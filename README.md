@@ -110,4 +110,5 @@ Comprehensive technical documentation is maintained in [`docs/`](./docs/):
 - [`docs/RBAC.md`](./docs/RBAC.md) — Permission matrix and server enforcement rules.
 - [`docs/BUSINESS_RULES.md`](./docs/BUSINESS_RULES.md) — Domain invariants, transaction formulas, and concurrency handling.
 - [`docs/TEST_PLAN.md`](./docs/TEST_PLAN.md) — QA test matrix and test specifications.
-- [`BUILD_LOG.md`](./BUILD_LOG.md) — Chronological engineering log & AI usage transparency disclosures.
+- [`BUILD_LOG.md`](./BUILD_LOG.md) — Chronological engineering log & architecture traceability.
+- [`AI_USAGE.md`](./AI_USAGE.md) — AI toolchain, prompt engineering, and methodology disclosures.

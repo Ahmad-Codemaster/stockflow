@@ -141,3 +141,4 @@ StockFlow has transitioned from an in-memory UI prototype into a production-read
 - **Code Generation:** All backend controllers, services, database models, and test fixtures were written with strict type-safety, explicit DTO schemas, and zero ad-hoc shortcuts.
 - **Security Validation:** Authentication was hardened with cryptographic random sessions, Bcrypt hashing, rate limiting, and session revocation.
 - **Verification Integrity:** Tests were run against the live SQLite test database with zero disabled assertions or bypassed business rules.
+- **Full Methodology Document:** For an in-depth breakdown of prompt engineering patterns, context steering strategies, and test-driven cycles, see [`AI_USAGE.md`](./AI_USAGE.md).
