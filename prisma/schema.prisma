@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String             @id @default(uuid())
+  name         String
+  email        String             @unique
+  passwordHash String             @map("password_hash")
+  role         String             @default("STAFF") // "ADMIN" | "STAFF"
+  status       String             @default("Active") // "Active" | "Inactive"
+  avatar       String?
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+  sessions     Session[]
+  transactions StockTransaction[]
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Supplier {
+  id            String             @id @default(uuid())
+  name          String
+  contactPerson String             @map("contact_person")
+  email         String
+  phone         String
+  address       String
+  leadTime      Int                @map("lead_time") // in days
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+  products      Product[]
+  transactions  StockTransaction[]
+
+  @@map("suppliers")
+}
+
+model Product {
+  id           String             @id @default(uuid())
+  name         String
+  sku          String             @unique
+  categoryId   String             @map("category_id")
+  category     Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  supplierId   String?            @map("supplier_id")
+  supplier     Supplier?          @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  price        Float
+  quantity     Int                @default(0) // Quantity on hand
+  reorderLevel Int                @map("reorder_level")
+  description  String?
+  isArchived   Boolean            @default(false) @map("is_archived")
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+  transactions StockTransaction[]
+
+  @@index([categoryId])
+  @@index([supplierId])
+  @@map("products")
+}
+
+model StockTransaction {
+  id            String    @id @default(uuid())
+  type          String // "STOCK_IN" | "STOCK_OUT" | "ADJUSTMENT"
+  productId     String    @map("product_id")
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity      Int
+  previousStock Int       @map("previous_stock")
+  newStock      Int       @map("new_stock")
+  supplierId    String?   @map("supplier_id")
+  supplier      Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  performedById String    @map("performed_by_id")
+  performedBy   User      @relation(fields: [performedById], references: [id], onDelete: Restrict)
+  reference     String?
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([productId])
+  @@index([performedById])
+  @@index([createdAt])
+  @@map("stock_transactions")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?  @map("entity_id")
+  details   String? // JSON string
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
