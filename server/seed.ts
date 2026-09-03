@@ -404,15 +404,21 @@ export async function seedDatabase(preserveSessions = false) {
 }
 
 if (import.meta.url.endsWith(process.argv[1]?.replace(/\\/g, '/') || '')) {
-  seedDatabase(false)
-    .then(() => {
+  (async () => {
+    try {
+      const force = process.argv.includes('--force');
+      const userCount = await prisma.user.count();
+      if (userCount > 0 && !force) {
+        console.log('ℹ️ Database already populated. Skipping seed to preserve existing records.');
+        process.exit(0);
+      }
+      await seedDatabase(false);
       console.log('🎉 Database seed completed successfully!');
-    })
-    .catch((err) => {
+    } catch (err) {
       console.error('❌ Database seed failed:', err);
       process.exit(1);
-    })
-    .finally(async () => {
+    } finally {
       await prisma.$disconnect();
-    });
+    }
+  })();
 }

@@ -34,4 +34,4 @@ RUN npm install tsx
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "npx prisma db push --skip-generate && npx tsx server/index.ts"]
+CMD ["sh", "-c", "npx prisma db push --skip-generate && npx tsx server/seed.ts && npx tsx server/index.ts"]
