@@ -360,20 +360,21 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const wipeStoreData = useCallback(async () => {
     try {
       await api.system.wipe();
+      // Clear all local state immediately — no competing refreshData() call
       setProducts([]);
       setCategories([]);
       setSuppliers([]);
       setInventory([]);
       setTransactions([]);
-      await refreshData();
+      navigate('dashboard');
       showToast(
         'success',
-        'Store wiped clean. 0 products, inventory, and transactions.'
+        'Store wiped to a clean slate. All products, inventory, and transactions cleared.'
       );
     } catch (err: any) {
       showToast('error', err.message || 'Failed to wipe store data.');
     }
-  }, [refreshData, showToast]);
+  }, [navigate, showToast]);
 
   return (
     <InventoryContext.Provider

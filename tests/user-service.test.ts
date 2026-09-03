@@ -74,4 +74,48 @@ describe('User Service & Product Filters In-depth', () => {
     const sRes = await request(app).put('/api/suppliers/nonexistent-id').set('Cookie', [cookie]).send({ name: 'Test' });
     expect(sRes.status).toBe(404);
   });
+
+  it('enforces last-admin protection guard preventing demotion or deactivation of the last active admin', async () => {
+    const { cookie } = await loginAsAdmin();
+
+    // 1. Delete u0 so only u1 remains as the sole active admin
+    await request(app).delete('/api/users/u0').set('Cookie', [cookie]);
+
+    // 2. Create a temporary second admin
+    const createRes = await request(app)
+      .post('/api/users')
+      .set('Cookie', [cookie])
+      .send({
+        name: 'Temp Admin',
+        email: 'tempadmin@stockflow.com',
+        role: 'ADMIN',
+        password: 'AdminPassword@123',
+      });
+    const tempAdminId = createRes.body.data.id;
+
+    // Login as temp admin so we can act on u1
+    const loginRes = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'tempadmin@stockflow.com', password: 'AdminPassword@123' });
+    const tempCookie = loginRes.headers['set-cookie'][0];
+
+    // Delete u1 so tempAdmin is now the SOLE active admin
+    await request(app).delete('/api/users/u1').set('Cookie', [tempCookie]);
+
+    // Attempt to demote tempAdmin (last admin) to STAFF -> should fail with 400 LAST_ADMIN
+    const demoteRes = await request(app)
+      .put(`/api/users/${tempAdminId}`)
+      .set('Cookie', [tempCookie])
+      .send({ role: 'STAFF' });
+    expect(demoteRes.status).toBe(400);
+    expect(demoteRes.body.error.code).toBe('LAST_ADMIN');
+
+    // Attempt to deactivate tempAdmin (last admin) -> should fail with 400 LAST_ADMIN
+    const deactRes = await request(app)
+      .put(`/api/users/${tempAdminId}`)
+      .set('Cookie', [tempCookie])
+      .send({ status: 'Inactive' });
+    expect(deactRes.status).toBe(400);
+    expect(deactRes.body.error.code).toBe('LAST_ADMIN');
+  });
 });

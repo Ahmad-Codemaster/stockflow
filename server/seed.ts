@@ -426,47 +426,31 @@ if (import.meta.url.endsWith(process.argv[1]?.replace(/\\/g, '/') || '')) {
     try {
       const force = process.argv.includes('--force');
       const userCount = await prisma.user.count();
+
       if (userCount === 0 || force) {
+        // First boot ever (or forced reset): seed full demo data
         await seedDatabase(false);
         console.log('🎉 Database seed completed successfully!');
       } else {
-        console.log('ℹ️ Database populated. Ensuring master accounts exist...');
-        await prisma.user.upsert({
-          where: { email: 'admin@stockflow.com' },
-          update: {},
-          create: {
-            id: 'u0',
-            name: 'Administrator',
-            email: 'admin@stockflow.com',
-            passwordHash: ADMIN_HASH,
-            role: 'ADMIN',
-            status: 'Active',
-          },
-        });
-        await prisma.user.upsert({
-          where: { email: 'ahmad@stockflow.com' },
-          update: {},
-          create: {
-            id: 'u1',
-            name: 'Ahmad Khan',
-            email: 'ahmad@stockflow.com',
-            passwordHash: ADMIN_HASH,
-            role: 'ADMIN',
-            status: 'Active',
-          },
-        });
-        await prisma.user.upsert({
-          where: { email: 'staff@stockflow.com' },
-          update: {},
-          create: {
-            id: 'u5',
-            name: 'Staff Operations',
-            email: 'staff@stockflow.com',
-            passwordHash: STAFF_HASH,
-            role: 'STAFF',
-            status: 'Active',
-          },
-        });
+        // Subsequent boots: only guarantee the bootstrap admin exists
+        // All other users are created manually by the admin through the UI
+        const adminCount = await prisma.user.count({ where: { role: 'ADMIN', status: 'Active' } });
+        if (adminCount === 0) {
+          console.log('⚠️ No active admin found. Re-creating bootstrap admin account...');
+          await prisma.user.upsert({
+            where: { email: 'ahmad@stockflow.com' },
+            update: { role: 'ADMIN', status: 'Active', passwordHash: ADMIN_HASH },
+            create: {
+              id: 'u1',
+              name: 'Ahmad Khan',
+              email: 'ahmad@stockflow.com',
+              passwordHash: ADMIN_HASH,
+              role: 'ADMIN',
+              status: 'Active',
+            },
+          });
+        }
+        console.log(`ℹ️ Database has ${userCount} users, ${adminCount} active admin(s). Skipping seed.`);
       }
     } catch (err) {
       console.error('❌ Database seed failed:', err);
@@ -476,3 +460,4 @@ if (import.meta.url.endsWith(process.argv[1]?.replace(/\\/g, '/') || '')) {
     }
   })();
 }
+

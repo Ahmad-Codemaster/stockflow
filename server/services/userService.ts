@@ -113,6 +113,30 @@ export class UserService {
       throw new AppError('User not found.', 404, 'NOT_FOUND');
     }
 
+    // LAST-ADMIN GUARD: Prevent demoting the last admin to staff
+    if (user.role === 'ADMIN' && data.role === 'STAFF') {
+      const activeAdminCount = await prisma.user.count({ where: { role: 'ADMIN', status: 'Active' } });
+      if (activeAdminCount <= 1) {
+        throw new AppError(
+          'Cannot demote the last administrator. At least one active admin account must exist at all times.',
+          400,
+          'LAST_ADMIN'
+        );
+      }
+    }
+
+    // LAST-ADMIN GUARD: Prevent deactivating the last admin
+    if (user.role === 'ADMIN' && user.status === 'Active' && data.status === 'Inactive') {
+      const activeAdminCount = await prisma.user.count({ where: { role: 'ADMIN', status: 'Active' } });
+      if (activeAdminCount <= 1) {
+        throw new AppError(
+          'Cannot deactivate the last administrator. At least one active admin account must exist at all times.',
+          400,
+          'LAST_ADMIN'
+        );
+      }
+    }
+
     const updateData: any = {};
 
     if (data.name) updateData.name = data.name.trim();
@@ -184,6 +208,18 @@ export class UserService {
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {
       throw new AppError('User not found.', 404, 'NOT_FOUND');
+    }
+
+    // LAST-ADMIN GUARD: Prevent deleting the last admin
+    if (user.role === 'ADMIN') {
+      const activeAdminCount = await prisma.user.count({ where: { role: 'ADMIN', status: 'Active' } });
+      if (activeAdminCount <= 1) {
+        throw new AppError(
+          'Cannot delete the last administrator account. At least one active admin must exist at all times.',
+          400,
+          'LAST_ADMIN'
+        );
+      }
     }
 
     // 1. Delete all active sessions for this user

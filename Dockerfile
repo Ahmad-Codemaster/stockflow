@@ -17,8 +17,6 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3001
-ENV DATABASE_URL="file:./dev.db"
-ENV JWT_SECRET="stockflow_production_jwt_secret_key_2026"
 
 COPY package.json ./
 RUN npm install --omit=dev
