@@ -11,6 +11,21 @@ jobs:
     name: Lint, Typecheck, Test & Build
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: stockflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -29,22 +44,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Generate Prisma Client & DB
+      - name: Generate Prisma Client & Push PostgreSQL Schema
         run: |
           npx prisma generate
-          npx prisma db push
+          npx prisma db push --skip-generate
           npx tsx server/seed.ts
         env:
-          DATABASE_URL: "file:./dev.db"
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/stockflow_test"
 
       - name: TypeScript Typecheck
         run: npx tsc --noEmit
 
-      - name: Run Automated Test Suite with Coverage
-        run: npx vitest run --coverage
+      - name: Run Automated Test Suite
+        run: npx vitest run
         env:
           NODE_ENV: test
-          DATABASE_URL: "file:./dev.db"
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/stockflow_test"
           SESSION_SECRET: "test-session-secret-key-32-characters-minimum"
 
       - name: Build Frontend Distribution Bundle

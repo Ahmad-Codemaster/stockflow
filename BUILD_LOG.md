@@ -139,6 +139,25 @@ StockFlow has transitioned from an in-memory UI prototype into a production-read
   - Retained root Administrator account (`ahmad@stockflow.com` / `Admin@123`).
   - Isolated automated test execution to `prisma/test.db` with auto-provisioning in `tests/setup.ts`, ensuring tests run without contaminating the live development database.
 
+### Phase 8 — Docker Containerization & Render Live Deployment
+- Created a production multi-stage `Dockerfile`:
+  - Stage 1 (`builder`): Compiles React 19 frontend bundle via Vite, generates Prisma client.
+  - Stage 2 (`runner`): Stripped Node.js 20 Alpine runtime serving client assets and Express 5 API on port 3001.
+  - Fixed Express 5 named parameter routing (`app.get('/{*splat}', ...)`).
+- Deployed live on Render. Added session restoration loading screen (`SessionLoadingScreen`) in `src/App.tsx` to eliminate 1-second login flash on page reload.
+- Added interactive **User Manual & Operational Guide** modal (`src/components/UserManualModal.tsx`) directly accessible from the Dashboard top action bar.
+- Added **Sign-Out Warning Confirmation** dialog (`src/components/Sidebar.tsx`) preventing accidental session loss.
+
+### Phase 9 — PostgreSQL Cloud Migration & Enterprise Last-Admin Protection
+- Switched Prisma ORM engine to **PostgreSQL** (`provider = "postgresql"` in `prisma/schema.prisma`).
+- Connected live to Render Managed PostgreSQL database for 100% permanent data persistence across sleep cycles and container restarts.
+- Implemented **Last-Administrator Safety Guards** in `server/services/userService.ts`:
+  - Rejects deletion of the last remaining active administrator (`400 LAST_ADMIN`).
+  - Rejects demoting the last active administrator to `STAFF` (`400 LAST_ADMIN`).
+  - Rejects deactivating the last active administrator (`400 LAST_ADMIN`).
+- Hardened seed bootstrap (`server/seed.ts`) to never overwrite or re-inject demo staff accounts on subsequent container boots.
+- Updated GitHub Actions CI pipeline (`.github/workflows/ci.yml`) with real PostgreSQL service container.
+
 ---
 
 ## 3. Key Invariants & Architectural Directives Enforced
@@ -150,6 +169,7 @@ StockFlow has transitioned from an in-memory UI prototype into a production-read
 | **Case-Insensitive Uniqueness** | `LOWER(email)`, `UPPER(sku)`, `LOWER(name)` normalization | `tests/products.test.ts`, `tests/categories-suppliers.test.ts` |
 | **Zero Negative Stock** | Server validation + atomic update before transaction creation | `tests/inventory.test.ts` |
 | **Concurrency Race Conditions** | `AsyncLock` + atomic transaction execution | `tests/concurrency.test.ts` |
+| **Last-Admin Protection** | Server-side active admin count check on delete/demote/deactivate | `tests/user-service.test.ts` |
 | **Session Invalidation on Deactivation/Deletion** | Active session records deleted immediately from DB | `tests/users-audit.test.ts` |
 | **Immutable Audit Logs** | Append-only `stock_transactions` and `audit_logs` tables | `tests/users-audit.test.ts` |
 | **Modular Domain Contexts** | Composed `AuthContext`, `InventoryContext`, and `UIContext` | `src/context.tsx` |
@@ -161,7 +181,7 @@ StockFlow has transitioned from an in-memory UI prototype into a production-read
 
 ```
  Test Files  14 passed (14)
-      Tests  54 passed (54)
+      Tests  55 passed (55)
    Duration  ~18s
 ```
 
@@ -172,5 +192,5 @@ StockFlow has transitioned from an in-memory UI prototype into a production-read
 - **Architecture & Design:** Grounded strictly in the requirements audit and user directives (`AGENTS.md` and `docs/`).
 - **Code Generation:** All backend controllers, services, database models, and test fixtures were written with strict type-safety, explicit DTO schemas, and zero ad-hoc shortcuts.
 - **Security Validation:** Authentication was hardened with cryptographic random sessions, Bcrypt hashing, rate limiting, and session revocation.
-- **Verification Integrity:** Tests were run against the live SQLite test database with zero disabled assertions or bypassed business rules.
+- **Verification Integrity:** Tests were run against the live test database with zero disabled assertions or bypassed business rules.
 - **Full Methodology Document:** For an in-depth breakdown of prompt engineering patterns, context steering strategies, and test-driven cycles, see [`AI_USAGE.md`](./AI_USAGE.md).

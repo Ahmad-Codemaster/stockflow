@@ -1,21 +1,34 @@
 # StockFlow — Inventory & Operations Management System
 
-> **Stack:** React 19 + TypeScript + Vite + Tailwind CSS v4 | Node.js + Express + Prisma ORM (SQLite / PostgreSQL) | Vitest + GitHub Actions CI
+> **Stack:** React 19 + TypeScript + Vite + Tailwind CSS v4 | Node.js + Express + Prisma ORM (PostgreSQL) | Docker + Render | Vitest + GitHub Actions CI
 
 StockFlow is an enterprise inventory and operations management system designed for businesses requiring strict stock-in/stock-out workflows, multi-supplier tracking, real-time catalog management, session-based role authorization (Admin vs. Staff), and operational reporting.
 
 ---
 
+## 🌐 Live Deployment & Repository
+
+| Resource | Link / Details |
+| :--- | :--- |
+| **GitHub Repository** | [https://github.com/Ahmad-Codemaster/stockflow](https://github.com/Ahmad-Codemaster/stockflow) |
+| **Live Production URL** | Deployed on Render with Docker & Managed PostgreSQL |
+| **Default Administrator** | Email: `ahmad@stockflow.com` \| Password: `Admin@123` |
+| **Engineering Build Log** | [`BUILD_LOG.md`](./BUILD_LOG.md) (Chronological phases & architecture) |
+| **AI Usage Disclosure** | [`AI_USAGE.md`](./AI_USAGE.md) (Toolchain, prompt engineering & methodology) |
+
+---
+
 ## 🌟 Core System Highlights
 
+- **Permanent Cloud Persistence:** Powered by managed PostgreSQL on Render with zero ephemeral data loss.
 - **Session-Based Authentication:** Secure `HttpOnly`, `SameSite=Lax` cookies validated against server-side `sessions` table with brute-force rate limiting.
 - **Role-Based Access Control (RBAC):** Server-enforced route guards for `ADMIN` (catalog management, user provisioning & deletion, system logs) and `STAFF` (inventory monitoring, stock receiving, order fulfillment, reporting).
+- **Last-Admin Protection:** Atomic guards preventing deletion, demotion, or deactivation of the last remaining administrator account.
 - **Atomic Inventory Transactions:** ACID stock-in, stock-out, and adjustment operations with row locking, negative stock prevention, and immutable transaction audit ledgers.
 - **Interactive Visual Analytics:** Real-time KPI sparklines, 7-day stock velocity dual-column bar chart, and category valuation donut chart.
-- **Case-Insensitive Uniqueness:** Enforced SKU uppercase normalization, email lowercase normalization, and unique database constraints.
-- **SQL Aggregated Reporting:** High-performance database aggregation for dashboard KPIs, stock valuations, movement summaries, and low-stock replenishment alerts.
-- **Automated Test Suite:** **54 unit, integration, frontend component, and concurrency race-condition tests** across 14 test suites ($\ge 86\%$ code coverage).
-- **Continuous Integration (CI):** Fully automated GitHub Actions workflow validating linting, TypeScript typechecking, automated test execution, and production bundling.
+- **Built-in System Manual:** Interactive operational guide modal directly accessible from the Operations Dashboard.
+- **Automated Test Suite:** **55 unit, integration, frontend component, and concurrency race-condition tests** across 14 test suites ($\ge 86\%$ code coverage).
+- **Continuous Integration (CI):** Fully automated GitHub Actions workflow validating linting, TypeScript typechecking, automated test execution with PostgreSQL container, and production bundling.
 
 ---
 
