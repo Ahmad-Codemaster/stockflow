@@ -3,68 +3,22 @@ import {
   AlertTriangle,
   ArrowRight,
   Boxes,
-  Check,
-  CheckCircle2,
   Eye,
   EyeOff,
   HelpCircle,
-  Info,
   KeyRound,
   Lock,
   Mail,
   Shield,
-  ShieldAlert,
   ShieldCheck,
-  Sparkles,
   UserCheck,
   Warehouse,
-  WifiOff,
   X,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context';
 
 type RoleTab = 'ADMIN' | 'STAFF';
-
-interface DemoUserFallback {
-  name: string;
-  email: string;
-  password: string;
-  role: RoleTab;
-  title: string;
-  avatarColor: string;
-}
-
-const DEFAULT_CREDENTIALS: Record<RoleTab, DemoUserFallback[]> = {
-  ADMIN: [
-    {
-      name: 'Ahmad Khan',
-      email: 'ahmad@stockflow.com',
-      password: 'Admin@123',
-      role: 'ADMIN',
-      title: 'Principal System Administrator',
-      avatarColor: 'bg-blue-600 text-white',
-    },
-  ],
-  STAFF: [
-    {
-      name: 'Ali Raza',
-      email: 'ali@stockflow.com',
-      password: 'Staff@123',
-      role: 'STAFF',
-      title: 'Warehouse Lead • Inbound Receiving',
-      avatarColor: 'bg-emerald-600 text-white',
-    },
-    {
-      name: 'Sara Ahmed',
-      email: 'sara@stockflow.com',
-      password: 'Staff@123',
-      role: 'STAFF',
-      title: 'Inventory Specialist • Fulfillment',
-      avatarColor: 'bg-teal-600 text-white',
-    },
-  ],
-};
 
 interface FormErrorState {
   email?: string;
@@ -75,68 +29,23 @@ interface FormErrorState {
 }
 
 export default function Login() {
-  const { login, users } = useApp();
+  const { login } = useApp();
   const [activeRole, setActiveRole] = useState<RoleTab>('ADMIN');
-  const [email, setEmail] = useState('ahmad@stockflow.com');
-  const [password, setPassword] = useState('Admin@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [capsLockActive, setCapsLockActive] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
-  const [justAutoFilled, setJustAutoFilled] = useState(false);
   const [errors, setErrors] = useState<FormErrorState>({});
-
-  // Merge live users from DB with default credentials
-  const displayedUsers = React.useMemo(() => {
-    const roleUsers = users.filter((u) => u.role === activeRole);
-    if (roleUsers.length > 0) {
-      return roleUsers.map((u) => {
-        // Match known passwords for demo users, default for newly created users
-        let knownPw = 'StockFlow@123';
-        if (u.email.toLowerCase() === 'ahmad@stockflow.com') knownPw = 'Admin@123';
-        else if (u.email.toLowerCase() === 'ali@stockflow.com') knownPw = 'Staff@123';
-        else if (u.email.toLowerCase() === 'sara@stockflow.com') knownPw = 'Staff@123';
-
-        return {
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          password: knownPw,
-          role: u.role as RoleTab,
-          status: u.status,
-          title: u.role === 'ADMIN' ? 'System Administrator' : 'Operations Specialist',
-          avatarColor:
-            u.role === 'ADMIN' ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white',
-        };
-      });
-    }
-    return DEFAULT_CREDENTIALS[activeRole];
-  }, [users, activeRole]);
 
   // Tab change
   const handleRoleChange = (newRole: RoleTab) => {
     if (newRole === activeRole) return;
     setActiveRole(newRole);
     setErrors({});
-    const defaultUser = DEFAULT_CREDENTIALS[newRole][0];
-    if (defaultUser) {
-      setEmail(defaultUser.email);
-      setPassword(defaultUser.password);
-      setJustAutoFilled(true);
-      setTimeout(() => setJustAutoFilled(false), 800);
-    }
-  };
-
-  const handleApplyUser = (user: { email: string; password?: string; name: string }) => {
-    setEmail(user.email);
-    if (user.password) {
-      setPassword(user.password);
-    }
-    setErrors({});
-    setJustAutoFilled(true);
-    setTimeout(() => setJustAutoFilled(false), 800);
   };
 
   // Detect Caps Lock state
@@ -180,14 +89,12 @@ export default function Login() {
       if (!result.ok) {
         triggerShake();
 
-        // Standardized, Professional Enterprise Error Feedback
         switch (result.code) {
           case 'INVALID_CREDENTIALS':
             setErrors({
               code: 'INVALID_CREDENTIALS',
               title: 'Authentication Failed',
-              form:
-                'Invalid corporate email or password. Please verify your credentials or select a quick-access terminal profile below.',
+              form: 'Invalid corporate email or password. Please verify your credentials and try again.',
             });
             break;
 
@@ -368,34 +275,25 @@ export default function Login() {
             <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
               {isAdmin ? 'Administrator Sign-In' : 'Staff Operations Portal'}
             </h1>
-            <p className="text-xs text-muted mt-1 leading-relaxed">
+            <p className="text-xs text-slate-500 mt-1">
               {isAdmin
-                ? 'Authorized access for user management, master catalog, and compliance logs.'
-                : 'Terminal access for warehouse stock-in, dispatch, and physical counts.'}
+                ? 'Sign in to access catalog configuration, system settings, and user provisioning.'
+                : 'Sign in to manage warehouse receiving, inventory movements, and stock dispatches.'}
             </p>
           </div>
 
-          {/* Professional Industry-Standard Error Callout Banner */}
+          {/* Alert Message Banner */}
           {errors.form && (
             <div
-              className={`mb-5 p-3.5 rounded-xl border flex items-start gap-3 animate-fade-slide ${
+              className={`mb-4 p-3.5 rounded-xl border text-xs flex items-start gap-2.5 animate-shake ${
                 errors.code === 'ACCOUNT_INACTIVE'
-                  ? 'bg-amber-50/90 border-amber-300 text-amber-900'
-                  : errors.code === 'NETWORK_ERROR'
-                  ? 'bg-slate-50 border-slate-300 text-slate-800'
+                  ? 'bg-rose-50 border-rose-200 text-rose-800'
                   : 'bg-rose-50/90 border-rose-200 text-rose-800'
               }`}
+              role="alert"
             >
-              <div className="shrink-0 mt-0.5">
-                {errors.code === 'ACCOUNT_INACTIVE' ? (
-                  <ShieldAlert size={18} className="text-amber-600" />
-                ) : errors.code === 'NETWORK_ERROR' ? (
-                  <WifiOff size={18} className="text-slate-600" />
-                ) : (
-                  <AlertCircle size={18} className="text-rose-600" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
+              <AlertCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
                 {errors.title && (
                   <h4 className="text-xs font-bold mb-0.5 tracking-tight">{errors.title}</h4>
                 )}
@@ -423,11 +321,6 @@ export default function Login() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-xs font-semibold text-slate-700">Corporate Email</label>
-                {justAutoFilled && (
-                  <span className="text-[10px] text-emerald-600 font-medium flex items-center gap-1 animate-fade-slide">
-                    <Check size={11} /> Auto-filled
-                  </span>
-                )}
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -441,7 +334,7 @@ export default function Login() {
                     if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
                     if (errors.form) setErrors((prev) => ({ ...prev, form: undefined }));
                   }}
-                  placeholder="name@stockflow.com"
+                  placeholder="operator@company.com"
                   className={`w-full pl-9 pr-3.5 py-2.5 text-sm rounded-xl border bg-slate-50/50 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
                     errors.email
                       ? 'border-rose-400 focus:ring-rose-200 focus:border-rose-500'
@@ -562,81 +455,6 @@ export default function Login() {
               )}
             </button>
           </form>
-
-          {/* Quick-Fill Profiles Showcase (Dynamic Accounts from System) */}
-          <div className="mt-6 pt-5 border-t border-slate-100">
-            <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                <Sparkles size={14} className={isAdmin ? 'text-blue-600' : 'text-emerald-600'} />
-                <span>Available System Accounts</span>
-              </div>
-              <span className="text-[10px] text-slate-400 font-mono">1-Click Auto-Fill</span>
-            </div>
-
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-0.5">
-              {displayedUsers.map((user) => {
-                const isCurrent = email.toLowerCase() === user.email.toLowerCase();
-                const isInactive = 'status' in user && user.status === 'Inactive';
-
-                return (
-                  <div
-                    key={user.email}
-                    onClick={() => handleApplyUser(user)}
-                    className={`group p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                      isCurrent
-                        ? isAdmin
-                          ? 'bg-blue-50/80 border-blue-200 shadow-xs'
-                          : 'bg-emerald-50/80 border-emerald-200 shadow-xs'
-                        : isInactive
-                        ? 'bg-slate-50/60 border-slate-200 opacity-60'
-                        : 'bg-slate-50 hover:bg-slate-100/80 border-slate-200/80'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${user.avatarColor}`}
-                      >
-                        {user.name.charAt(0)}
-                      </div>
-                      <div className="truncate">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-semibold text-slate-900 truncate">{user.name}</span>
-                          <span
-                            className={`text-[9px] font-medium px-1.5 py-0.2 rounded ${
-                              user.role === 'ADMIN'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-emerald-100 text-emerald-800'
-                            }`}
-                          >
-                            {user.role}
-                          </span>
-                          {isInactive && (
-                            <span className="text-[9px] font-medium px-1.5 py-0.2 rounded bg-rose-100 text-rose-800">
-                              Inactive
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-slate-500 truncate font-mono">{user.email}</p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all shrink-0 cursor-pointer ${
-                        isCurrent
-                          ? isAdmin
-                            ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                            : 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                          : 'bg-white text-slate-700 border-slate-300 group-hover:border-slate-400'
-                      }`}
-                    >
-                      {isCurrent ? 'Selected' : 'Use'}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </div>
       </main>
 
@@ -691,24 +509,23 @@ export default function Login() {
 
             <div className="space-y-3 text-xs text-slate-600 mb-6 leading-relaxed">
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
-                <p className="font-semibold text-slate-900 mb-1">Standard Demo Credentials:</p>
-                <div className="space-y-1 font-mono text-[11px] text-slate-700">
-                  <p>• Admin: <span className="text-blue-600 font-semibold">ahmad@stockflow.com</span> / <span className="bg-slate-200 px-1 py-0.5 rounded">Admin@123</span></p>
-                  <p>• Staff: <span className="text-emerald-600 font-semibold">ali@stockflow.com</span> / <span className="bg-slate-200 px-1 py-0.5 rounded">Staff@123</span></p>
-                </div>
+                <p className="font-semibold text-slate-900 mb-1">Corporate Access Credentials:</p>
+                <p className="text-slate-600 text-xs">
+                  Sign in using your assigned corporate email address and security password.
+                </p>
               </div>
 
               <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200 text-blue-900">
-                <p className="font-semibold mb-1">Newly Created Operator Accounts:</p>
+                <p className="font-semibold mb-1">Account Provisioning:</p>
                 <p>
-                  When creating new administrators or staff in <strong>User Access Management</strong>, the assigned password is encrypted with Bcrypt. If no custom password was specified, the system assigns default initial password <code className="bg-blue-100 px-1 py-0.5 rounded text-blue-800 font-mono">StockFlow@123</code>.
+                  New operator profiles are created and managed by an Administrator through the <strong>User Access Management</strong> console.
                 </p>
               </div>
 
               <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900">
                 <p className="font-semibold mb-1">Password Resets & Role Elevation:</p>
                 <p>
-                  Password updates and role changes must be performed by an active system administrator in the <strong>User Management</strong> console.
+                  If you have forgotten your password or require permissions adjustments, please contact your organization&apos;s system administrator.
                 </p>
               </div>
             </div>

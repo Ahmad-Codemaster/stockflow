@@ -35,22 +35,24 @@ export default function Categories() {
       return;
     }
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 400));
-    setSaving(false);
-    if (editingId) {
-      const ok = await updateCategory(editingId, name.trim());
-      if (!ok) {
-        setNameError('A category with this name already exists.');
-        return;
+    try {
+      if (editingId) {
+        const ok = await updateCategory(editingId, name.trim());
+        if (!ok) {
+          setNameError('A category with this name already exists.');
+          return;
+        }
+      } else {
+        const ok = await addCategory(name.trim());
+        if (!ok) {
+          setNameError('A category with this name already exists.');
+          return;
+        }
       }
-    } else {
-      const ok = await addCategory(name.trim());
-      if (!ok) {
-        setNameError('A category with this name already exists.');
-        return;
-      }
+      setShowModal(false);
+    } finally {
+      setSaving(false);
     }
-    setShowModal(false);
   }
 
   function getProductCount(catId: string) {

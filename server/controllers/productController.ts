@@ -1,4 +1,4 @@
-import type { NextFunction, Response } from 'express';
+import type { Response } from 'express';
 import { z } from 'zod';
 import { ProductService } from '../services/productService';
 import type { AuthenticatedRequest } from '../types/api';
@@ -24,73 +24,53 @@ const updateProductSchema = z.object({
 });
 
 export class ProductController {
-  static async list(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    try {
-      const products = await ProductService.listProducts({
-        search: req.query.search as string,
-        categoryId: req.query.categoryId as string,
-        status: req.query.status as any,
-        includeArchived: req.query.includeArchived === 'true',
-      });
-      return res.status(200).json({ success: true, data: products });
-    } catch (error) {
-      next(error);
-    }
+  static async list(req: AuthenticatedRequest, res: Response) {
+    const products = await ProductService.listProducts({
+      search: req.query.search as string,
+      categoryId: req.query.categoryId as string,
+      status: req.query.status as any,
+      includeArchived: req.query.includeArchived === 'true',
+    });
+    return res.status(200).json({ success: true, data: products });
   }
 
-  static async getById(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    try {
-      const product = await ProductService.getProductById(req.params.id);
-      return res.status(200).json({ success: true, data: product });
-    } catch (error) {
-      next(error);
-    }
+  static async getById(req: AuthenticatedRequest, res: Response) {
+    const product = await ProductService.getProductById(req.params.id);
+    return res.status(200).json({ success: true, data: product });
   }
 
-  static async create(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    try {
-      const parsed = createProductSchema.parse(req.body);
-      const ipAddress = req.ip || req.socket.remoteAddress;
+  static async create(req: AuthenticatedRequest, res: Response) {
+    const parsed = createProductSchema.parse(req.body);
+    const ipAddress = req.ip || req.socket.remoteAddress;
 
-      const product = await ProductService.createProduct(
-        parsed,
-        req.user!.id,
-        ipAddress
-      );
-      return res.status(201).json({ success: true, data: product });
-    } catch (error) {
-      next(error);
-    }
+    const product = await ProductService.createProduct(
+      parsed,
+      req.user!.id,
+      ipAddress
+    );
+    return res.status(201).json({ success: true, data: product });
   }
 
-  static async update(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    try {
-      const parsed = updateProductSchema.parse(req.body);
-      const ipAddress = req.ip || req.socket.remoteAddress;
+  static async update(req: AuthenticatedRequest, res: Response) {
+    const parsed = updateProductSchema.parse(req.body);
+    const ipAddress = req.ip || req.socket.remoteAddress;
 
-      const product = await ProductService.updateProduct(
-        req.params.id,
-        parsed,
-        req.user!.id,
-        ipAddress
-      );
-      return res.status(200).json({ success: true, data: product });
-    } catch (error) {
-      next(error);
-    }
+    const product = await ProductService.updateProduct(
+      req.params.id,
+      parsed,
+      req.user!.id,
+      ipAddress
+    );
+    return res.status(200).json({ success: true, data: product });
   }
 
-  static async delete(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    try {
-      const ipAddress = req.ip || req.socket.remoteAddress;
-      const result = await ProductService.deleteProduct(
-        req.params.id,
-        req.user!.id,
-        ipAddress
-      );
-      return res.status(200).json({ success: true, data: result });
-    } catch (error) {
-      next(error);
-    }
+  static async delete(req: AuthenticatedRequest, res: Response) {
+    const ipAddress = req.ip || req.socket.remoteAddress;
+    const result = await ProductService.deleteProduct(
+      req.params.id,
+      req.user!.id,
+      ipAddress
+    );
+    return res.status(200).json({ success: true, data: result });
   }
 }

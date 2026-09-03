@@ -108,6 +108,37 @@ StockFlow has transitioned from an in-memory UI prototype into a production-read
 - Achieved **$\ge 86\%$** line coverage across server code.
 - Created `.github/workflows/ci.yml` (lint, typecheck, test with coverage, build) and multi-stage `Dockerfile`.
 
+### Phase 11 — Enterprise Structural Modularization & Frontend Test Suite
+- **Modular Domain Contexts:** Decoupled the monolithic `src/context.tsx` into domain-focused contexts:
+  - `src/contexts/AuthContext.tsx` (`useAuth`): user sessions, login/logout, user administration.
+  - `src/contexts/InventoryContext.tsx` (`useInventory`): catalog items, stock-in, stock-out, transactions ledger, valuation, and reset tools.
+  - `src/contexts/UIContext.tsx` (`useUI`): toast notifications, modals, and silent route synchronization.
+  - `src/contexts/index.tsx`: Composed provider hierarchy combining UI, Inventory, and Auth contexts.
+  - `src/context.tsx`: Backward-compatible adapter layer guaranteeing zero breaking changes for existing components.
+- **Shared Utilities & Constants:** Established `src/utils/formatters.ts` and `src/utils/constants.ts` with pure helpers for currency, dates, numbers, and stock status badges.
+- **Frontend Test Suite:** Integrated `jsdom`, `@testing-library/react`, and `@testing-library/jest-dom` with Vitest dual-environment setup:
+  - `src/components/__tests__/ui.test.tsx`: UI primitives (`Badge`, `KPICard`, `EmptyState`, `Confirm`, `Pagination`).
+  - `src/components/__tests__/Sidebar.test.tsx`: Role-Based Access Control UI gating (Admin vs Staff).
+  - `src/components/__tests__/Toast.test.tsx`: Toast notification lifecycle and manual dismissals.
+  - `src/utils/__tests__/formatters.test.ts`: Data formatting and stock badge mapping.
+
+### Phase 12 — Demo Data & Mock Fixtures Elimination for Clean-Slate Deployment
+- **Purged Public Demo Routes:** Removed `/api/system/seed` and `/api/system/reset` from `server/routes/systemRoutes.ts` and `src/api/client.ts`. Retained `POST /api/system/wipe` for authorized administrator clean resets.
+- **Removed Context Seeding References:** Eliminated `seedDemoData` and `resetDatabase` from `src/contexts/InventoryContext.tsx` and unified adapter `src/context.tsx`.
+- **Streamlined UI Pages:**
+  - `src/pages/Login.tsx`: Cleared pre-filled credentials, removed mock user accounts, removed 1-click auto-fill cards, and updated help instructions.
+  - `src/pages/Settings.tsx`: Removed the "Load Sample Demo Data" action card, state hooks, and confirmation modal.
+- **Emptied Static Mock Arrays:** Emptied all mock fixtures in `src/data.ts` to 0 items (`initialUsers`, `initialProducts`, `initialCategories`, `initialSuppliers`, `initialTransactions`, `initialInventory`, `initialNotifications`) while preserving TypeScript type interfaces.
+- **Zero-Data Visuals & Helpful Empty States:**
+  - Removed artificial fallback date simulation from `src/components/DashboardCharts.tsx`.
+  - Added empty state handling to `InventoryStatusChart` and `recentTxns` in `src/pages/Dashboard.tsx`.
+  - Added prerequisite category and product alert banners in `src/pages/ProductForm.tsx`, `src/pages/StockIn.tsx`, and `src/pages/StockOut.tsx`.
+  - Added empty data guard in `src/pages/Reports.tsx`.
+- **Database Clean Slate & Test Isolation:**
+  - Purged all demo catalog, suppliers, categories, transactions, audit logs, and demo staff from `prisma/dev.db`.
+  - Retained root Administrator account (`ahmad@stockflow.com` / `Admin@123`).
+  - Isolated automated test execution to `prisma/test.db` with auto-provisioning in `tests/setup.ts`, ensuring tests run without contaminating the live development database.
+
 ---
 
 ## 3. Key Invariants & Architectural Directives Enforced
@@ -121,16 +152,17 @@ StockFlow has transitioned from an in-memory UI prototype into a production-read
 | **Concurrency Race Conditions** | `AsyncLock` + atomic transaction execution | `tests/concurrency.test.ts` |
 | **Session Invalidation on Deactivation/Deletion** | Active session records deleted immediately from DB | `tests/users-audit.test.ts` |
 | **Immutable Audit Logs** | Append-only `stock_transactions` and `audit_logs` tables | `tests/users-audit.test.ts` |
-| **Preserved Frontend UI** | Zero CSS/styling alterations; seamless React Router v7 | Manual + E2E |
+| **Modular Domain Contexts** | Composed `AuthContext`, `InventoryContext`, and `UIContext` | `src/context.tsx` |
+| **Frontend UI Verification** | Testing Library + Vitest DOM tests | `src/components/__tests__/*.test.tsx` |
 
 ---
 
 ## 4. Test Matrix & Coverage Summary
 
 ```
- Test Files  10 passed (10)
-      Tests  39 passed (39)
-   Duration  ~12s
+ Test Files  14 passed (14)
+      Tests  54 passed (54)
+   Duration  ~18s
 ```
 
 ---

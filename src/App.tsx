@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ToastContainer from './components/Toast';
 import { AppProvider, useApp } from './context';
@@ -18,60 +17,6 @@ import Suppliers from './pages/Suppliers';
 import TransactionDetail from './pages/TransactionDetail';
 import Transactions from './pages/Transactions';
 import Users from './pages/Users';
-import type { Page } from './types';
-
-// Synchronize browser URL changes into AppContext silently
-function RouteSync() {
-  const location = useLocation();
-  const { setPageSilent } = useApp();
-
-  useEffect(() => {
-    const path = location.pathname;
-    let page: Page = 'dashboard';
-    let id: string | undefined;
-
-    if (path === '/login') {
-      page = 'login';
-    } else if (path === '/' || path === '/dashboard') {
-      page = 'dashboard';
-    } else if (path === '/products') {
-      page = 'products';
-    } else if (path === '/products/add') {
-      page = 'product-add';
-    } else if (path.startsWith('/products/edit/')) {
-      page = 'product-edit';
-      id = path.replace('/products/edit/', '');
-    } else if (path.startsWith('/products/')) {
-      page = 'product-detail';
-      id = path.replace('/products/', '');
-    } else if (path === '/categories') {
-      page = 'categories';
-    } else if (path === '/suppliers') {
-      page = 'suppliers';
-    } else if (path === '/inventory') {
-      page = 'inventory';
-    } else if (path === '/stock-in') {
-      page = 'stock-in';
-    } else if (path === '/stock-out') {
-      page = 'stock-out';
-    } else if (path === '/transactions') {
-      page = 'transactions';
-    } else if (path.startsWith('/transactions/')) {
-      page = 'transaction-detail';
-      id = path.replace('/transactions/', '');
-    } else if (path === '/reports') {
-      page = 'reports';
-    } else if (path === '/users') {
-      page = 'users';
-    } else if (path === '/settings') {
-      page = 'settings';
-    }
-
-    setPageSilent(page, id);
-  }, [location.pathname, setPageSilent]);
-
-  return null;
-}
 
 function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { currentUser } = useApp();
@@ -92,9 +37,7 @@ function AppRoutes() {
   const { currentUser } = useApp();
 
   return (
-    <>
-      <RouteSync />
-      <Routes>
+    <Routes>
         <Route
           path="/login"
           element={
@@ -238,7 +181,6 @@ function AppRoutes() {
         />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
-    </>
   );
 }
 

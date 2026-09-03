@@ -55,17 +55,19 @@ export default function Suppliers() {
       return;
     }
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 400));
-    setSaving(false);
-    const data = {
-      name: form.name.trim(),
-      email: form.email.trim(),
-      phone: form.phone.trim(),
-      address: form.address.trim(),
-    };
-    if (editingId) updateSupplier(editingId, data);
-    else addSupplier(data);
-    setShowModal(false);
+    try {
+      const data = {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        address: form.address.trim(),
+      };
+      if (editingId) await updateSupplier(editingId, data);
+      else await addSupplier(data);
+      setShowModal(false);
+    } finally {
+      setSaving(false);
+    }
   }
 
   function getProductCount(suppId: string) {

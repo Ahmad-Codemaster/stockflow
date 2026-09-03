@@ -55,18 +55,21 @@ export default function Users() {
       return;
     }
     setAddSaving(true);
-    const success = await addUser({
-      name: addForm.name.trim(),
-      email: addForm.email.trim(),
-      role: addForm.role,
-      status: 'Active',
-      password: addForm.password,
-    });
-    setAddSaving(false);
-    if (success) {
-      setShowAdd(false);
-      setAddForm({ name: '', email: '', role: 'STAFF', password: '' });
-      setAddErrors({});
+    try {
+      const success = await addUser({
+        name: addForm.name.trim(),
+        email: addForm.email.trim(),
+        role: addForm.role,
+        status: 'Active',
+        password: addForm.password,
+      });
+      if (success) {
+        setShowAdd(false);
+        setAddForm({ name: '', email: '', role: 'STAFF', password: '' });
+        setAddErrors({});
+      }
+    } finally {
+      setAddSaving(false);
     }
   }
 
@@ -79,18 +82,21 @@ export default function Users() {
       return;
     }
     setEditSaving(true);
-    const payload: { name: string; role: Role; status: UserStatus; password?: string } = {
-      name: editForm.name.trim(),
-      role: editForm.role,
-      status: editForm.status,
-    };
-    if (editForm.password && editForm.password.trim().length >= 6) {
-      payload.password = editForm.password.trim();
-    }
-    const success = await updateUser(editingId, payload);
-    setEditSaving(false);
-    if (success) {
-      setEditingId(null);
+    try {
+      const payload: { name: string; role: Role; status: UserStatus; password?: string } = {
+        name: editForm.name.trim(),
+        role: editForm.role,
+        status: editForm.status,
+      };
+      if (editForm.password && editForm.password.trim().length >= 6) {
+        payload.password = editForm.password.trim();
+      }
+      const success = await updateUser(editingId, payload);
+      if (success) {
+        setEditingId(null);
+      }
+    } finally {
+      setEditSaving(false);
     }
   }
 

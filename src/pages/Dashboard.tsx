@@ -11,7 +11,7 @@ import {
   Sparkles,
   TrendingDown,
 } from 'lucide-react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   CategoryValuationDonutChart,
   KPISparkline,
@@ -41,32 +41,40 @@ function InventoryStatusChart({
     <div className="space-y-4">
       {/* Visual Multi-Segment Bar */}
       <div className="flex h-3.5 rounded-full overflow-hidden gap-1 p-0.5 bg-slate-100/80 border border-slate-200/80 shadow-2xs">
-        {healthy > 0 && (
-          <button
-            type="button"
-            onClick={() => onFilterClick('In Stock')}
-            className="bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-500 hover:opacity-90 cursor-pointer"
-            style={{ width: `${hPct}%` }}
-            title={`In Stock: ${healthy} (${Math.round(hPct)}%) — Click to filter`}
-          />
-        )}
-        {low > 0 && (
-          <button
-            type="button"
-            onClick={() => onFilterClick('Low Stock')}
-            className="bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-500 hover:opacity-90 cursor-pointer"
-            style={{ width: `${lPct}%` }}
-            title={`Low Stock: ${low} (${Math.round(lPct)}%) — Click to filter`}
-          />
-        )}
-        {outOfStock > 0 && (
-          <button
-            type="button"
-            onClick={() => onFilterClick('Out of Stock')}
-            className="bg-gradient-to-r from-rose-400 to-rose-500 rounded-full transition-all duration-500 hover:opacity-90 cursor-pointer"
-            style={{ width: `${oPct}%` }}
-            title={`Out of Stock: ${outOfStock} (${Math.round(oPct)}%) — Click to filter`}
-          />
+        {total === 0 ? (
+          <div className="w-full h-full bg-slate-200/50 rounded-full flex items-center justify-center text-[9px] text-slate-400 font-medium" title="No inventory items yet">
+            No Catalog Items Added
+          </div>
+        ) : (
+          <>
+            {healthy > 0 && (
+              <button
+                type="button"
+                onClick={() => onFilterClick('In Stock')}
+                className="bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-500 hover:opacity-90 cursor-pointer"
+                style={{ width: `${hPct}%` }}
+                title={`In Stock: ${healthy} (${Math.round(hPct)}%) — Click to filter`}
+              />
+            )}
+            {low > 0 && (
+              <button
+                type="button"
+                onClick={() => onFilterClick('Low Stock')}
+                className="bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-500 hover:opacity-90 cursor-pointer"
+                style={{ width: `${lPct}%` }}
+                title={`Low Stock: ${low} (${Math.round(lPct)}%) — Click to filter`}
+              />
+            )}
+            {outOfStock > 0 && (
+              <button
+                type="button"
+                onClick={() => onFilterClick('Out of Stock')}
+                className="bg-gradient-to-r from-rose-400 to-rose-500 rounded-full transition-all duration-500 hover:opacity-90 cursor-pointer"
+                style={{ width: `${oPct}%` }}
+                title={`Out of Stock: ${outOfStock} (${Math.round(oPct)}%) — Click to filter`}
+              />
+            )}
+          </>
         )}
       </div>
 
@@ -119,15 +127,31 @@ function InventoryStatusChart({
 export default function Dashboard() {
   const { products, inventory, transactions, categories, navigate, getStockStatus } = useApp();
 
+  const categoryMap = useMemo(
+    () => new Map(categories.map((c) => [c.id, c.name])),
+    [categories]
+  );
+  const productMap = useMemo(
+    () => new Map(products.map((p) => [p.id, p])),
+    [products]
+  );
+  const inventoryMap = useMemo(
+    () => new Map(inventory.map((i) => [i.productId, i.currentStock])),
+    [inventory]
+  );
+
   const totalProducts = products.length;
   const totalStock = inventory.reduce((sum, i) => sum + i.currentStock, 0);
   const lowStock = products.filter((p) => getStockStatus(p.id) === 'Low Stock').length;
   const outOfStock = products.filter((p) => getStockStatus(p.id) === 'Out of Stock').length;
   const healthy = totalProducts - lowStock - outOfStock;
-  const inventoryValue = products.reduce((sum, p) => {
-    const stock = inventory.find((i) => i.productId === p.id)?.currentStock ?? 0;
-    return sum + stock * p.price;
-  }, 0);
+
+  const inventoryValue = useMemo(() => {
+    return products.reduce((sum, p) => {
+      const stock = inventoryMap.get(p.id) ?? 0;
+      return sum + stock * p.price;
+    }, 0);
+  }, [products, inventoryMap]);
 
   const recentTxns = [...transactions]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
@@ -138,15 +162,15 @@ export default function Dashboard() {
     .slice(0, 5);
 
   function getCategoryName(id: string) {
-    return categories.find((c) => c.id === id)?.name ?? '—';
+    return categoryMap.get(id) ?? '—';
   }
 
   function getProductName(id: string) {
-    return products.find((p) => p.id === id)?.name ?? 'Unknown';
+    return productMap.get(id)?.name ?? 'Unknown';
   }
 
   function getProductSku(id: string) {
-    return products.find((p) => p.id === id)?.sku ?? '—';
+    return productMap.get(id)?.sku ?? '—';
   }
 
   const txnBadge: Record<string, React.ReactNode> = {
@@ -340,50 +364,61 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100/80">
-                {recentTxns.map((t) => (
-                  <tr
-                    key={t.id}
-                    onClick={() => navigate('transaction-detail', t.id)}
-                    className="hover:bg-blue-50/40 transition-colors cursor-pointer group"
-                  >
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate('product-detail', t.productId);
-                        }}
-                        className="font-bold text-slate-900 hover:text-blue-600 text-left transition-colors cursor-pointer"
-                      >
-                        {getProductName(t.productId)}
-                      </button>
-                      <p className="text-[10px] text-slate-400 font-mono">{getProductSku(t.productId)}</p>
-                    </td>
-                    <td className="px-4 py-3">{txnBadge[t.type]}</td>
-                    <td className="px-4 py-3 text-right">
-                      <span
-                        className={`inline-flex items-center justify-end gap-1 font-bold ${
-                          t.type === 'Stock In'
-                            ? 'text-emerald-600'
-                            : t.type === 'Stock Out'
-                            ? 'text-rose-600'
-                            : 'text-amber-600'
-                        }`}
-                      >
-                        {t.type === 'Stock In' ? (
-                          <ArrowUpRight size={13} />
-                        ) : t.type === 'Stock Out' ? (
-                          <ArrowDownRight size={13} />
-                        ) : null}
-                        {t.quantity}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 font-medium">{t.performedBy.split(' ')[0]}</td>
-                    <td className="px-4 py-3 text-slate-400 font-mono text-[11px] group-hover:text-slate-700 transition-colors">
-                      {t.createdAt}
+                {recentTxns.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <p className="font-semibold text-slate-600">No inventory transactions logged</p>
+                        <p className="text-[11px] text-slate-400">Perform a Stock In or Stock Out operation to begin tracking movements.</p>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  recentTxns.map((t) => (
+                    <tr
+                      key={t.id}
+                      onClick={() => navigate('transaction-detail', t.id)}
+                      className="hover:bg-blue-50/40 transition-colors cursor-pointer group"
+                    >
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate('product-detail', t.productId);
+                          }}
+                          className="font-bold text-slate-900 hover:text-blue-600 text-left transition-colors cursor-pointer"
+                        >
+                          {getProductName(t.productId)}
+                        </button>
+                        <p className="text-[10px] text-slate-400 font-mono">{getProductSku(t.productId)}</p>
+                      </td>
+                      <td className="px-4 py-3">{txnBadge[t.type]}</td>
+                      <td className="px-4 py-3 text-right">
+                        <span
+                          className={`inline-flex items-center justify-end gap-1 font-bold ${
+                            t.type === 'Stock In'
+                              ? 'text-emerald-600'
+                              : t.type === 'Stock Out'
+                              ? 'text-rose-600'
+                              : 'text-amber-600'
+                          }`}
+                        >
+                          {t.type === 'Stock In' ? (
+                            <ArrowUpRight size={13} />
+                          ) : t.type === 'Stock Out' ? (
+                            <ArrowDownRight size={13} />
+                          ) : null}
+                          {t.quantity}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-600 font-medium">{t.performedBy.split(' ')[0]}</td>
+                      <td className="px-4 py-3 text-slate-400 font-mono text-[11px] group-hover:text-slate-700 transition-colors">
+                        {t.createdAt}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

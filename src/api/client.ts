@@ -274,13 +274,6 @@ export const api = {
       request<{ message: string }>('/system/wipe', {
         method: 'POST',
       }),
-    seed: () =>
-      request<{ message: string }>('/system/seed', {
-        method: 'POST',
-      }),
-    reset: () =>
-      request<{ message: string }>('/system/reset', {
-        method: 'POST',
-      }),
   },
 };
+

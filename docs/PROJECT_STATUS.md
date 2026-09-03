@@ -15,7 +15,7 @@
 | **Backend & REST APIs** | 🟢 **Complete (100%)** | Express 5 REST API with 8 modular controllers, Zod validation, rate limiting, and standard responses. |
 | **Database & Persistence** | 🟢 **Complete (100%)** | Prisma ORM with SQLite, 7 relational models, unique indexes, cascading rules, and soft deletion. |
 | **Security & Auth** | 🟢 **Complete (100%)** | Bcrypt hashing, 256-bit crypto session cookies (`HttpOnly`), server-enforced RBAC, instant revocation. |
-| **Automated Testing** | 🟢 **Complete (100%)** | 10 Vitest test files, **39 automated tests passing**, $\ge 86\%$ code coverage, concurrency race testing. |
+| **Automated Testing** | 🟢 **Complete (100%)** | 14 Vitest test files, **54 automated tests passing**, $\ge 86\%$ code coverage, backend integration + React component testing, concurrency race testing. |
 | **CI/CD & DevOps** | 🟢 **Complete (100%)** | GitHub Actions CI workflow (lint, typecheck, test with coverage, build) and multi-stage `Dockerfile`. |
 
 ---
@@ -30,6 +30,8 @@
 * [x] Sidebar navigation with active state highlights and Admin-only section gating.
 * [x] Floating toast notification manager with auto-dismiss timer.
 * [x] 15 screen layouts with responsive tables, cards, and modal dialogs.
+* [x] Modular domain contexts (`src/contexts/`): AuthContext, InventoryContext, UIContext, and backward-compatible unified adapter.
+* [x] Zero-data empty states and onboarding guidance across Dashboard, Catalog, Stock In, Stock Out, and Reports.
 
 ### 2.2 Completed Items (Backend & Business Logic)
 * [x] **Authentication:** Bcrypt password hashing, 256-bit crypto session tokens in `HttpOnly; SameSite=Lax` cookies, sliding-window rate limiting.
@@ -39,11 +41,14 @@
 * [x] **Transaction Ledger:** Immutable, append-only cryptographic audit records with previous balance, delta, operator ID, and timestamp.
 * [x] **Reports & Analytics:** SQL-level financial valuation, stock turn velocity, and low-stock replenishment queue.
 * [x] **User Management & RBAC:** Admin provisioning, user removal with transaction reassignment, self-deletion prevention, and immediate session termination.
-* [x] **Settings & Data Tools:** Real password updates, store data wipe (preserving active sessions), and demo fixture seeding.
+* [x] **Settings & Data Tools:** Real password updates, store data wipe (preserving active sessions), and clean-slate production reset.
 
 ### 2.3 Completed Items (DevOps & Testing)
-* [x] 10 Vitest test suites (**39 automated tests passing**).
+* [x] 14 Vitest test suites (**54 automated tests passing**).
+* [x] Backend integration tests for Auth, RBAC, Inventory, Products, Categories, Suppliers, Reports, and Users.
+* [x] Frontend component tests verifying UI primitives, Sidebar RBAC gating, Toast notifications, and formatters.
 * [x] High-concurrency race condition testing (10 concurrent requests verifying zero negative stock).
+* [x] Test database isolation (`prisma/test.db`) with automatic on-the-fly provisioning.
 * [x] GitHub Actions CI pipeline (`.github/workflows/ci.yml`).
 * [x] Multi-stage production `Dockerfile`.
 * [x] Comprehensive documentation in `docs/` and root `BUILD_LOG.md`, `README.md`, and `AI_USAGE.md`.

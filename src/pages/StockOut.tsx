@@ -46,20 +46,15 @@ export default function StockOut() {
       return;
     }
     setSubmitting(true);
-    const ok = await stockOut(productId, qtyNum, reference.trim(), notes.trim());
-    setSubmitting(false);
-    if (ok) {
-      setSuccess(true);
-      setTimeout(() => {
-        setProductId('');
-        setQuantity('');
-        setReference('');
-        setNotes('');
-        setSuccess(false);
+    try {
+      const ok = await stockOut(productId, qtyNum, reference.trim(), notes.trim());
+      if (ok) {
         navigate('inventory');
-      }, 1200);
-    } else {
-      setErrors({ quantity: `Insufficient stock. Only ${currentStock} units available.` });
+      } else {
+        setErrors({ quantity: `Insufficient stock. Only ${currentStock} units available.` });
+      }
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -78,6 +73,24 @@ export default function StockOut() {
           <p className="text-xs text-slate-500 font-medium">Fulfill customer orders or log internal supply dispatches.</p>
         </div>
       </div>
+
+      {products.length === 0 && (
+        <div className="p-4 rounded-xl border border-blue-200/80 bg-blue-50/70 text-blue-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-slide">
+          <div>
+            <p className="font-bold">No Products Available in Catalog</p>
+            <p className="text-[11px] text-blue-700 mt-0.5">
+              Before fulfilling stock orders, products must be registered and stocked into inventory.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('product-add')}
+            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-xs shrink-0 cursor-pointer"
+          >
+            Add Product
+          </button>
+        </div>
+      )}
 
       {success && (
         <div className="flex items-center gap-2.5 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-bold animate-fade-slide">

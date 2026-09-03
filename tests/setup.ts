@@ -4,7 +4,22 @@ import app from '../server/app';
 import prisma from '../server/db';
 import { seedDatabase } from '../server/seed';
 
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+
 beforeAll(async () => {
+  const testDbPath = path.resolve(process.cwd(), 'prisma/test.db');
+  if (!fs.existsSync(testDbPath) || fs.statSync(testDbPath).size < 1000) {
+    try {
+      execSync('npx prisma db push --skip-generate --accept-data-loss', {
+        env: { ...process.env, DATABASE_URL: 'file:./test.db' },
+        stdio: 'ignore',
+      });
+    } catch {
+      // ignore if already created
+    }
+  }
   await seedDatabase();
 });
 

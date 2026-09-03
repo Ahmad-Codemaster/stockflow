@@ -48,19 +48,12 @@ export default function StockIn() {
       return;
     }
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 400));
-    await stockIn(productId, qtyNum, supplierId || null, reference.trim(), notes.trim());
-    setSubmitting(false);
-    setSuccess(true);
-    setTimeout(() => {
-      setProductId('');
-      setQuantity('');
-      setSupplierId('');
-      setReference('');
-      setNotes('');
-      setSuccess(false);
+    try {
+      await stockIn(productId, qtyNum, supplierId || null, reference.trim(), notes.trim());
       navigate('inventory');
-    }, 1200);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -78,6 +71,24 @@ export default function StockIn() {
           <p className="text-xs text-slate-500 font-medium">Record physical inbound freight and purchase orders.</p>
         </div>
       </div>
+
+      {products.length === 0 && (
+        <div className="p-4 rounded-xl border border-blue-200/80 bg-blue-50/70 text-blue-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-slide">
+          <div>
+            <p className="font-bold">No Products Available in Catalog</p>
+            <p className="text-[11px] text-blue-700 mt-0.5">
+              Before receiving inbound inventory, at least one product must be registered in the catalog.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('product-add')}
+            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-xs shrink-0 cursor-pointer"
+          >
+            Add Product
+          </button>
+        </div>
+      )}
 
       {success && (
         <div className="flex items-center gap-2.5 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-bold animate-fade-slide">

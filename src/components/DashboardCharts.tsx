@@ -82,19 +82,6 @@ export function StockMovementActivityChart({
     }
   }
 
-  // Fallback demo distribution if transactions are on different simulated dates
-  const totalIn = days.reduce((s, d) => s + d.stockIn, 0);
-  const totalOut = days.reduce((s, d) => s + d.stockOut, 0);
-
-  // If no transactions happened in the last 7 calendar days, distribute latest transactions across the 7 slots
-  if (totalIn === 0 && totalOut === 0 && transactions.length > 0) {
-    transactions.slice(0, 14).forEach((t, idx) => {
-      const slot = days[idx % 7];
-      if (t.type === 'Stock In') slot.stockIn += t.quantity;
-      if (t.type === 'Stock Out') slot.stockOut += t.quantity;
-    });
-  }
-
   const maxVal = Math.max(...days.map((d) => Math.max(d.stockIn, d.stockOut)), 10);
   const chartHeight = 120;
 
@@ -117,8 +104,8 @@ export function StockMovementActivityChart({
       {/* Modern Dual Column Bar Chart */}
       <div className="h-[140px] flex items-end justify-between gap-2 pt-4 px-1 pb-1 relative border-b border-slate-100">
         {days.map((d, idx) => {
-          const inHeight = Math.max((d.stockIn / maxVal) * chartHeight, 4);
-          const outHeight = Math.max((d.stockOut / maxVal) * chartHeight, 4);
+          const inHeight = d.stockIn > 0 ? Math.max((d.stockIn / maxVal) * chartHeight, 6) : 0;
+          const outHeight = d.stockOut > 0 ? Math.max((d.stockOut / maxVal) * chartHeight, 6) : 0;
           const isHovered = hoveredIdx === idx;
 
           return (
@@ -235,6 +222,15 @@ export function CategoryValuationDonutChart({
   });
 
   const highlighted = activeCategory ? slices.find((s) => s.id === activeCategory) : null;
+
+  if (categories.length === 0 || products.length === 0) {
+    return (
+      <div className="h-44 flex flex-col items-center justify-center text-center p-4 border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+        <p className="text-xs font-semibold text-slate-700">No inventory valuation available</p>
+        <p className="text-[11px] text-slate-400 mt-0.5">Add categories and catalog products to track asset distribution.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

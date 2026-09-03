@@ -1,11 +1,11 @@
-import { Database, KeyRound, Lock, Palette, RotateCcw, ShieldAlert, Sparkles, Trash2, User } from 'lucide-react';
+import { Database, KeyRound, Lock, Palette, ShieldAlert, Trash2, User } from 'lucide-react';
 import React, { useState } from 'react';
 import { api } from '../api/client';
 import { Badge, Confirm, FormField, PageHeader } from '../components/ui';
 import { useApp } from '../context';
 
 export default function Settings() {
-  const { currentUser, showToast, wipeStoreData, seedDemoData } = useApp();
+  const { currentUser, showToast, wipeStoreData } = useApp();
   const [profileName, setProfileName] = useState(currentUser?.name ?? '');
   const [saving, setSaving] = useState(false);
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
@@ -13,16 +13,16 @@ export default function Settings() {
   const [notifEmail, setNotifEmail] = useState(true);
   const [notifLowStock, setNotifLowStock] = useState(true);
   const [confirmWipe, setConfirmWipe] = useState(false);
-  const [confirmSeed, setConfirmSeed] = useState(false);
   const [wiping, setWiping] = useState(false);
-  const [seeding, setSeeding] = useState(false);
 
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 400));
-    setSaving(false);
-    showToast('success', 'Profile updated successfully.');
+    try {
+      showToast('success', 'Profile updated successfully.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function savePassword(e: React.FormEvent) {
@@ -54,12 +54,6 @@ export default function Settings() {
     setWiping(false);
   }
 
-  async function handleSeedData() {
-    setConfirmSeed(false);
-    setSeeding(true);
-    await seedDemoData();
-    setSeeding(false);
-  }
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -244,13 +238,12 @@ export default function Settings() {
                   Store Data & Inventory Management
                 </h2>
                 <p className="text-[11px] text-slate-500">
-                  Wipe store data for clean production use, or load sample demo fixtures
+                  Reset catalog, stock units, and transaction records to a clean slate
                 </p>
               </div>
             </div>
 
             <div className="space-y-4 pt-2">
-              {/* Option 1: Clean Slate Wipe */}
               <div className="p-4 rounded-xl border border-rose-200/80 bg-rose-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <p className="font-bold text-xs text-rose-900 flex items-center gap-1.5">
@@ -258,39 +251,17 @@ export default function Settings() {
                     <span>Wipe All Store Data (Clean Slate)</span>
                   </p>
                   <p className="text-[11px] text-rose-700 mt-0.5 max-w-md leading-relaxed">
-                    Permanently deletes all products, categories, suppliers, stock counts, and transactions. Leaves a 100% empty store for you to input your own inventory. Your login session stays active.
+                    Permanently deletes all products, categories, suppliers, stock counts, and transactions. Leaves a 100% empty store for you to input your own fresh inventory. Your login session and user account stay active.
                   </p>
                 </div>
                 <button
                   type="button"
-                  disabled={wiping || seeding}
+                  disabled={wiping}
                   onClick={() => setConfirmWipe(true)}
                   className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all disabled:opacity-60 cursor-pointer shrink-0 inline-flex items-center gap-1.5"
                 >
                   <Trash2 size={13} className={wiping ? 'animate-spin' : ''} />
                   <span>{wiping ? 'Wiping Store...' : 'Wipe to Blank Store'}</span>
-                </button>
-              </div>
-
-              {/* Option 2: Seed Demo Fixtures */}
-              <div className="p-4 rounded-xl border border-blue-200/80 bg-blue-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <p className="font-bold text-xs text-blue-900 flex items-center gap-1.5">
-                    <Sparkles size={13} className="text-blue-600" />
-                    <span>Load Sample Demo Data</span>
-                  </p>
-                  <p className="text-[11px] text-blue-700 mt-0.5 max-w-md leading-relaxed">
-                    Populates standard sample products (peripherals, cables, headsets) and realistic transaction history for testing and demonstrations.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  disabled={wiping || seeding}
-                  onClick={() => setConfirmSeed(true)}
-                  className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all disabled:opacity-60 cursor-pointer shrink-0 inline-flex items-center gap-1.5"
-                >
-                  <RotateCcw size={13} className={seeding ? 'animate-spin' : ''} />
-                  <span>{seeding ? 'Loading Demo Data...' : 'Load Demo Fixtures'}</span>
                 </button>
               </div>
             </div>
@@ -306,17 +277,6 @@ export default function Settings() {
           variant="danger"
           onConfirm={handleWipeData}
           onCancel={() => setConfirmWipe(false)}
-        />
-      )}
-
-      {confirmSeed && (
-        <Confirm
-          title="Load Sample Demo Fixtures?"
-          message="This will replace current catalog items with standard demonstration products, categories, suppliers, and stock transactions. Your user account and login session will remain active."
-          confirmLabel="Load Demo Fixtures"
-          variant="warning"
-          onConfirm={handleSeedData}
-          onCancel={() => setConfirmSeed(false)}
         />
       )}
     </div>

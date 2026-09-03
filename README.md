@@ -14,7 +14,7 @@ StockFlow is an enterprise inventory and operations management system designed f
 - **Interactive Visual Analytics:** Real-time KPI sparklines, 7-day stock velocity dual-column bar chart, and category valuation donut chart.
 - **Case-Insensitive Uniqueness:** Enforced SKU uppercase normalization, email lowercase normalization, and unique database constraints.
 - **SQL Aggregated Reporting:** High-performance database aggregation for dashboard KPIs, stock valuations, movement summaries, and low-stock replenishment alerts.
-- **Automated Test Suite:** **39 unit, integration, and concurrency race-condition tests** across 10 test suites ($\ge 86\%$ code coverage).
+- **Automated Test Suite:** **54 unit, integration, frontend component, and concurrency race-condition tests** across 14 test suites ($\ge 86\%$ code coverage).
 - **Continuous Integration (CI):** Fully automated GitHub Actions workflow validating linting, TypeScript typechecking, automated test execution, and production bundling.
 
 ---
@@ -47,14 +47,11 @@ SESSION_SECRET="stockflow-secure-random-session-secret-key-32-chars-min"
 CORS_ORIGIN="http://localhost:5173"
 ```
 
-### 3. Database Initialization & Seeding
+### 3. Database Initialization
 ```bash
-# Generate Prisma Client and initialize SQLite database
+# Generate Prisma Client and initialize SQLite schema
 npx prisma generate
 npx prisma db push
-
-# Seed initial admin user, catalog, and transactions
-npx tsx server/seed.ts
 ```
 
 ### 4. Running the Application Locally
@@ -71,29 +68,38 @@ Visit the application at `http://localhost:5173`.
 
 ---
 
-## 🔑 Default Demonstration Credentials
+## 🔑 Initial Administrator Account & Clean-Slate Setup
+
+StockFlow is delivered in a **pristine clean-slate state** with zero demo catalog items, suppliers, or transactions. All business data is added fresh through the UI.
+
+The system is pre-configured with a root Administrator account:
 
 | Account | Email | Password | Role | Permissions |
 | :--- | :--- | :--- | :---: | :--- |
-| **Admin** | `ahmad@stockflow.com` | `Admin@123` | `ADMIN` | Full CRUD, user provisioning/removal, audit trail, wipe/seed tools |
-| **Staff** | `ali@stockflow.com` | `Staff@123` | `STAFF` | Inventory, stock-in, stock-out, reporting |
-| **Staff** | `sara@stockflow.com` | `Staff@123` | `STAFF` | Inventory, stock-in, stock-out, reporting |
-| **Inactive** | `omar@stockflow.com` | `Staff@123` | `STAFF` | Deactivated (Login blocked with HTTP 403) |
+| **System Admin** | `ahmad@stockflow.com` | `Admin@123` | `ADMIN` | Full CRUD, user provisioning & role management, audit ledger, and store wipe utility |
+
+> **Fresh Onboarding Flow:**
+> 1. Log in with the Administrator account above.
+> 2. Create your business categories under **Categories**.
+> 3. Register your vendor partners under **Suppliers**.
+> 4. Add your product SKUs under **Products**.
+> 5. Provision staff user accounts under **User Management** (`ADMIN` or `STAFF` roles).
 
 ---
 
 ## 🧪 Testing & Quality Assurance
 
-Run the automated test suite and typechecks:
+StockFlow features automated test coverage spanning backend REST APIs, atomic transaction invariants, high-concurrency race conditions, and React frontend components:
+
 ```bash
-# Run all 39 Vitest automated test suites
+# Run all 54 Vitest automated tests across 14 suites
 npm run test
 
 # Run with test coverage analysis
 npx vitest run --coverage
 
 # Typecheck entire TypeScript codebase (zero errors)
-npx tsc --noEmit
+npm run typecheck
 
 # Build production bundle
 npm run build

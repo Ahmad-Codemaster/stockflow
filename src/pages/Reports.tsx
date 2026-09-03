@@ -5,6 +5,13 @@ import { useApp } from '../context';
 type ReportTab = 'summary' | 'movement' | 'lowstock' | 'value';
 
 function SimpleBarChart({ data }: { data: { label: string; inQty: number; outQty: number }[] }) {
+  if (data.length === 0) {
+    return (
+      <div className="py-8 text-center text-slate-400 text-xs font-medium border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+        No catalog products or movement activity to chart.
+      </div>
+    );
+  }
   const maxVal = Math.max(...data.flatMap((d) => [d.inQty, d.outQty]), 1);
   return (
     <div className="space-y-3.5">

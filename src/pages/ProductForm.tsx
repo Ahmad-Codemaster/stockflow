@@ -77,30 +77,32 @@ export default function ProductForm({ mode }: Props) {
       return;
     }
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 400));
-    setSaving(false);
-    if (mode === 'add') {
-      await addProduct({
-        name: form.name.trim(),
-        sku: form.sku.trim().toUpperCase(),
-        categoryId: form.categoryId,
-        supplierId: form.supplierId || null,
-        price: Number(form.price),
-        initialStock: Number(form.initialStock),
-        reorderLevel: Number(form.reorderLevel),
-        description: form.description.trim(),
-      });
-      navigate('products');
-    } else if (editing) {
-      await updateProduct(editing.id, {
-        name: form.name.trim(),
-        categoryId: form.categoryId,
-        supplierId: form.supplierId || null,
-        price: Number(form.price),
-        reorderLevel: Number(form.reorderLevel),
-        description: form.description.trim(),
-      });
-      navigate('product-detail', editing.id);
+    try {
+      if (mode === 'add') {
+        await addProduct({
+          name: form.name.trim(),
+          sku: form.sku.trim().toUpperCase(),
+          categoryId: form.categoryId,
+          supplierId: form.supplierId || null,
+          price: Number(form.price),
+          initialStock: Number(form.initialStock),
+          reorderLevel: Number(form.reorderLevel),
+          description: form.description.trim(),
+        });
+        navigate('products');
+      } else if (editing) {
+        await updateProduct(editing.id, {
+          name: form.name.trim(),
+          categoryId: form.categoryId,
+          supplierId: form.supplierId || null,
+          price: Number(form.price),
+          reorderLevel: Number(form.reorderLevel),
+          description: form.description.trim(),
+        });
+        navigate('product-detail', editing.id);
+      }
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -123,6 +125,24 @@ export default function ProductForm({ mode }: Props) {
           </p>
         </div>
       </div>
+
+      {categories.length === 0 && (
+        <div className="p-4 rounded-xl border border-amber-200/80 bg-amber-50/70 text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-slide">
+          <div>
+            <p className="font-bold">No Categories Defined</p>
+            <p className="text-[11px] text-amber-700 mt-0.5">
+              Each product must belong to a category. Please create a category before adding items to the catalog.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('categories')}
+            className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold text-xs shrink-0 cursor-pointer"
+          >
+            Create Category
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} noValidate>
         <div className="glass-card rounded-2xl p-6 space-y-4">
