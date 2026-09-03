@@ -9,9 +9,6 @@ export default defineConfig({
       ['tests/**', 'node'],
     ],
     setupFiles: ['./src/test/setup.ts'],
-    env: {
-      DATABASE_URL: 'file:./test.db',
-    },
     testTimeout: 20000,
     hookTimeout: 20000,
     fileParallelism: false,
