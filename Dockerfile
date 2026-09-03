@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9
 
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --no-frozen-lockfile
@@ -22,7 +22,7 @@ ENV PORT=3001
 ENV DATABASE_URL="file:./dev.db"
 ENV JWT_SECRET="stockflow_production_jwt_secret_key_2026"
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9
 
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --no-frozen-lockfile
