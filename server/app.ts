@@ -2,6 +2,9 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/logger';
 import authRoutes from './routes/authRoutes';
@@ -13,11 +16,14 @@ import supplierRoutes from './routes/supplierRoutes';
 import systemRoutes from './routes/systemRoutes';
 import userRoutes from './routes/userRoutes';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export function createApp() {
   const app = express();
 
   // Security & standard middleware
-  app.use(helmet());
+  app.use(helmet({ contentSecurityPolicy: false }));
   app.use(
     cors({
       origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
@@ -47,7 +53,19 @@ export function createApp() {
   app.use('/api/reports', reportRoutes);
   app.use('/api/system', systemRoutes);
 
-  // 404 Handler for undefined routes
+  // In production / standalone, serve client static assets from dist/
+  const distPath = path.resolve(__dirname, '../dist');
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api')) {
+        return next();
+      }
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
+
+  // 404 Handler for undefined API routes
   app.use((req, res) => {
     res.status(404).json({
       success: false,

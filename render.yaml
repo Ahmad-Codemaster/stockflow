@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: stockflow
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx prisma db push --skip-generate && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:./dev.db
+      - key: JWT_SECRET
+        generateValue: true
