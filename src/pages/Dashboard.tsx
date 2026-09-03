@@ -4,20 +4,23 @@ import {
   ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
+  BookOpen,
   Boxes,
   Eye,
   Package,
   PieChart,
   Sparkles,
   TrendingDown,
+  X,
 } from 'lucide-react';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   CategoryValuationDonutChart,
   KPISparkline,
   StockMovementActivityChart,
 } from '../components/DashboardCharts';
 import { Badge, KPICard, PageHeader } from '../components/ui';
+import UserManualModal from '../components/UserManualModal';
 import { useApp } from '../context';
 
 function InventoryStatusChart({
@@ -126,6 +129,8 @@ function InventoryStatusChart({
 
 export default function Dashboard() {
   const { products, inventory, transactions, categories, navigate, getStockStatus } = useApp();
+  const [showManual, setShowManual] = useState(false);
+  const [showGuideBanner, setShowGuideBanner] = useState(true);
 
   const categoryMap = useMemo(
     () => new Map(categories.map((c) => [c.id, c.name])),
@@ -189,6 +194,14 @@ export default function Dashboard() {
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={() => setShowManual(true)}
+              className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+            >
+              <BookOpen size={14} className="text-blue-600" />
+              <span>User Manual</span>
+            </button>
+            <button
+              type="button"
               onClick={() => navigate('stock-in')}
               className="px-3.5 py-2 gradient-btn-success text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
@@ -206,6 +219,46 @@ export default function Dashboard() {
           </div>
         }
       />
+
+      {/* Operational Quick-Start Banner */}
+      {showGuideBanner && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-slate-900 text-white shadow-md shadow-blue-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative overflow-hidden animate-fade-slide">
+          <div className="flex items-center gap-3 z-10">
+            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-xs border border-white/20 flex items-center justify-center shrink-0">
+              <Sparkles size={18} className="text-blue-200" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-xs sm:text-sm tracking-tight">StockFlow Operational Guide & System Manual</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white">
+                  Quick Guide
+                </span>
+              </div>
+              <p className="text-[11px] text-blue-100 mt-0.5">
+                New to StockFlow? Learn the logical order of operations: categories, suppliers, products & SKUs, and stock movements.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 z-10 self-end sm:self-auto shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowManual(true)}
+              className="px-3.5 py-1.5 bg-white text-slate-900 hover:bg-blue-50 text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-xs"
+            >
+              Open Manual
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowGuideBanner(false)}
+              className="p-1.5 text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+              aria-label="Dismiss banner"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* KPI Metrics Grid with Visual Sparklines */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
@@ -499,6 +552,8 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      <UserManualModal isOpen={showManual} onClose={() => setShowManual(false)} />
     </div>
   );
 }

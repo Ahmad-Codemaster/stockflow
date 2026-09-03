@@ -11,9 +11,10 @@ import {
   Users,
   Warehouse,
 } from 'lucide-react';
-import type React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context';
 import type { Page } from '../types';
+import { Confirm } from './ui';
 
 const navItems: { icon: React.ElementType; label: string; page: Page }[] = [
   { icon: LayoutDashboard, label: 'Dashboard', page: 'dashboard' },
@@ -37,6 +38,7 @@ function isActive(page: Page, current: Page): boolean {
 
 export default function Sidebar() {
   const { currentUser, currentPage, navigate, logout } = useApp();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   return (
     <aside className="w-64 shrink-0 glass-sidebar flex flex-col h-full z-20 select-none">
@@ -127,13 +129,27 @@ export default function Sidebar() {
         </button>
 
         <button
-          onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all duration-200"
+          onClick={() => setShowLogoutConfirm(true)}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all duration-200 cursor-pointer"
         >
           <LogOut size={15} />
           <span>Sign Out</span>
         </button>
       </div>
+
+      {showLogoutConfirm && (
+        <Confirm
+          title="Sign Out of StockFlow"
+          message="Are you sure you want to sign out? Your active session will be securely ended, and you will need to re-enter your credentials to sign in."
+          confirmLabel="Sign Out"
+          variant="danger"
+          onConfirm={() => {
+            setShowLogoutConfirm(false);
+            logout();
+          }}
+          onCancel={() => setShowLogoutConfirm(false)}
+        />
+      )}
     </aside>
   );
 }
