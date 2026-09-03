@@ -9,15 +9,27 @@ import fs from 'fs';
 import path from 'path';
 
 beforeAll(async () => {
-  const testDbPath = path.resolve(process.cwd(), 'prisma/test.db');
-  if (!fs.existsSync(testDbPath) || fs.statSync(testDbPath).size < 1000) {
+  const dbUrl = process.env.DATABASE_URL;
+  if (dbUrl && dbUrl.startsWith('postgres')) {
     try {
       execSync('npx prisma db push --skip-generate --accept-data-loss', {
-        env: { ...process.env, DATABASE_URL: 'file:./test.db' },
+        env: { ...process.env, DATABASE_URL: dbUrl },
         stdio: 'ignore',
       });
     } catch {
-      // ignore if already created
+      // ignore
+    }
+  } else {
+    const testDbPath = path.resolve(process.cwd(), 'prisma/test.db');
+    if (!fs.existsSync(testDbPath) || fs.statSync(testDbPath).size < 1000) {
+      try {
+        execSync('npx prisma db push --skip-generate --accept-data-loss', {
+          env: { ...process.env, DATABASE_URL: 'file:./test.db' },
+          stdio: 'ignore',
+        });
+      } catch {
+        // ignore if already created
+      }
     }
   }
   await seedDatabase();
