@@ -42,6 +42,15 @@ export async function seedDatabase(preserveSessions = false) {
     // 2. Seed or Upsert Users
     const users = [
       {
+        id: 'u0',
+        name: 'Admin',
+        email: 'admin@stockflow.com',
+        passwordHash: ADMIN_HASH,
+        role: 'ADMIN',
+        status: 'Active',
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+      },
+      {
         id: 'u1',
         name: 'Ahmad Khan',
         email: 'ahmad@stockflow.com',
@@ -76,6 +85,15 @@ export async function seedDatabase(preserveSessions = false) {
         role: 'STAFF',
         status: 'Inactive',
         createdAt: new Date('2024-04-05T00:00:00.000Z'),
+      },
+      {
+        id: 'u5',
+        name: 'Staff Operations',
+        email: 'staff@stockflow.com',
+        passwordHash: STAFF_HASH,
+        role: 'STAFF',
+        status: 'Active',
+        createdAt: new Date('2024-02-15T00:00:00.000Z'),
       },
     ];
 
@@ -408,12 +426,48 @@ if (import.meta.url.endsWith(process.argv[1]?.replace(/\\/g, '/') || '')) {
     try {
       const force = process.argv.includes('--force');
       const userCount = await prisma.user.count();
-      if (userCount > 0 && !force) {
-        console.log('ℹ️ Database already populated. Skipping seed to preserve existing records.');
-        process.exit(0);
+      if (userCount === 0 || force) {
+        await seedDatabase(false);
+        console.log('🎉 Database seed completed successfully!');
+      } else {
+        console.log('ℹ️ Database populated. Ensuring master accounts exist...');
+        await prisma.user.upsert({
+          where: { email: 'admin@stockflow.com' },
+          update: {},
+          create: {
+            id: 'u0',
+            name: 'Administrator',
+            email: 'admin@stockflow.com',
+            passwordHash: ADMIN_HASH,
+            role: 'ADMIN',
+            status: 'Active',
+          },
+        });
+        await prisma.user.upsert({
+          where: { email: 'ahmad@stockflow.com' },
+          update: {},
+          create: {
+            id: 'u1',
+            name: 'Ahmad Khan',
+            email: 'ahmad@stockflow.com',
+            passwordHash: ADMIN_HASH,
+            role: 'ADMIN',
+            status: 'Active',
+          },
+        });
+        await prisma.user.upsert({
+          where: { email: 'staff@stockflow.com' },
+          update: {},
+          create: {
+            id: 'u5',
+            name: 'Staff Operations',
+            email: 'staff@stockflow.com',
+            passwordHash: STAFF_HASH,
+            role: 'STAFF',
+            status: 'Active',
+          },
+        });
       }
-      await seedDatabase(false);
-      console.log('🎉 Database seed completed successfully!');
     } catch (err) {
       console.error('❌ Database seed failed:', err);
       process.exit(1);
