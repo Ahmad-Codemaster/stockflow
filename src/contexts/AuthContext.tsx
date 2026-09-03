@@ -12,6 +12,7 @@ export interface LoginResult {
 export interface AuthContextValue {
   currentUser: User | null;
   users: User[];
+  isAuthLoading: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
   logout: () => Promise<void>;
   addUser: (data: {
@@ -40,6 +41,7 @@ export function AuthProvider({
 }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   const { showToast, navigate } = useUI();
 
   const refreshUsers = useCallback(async () => {
@@ -68,20 +70,35 @@ export function AuthProvider({
 
   // Restore active session on mount
   useEffect(() => {
+    let isMounted = true;
+
     api.auth
       .me()
-      .then(res => {
+      .then(async (res) => {
+        if (!isMounted) return;
         if (res.user) {
           setCurrentUser(res.user);
           if (onLoginSuccess) {
-            onLoginSuccess();
+            await onLoginSuccess();
+          }
+          if (res.user.role === 'ADMIN') {
+            await refreshUsers();
           }
         }
       })
       .catch(() => {
         // No active session
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsAuthLoading(false);
+        }
       });
-  }, [onLoginSuccess]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [onLoginSuccess, refreshUsers]);
 
   const login = useCallback(
     async (email: string, password: string): Promise<LoginResult> => {
@@ -90,6 +107,9 @@ export function AuthProvider({
         setCurrentUser(res.user);
         if (onLoginSuccess) {
           await onLoginSuccess();
+        }
+        if (res.user.role === 'ADMIN') {
+          await refreshUsers();
         }
         navigate('dashboard');
         showToast('success', `Welcome back, ${res.user.name}!`);
@@ -109,7 +129,7 @@ export function AuthProvider({
         };
       }
     },
-    [navigate, onLoginSuccess, showToast]
+    [navigate, onLoginSuccess, refreshUsers, showToast]
   );
 
   const logout = useCallback(async () => {
@@ -119,6 +139,7 @@ export function AuthProvider({
       // Ignore network errors on logout
     } finally {
       setCurrentUser(null);
+      setUsers([]);
       navigate('login');
       showToast('info', 'You have been logged out.');
     }
@@ -181,6 +202,7 @@ export function AuthProvider({
       value={{
         currentUser,
         users,
+        isAuthLoading,
         login,
         logout,
         addUser,

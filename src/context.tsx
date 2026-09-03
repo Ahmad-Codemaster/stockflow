@@ -37,6 +37,7 @@ export interface AppContextValue {
   inventory: InventoryRecord[];
   transactions: Transaction[];
   users: User[];
+  isAuthLoading: boolean;
   toasts: Toast[];
   notifications: Notification[];
   login: (email: string, password: string) => Promise<LoginResult>;
@@ -79,6 +80,7 @@ export interface AppContextValue {
     data: Partial<User> & { password?: string }
   ) => Promise<boolean>;
   deleteUser: (id: string) => Promise<void>;
+  refreshUsers: () => Promise<void>;
   showToast: (type: Toast['type'], message: string) => void;
   dismissToast: (id: string) => void;
   markNotificationRead: (id: string) => void;

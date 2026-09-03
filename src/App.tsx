@@ -1,3 +1,4 @@
+import { Warehouse } from 'lucide-react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ToastContainer from './components/Toast';
@@ -18,8 +19,26 @@ import TransactionDetail from './pages/TransactionDetail';
 import Transactions from './pages/Transactions';
 import Users from './pages/Users';
 
+function SessionLoadingScreen({ message = 'Restoring secure session...' }: { message?: string }) {
+  return (
+    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+      <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center mb-4 animate-pulse">
+        <Warehouse className="text-blue-400" size={24} />
+      </div>
+      <div className="flex items-center gap-2.5 text-slate-400 text-xs font-medium">
+        <div className="w-3.5 h-3.5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+        <span>{message}</span>
+      </div>
+    </div>
+  );
+}
+
 function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const { currentUser } = useApp();
+  const { currentUser, isAuthLoading } = useApp();
+
+  if (isAuthLoading) {
+    return <SessionLoadingScreen />;
+  }
 
   if (!currentUser) {
     return <Navigate to="/login" replace />;
@@ -34,14 +53,16 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
-  const { currentUser } = useApp();
+  const { currentUser, isAuthLoading } = useApp();
 
   return (
     <Routes>
         <Route
           path="/login"
           element={
-            currentUser ? (
+            isAuthLoading ? (
+              <SessionLoadingScreen message="Verifying session..." />
+            ) : currentUser ? (
               <Navigate to="/dashboard" replace />
             ) : (
               <>

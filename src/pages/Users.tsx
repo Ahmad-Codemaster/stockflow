@@ -1,17 +1,29 @@
 import { Eye, EyeOff, Plus, Trash2, UserCheck, UserX } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Modal from '../components/Modal';
 import { Badge, Confirm, EmptyState, FormField, PageHeader } from '../components/ui';
 import { useApp } from '../context';
 import type { Role, UserStatus } from '../types';
 
 export default function Users() {
-  const { users, currentUser, addUser, updateUser, deleteUser } = useApp();
+  const { users, currentUser, addUser, updateUser, deleteUser, refreshUsers } = useApp();
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmDeactivate, setConfirmDeactivate] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
   const [confirmRole, setConfirmRole] = useState<{ id: string; from: Role; to: Role } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setLoadingUsers(true);
+    refreshUsers().finally(() => {
+      if (active) setLoadingUsers(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [refreshUsers]);
 
   // Add user form
   const [addForm, setAddForm] = useState({ name: '', email: '', role: 'STAFF' as Role, password: '' });
@@ -166,7 +178,16 @@ export default function Users() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100/80">
-              {users.length === 0 ? (
+              {loadingUsers && users.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+                      <span>Loading team accounts...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : users.length === 0 ? (
                 <tr>
                   <td colSpan={7}>
                     <EmptyState title="No users found" description="Provision user accounts to begin team collaboration." />

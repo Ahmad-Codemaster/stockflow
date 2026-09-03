@@ -1,5 +1,5 @@
 import { Database, KeyRound, Lock, Palette, ShieldAlert, Trash2, User } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { Badge, Confirm, FormField, PageHeader } from '../components/ui';
 import { useApp } from '../context';
@@ -7,6 +7,12 @@ import { useApp } from '../context';
 export default function Settings() {
   const { currentUser, showToast, wipeStoreData } = useApp();
   const [profileName, setProfileName] = useState(currentUser?.name ?? '');
+
+  useEffect(() => {
+    if (currentUser?.name) {
+      setProfileName(currentUser.name);
+    }
+  }, [currentUser]);
   const [saving, setSaving] = useState(false);
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
   const [pwErrors, setPwErrors] = useState<Record<string, string>>({});
