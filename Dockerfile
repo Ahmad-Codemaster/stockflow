@@ -17,6 +17,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3001
+ENV DATABASE_URL="postgresql://stockflow_db_wenq_user:vr5WCl8r6h3mMcEutE7tahDNzBHhibGZ@dpg-dack6pojo6nc738gnv00-a/stockflow_db_wenq"
+ENV JWT_SECRET="stockflow_production_jwt_secret_key_2026_secure"
 
 COPY package.json ./
 RUN npm install --omit=dev
