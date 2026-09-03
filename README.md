@@ -12,7 +12,7 @@ StockFlow is an enterprise inventory and operations management system designed f
 | :--- | :--- |
 | **GitHub Repository** | [https://github.com/Ahmad-Codemaster/stockflow](https://github.com/Ahmad-Codemaster/stockflow) |
 | **Live Production URL** | Deployed on Render with Docker & Managed PostgreSQL |
-| **Default Administrator** | Email: `ahmad@stockflow.com` \| Password: `Admin@123` |
+| **Default Administrator** | Email: `admin@stockflow.com` \| Password: `Admin@123` |
 | **Engineering Build Log** | [`BUILD_LOG.md`](./BUILD_LOG.md) (Chronological phases & architecture) |
 | **AI Usage Disclosure** | [`AI_USAGE.md`](./AI_USAGE.md) (Toolchain, prompt engineering & methodology) |
 
@@ -89,7 +89,7 @@ The system is pre-configured with a root Administrator account:
 
 | Account | Email | Password | Role | Permissions |
 | :--- | :--- | :--- | :---: | :--- |
-| **System Admin** | `ahmad@stockflow.com` | `Admin@123` | `ADMIN` | Full CRUD, user provisioning & role management, audit ledger, and store wipe utility |
+| **System Admin** | `admin@stockflow.com` | `Admin@123` | `ADMIN` | Full CRUD, user provisioning & role management, audit ledger, and store wipe utility |
 
 > **Fresh Onboarding Flow:**
 > 1. Log in with the Administrator account above.
