@@ -79,7 +79,8 @@ export default function Categories() {
       />
 
       <div className="glass-card rounded-2xl overflow-hidden">
-        <table className="w-full text-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
               <th className="px-5 py-3.5 text-left">Category Name</th>
@@ -149,6 +150,7 @@ export default function Categories() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {showModal && (

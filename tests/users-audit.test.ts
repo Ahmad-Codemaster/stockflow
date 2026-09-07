@@ -1,3 +1,15 @@
+/**
+ * ============================================================================
+ * USER MANAGEMENT & AUDIT LOGGING TEST SUITE
+ * ============================================================================
+ * What this test suite proves:
+ * - Admin can create staff accounts with normalized emails and audit trail entries.
+ * - Deactivating an employee immediately PURGES their active session rows from PostgreSQL,
+ *   causing their next request to fail with HTTP 401.
+ * - Immutable audit log records are written for critical administrative actions.
+ * - An administrator CANNOT delete their own active account (`SELF_DELETION_FORBIDDEN`).
+ */
+
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../server/app';
@@ -10,6 +22,9 @@ describe('User Management & Audit Logging', () => {
     await seedDatabase();
   });
 
+  /**
+   * Test 1: Staff Creation & Audit Trail Recording
+   */
   it('Admin creates a new Staff user with normalized lowercase email', async () => {
     const { cookie } = await loginAsAdmin();
 
@@ -27,7 +42,7 @@ describe('User Management & Audit Logging', () => {
     expect(res.body.data.email).toBe('zayn@stockflow.com');
     expect(res.body.data.role).toBe('STAFF');
 
-    // Verify audit log
+    // Verify audit log row was written
     const audit = await prisma.auditLog.findFirst({
       where: { action: 'USER_CREATE', entityId: res.body.data.id },
     });
@@ -35,6 +50,10 @@ describe('User Management & Audit Logging', () => {
     expect(audit?.userId).toBe('u1');
   });
 
+  /**
+   * Test 2: Instant Session Revocation on Account Deactivation
+   * Proves that deactivating an employee deletes their session token from PostgreSQL immediately.
+   */
   it('deactivating a user immediately purges their active sessions from the database', async () => {
     // 1. Staff logs in to get an active session
     const staffLoginRes = await request(app)

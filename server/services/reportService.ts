@@ -1,7 +1,27 @@
+/**
+ * ============================================================================
+ * REPORT SERVICE — Business Intelligence & Inventory Analytics
+ * ============================================================================
+ * What this module does:
+ * - Aggregates operational KPIs for the executive dashboard.
+ * - Computes total inventory valuation (Σ quantity * price).
+ * - Tracks stock velocity metrics (inflow vs. outflow volume).
+ * - Generates low-stock replenishment reorder reports.
+ */
+
 import prisma from '../db';
 import { computeStockStatus } from './productService';
 
 export class ReportService {
+  /**
+   * GET SUMMARY KPIS: High-level store metrics
+   * 
+   * Calculates:
+   * - Total catalog item count (excluding archived).
+   * - Total stock units on hand.
+   * - Total financial valuation of all inventory.
+   * - Product distribution across statuses (In Stock, Low Stock, Out of Stock).
+   */
   static async getSummary() {
     const products = await prisma.product.findMany({
       where: { isArchived: false },

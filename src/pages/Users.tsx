@@ -1,3 +1,15 @@
+/**
+ * ============================================================================
+ * USER MANAGEMENT VIEW (`src/pages/Users.tsx`) — Admin Only
+ * ============================================================================
+ * What this screen does:
+ * - Admin interface for provisioning and managing team members.
+ * - Displays active/inactive employee statuses and assigned roles (`ADMIN` vs `STAFF`).
+ * - Enforces Last-Admin Protection in the UI (disables deleting/deactivating the sole admin).
+ * - Enforces Self-Deletion prevention (an administrator cannot delete their own account).
+ * - Interfaces with `/api/users/*` backend routes.
+ */
+
 import { Eye, EyeOff, Plus, Trash2, UserCheck, UserX } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import Modal from '../components/Modal';
@@ -14,6 +26,7 @@ export default function Users() {
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
   const [confirmRole, setConfirmRole] = useState<{ id: string; from: Role; to: Role } | null>(null);
 
+  // Refresh user directory from PostgreSQL on mount
   useEffect(() => {
     let active = true;
     setLoadingUsers(true);
@@ -25,12 +38,12 @@ export default function Users() {
     };
   }, [refreshUsers]);
 
-  // Add user form
+  // Add user form state
   const [addForm, setAddForm] = useState({ name: '', email: '', role: 'STAFF' as Role, password: '' });
   const [addErrors, setAddErrors] = useState<Record<string, string>>({});
   const [addSaving, setAddSaving] = useState(false);
 
-  // Edit user form
+  // Edit user form state
   const [showAddPw, setShowAddPw] = useState(false);
   const [showEditPw, setShowEditPw] = useState(false);
   const [editForm, setEditForm] = useState<{ name: string; role: Role; status: UserStatus; password?: string }>({
@@ -48,6 +61,9 @@ export default function Users() {
     setEditForm({ name: u.name, role: u.role, status: u.status });
   }
 
+  /**
+   * Validate new user creation inputs
+   */
   function validateAdd() {
     const errs: Record<string, string> = {};
     if (!addForm.name.trim()) errs.name = 'Full name is required.';

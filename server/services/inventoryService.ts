@@ -1,13 +1,40 @@
+/**
+ * ============================================================================
+ * INVENTORY SERVICE — Core Domain Logic & Concurrency Engine
+ * ============================================================================
+ * What this module does:
+ * - Executes Stock-In (receiving/restocking) and Stock-Out (fulfillment/deduction).
+ * - Enforces the strict domain invariant: inventory can NEVER drop below zero.
+ * - Prevents race conditions using an in-process Promise-chained Mutex (`AsyncLock`).
+ * - Executes all multi-table mutations inside atomic ACID transactions (`prisma.$transaction`).
+ * - Writes immutable audit logs and ledger transactions for every inventory movement.
+ */
+
 import prisma from '../db';
 import { AppError } from '../middleware/errorHandler';
 import { AuditService } from './auditService';
 import { computeStockStatus } from './productService';
 
+/**
+ * AsyncLock: In-Memory Concurrency Mutex
+ * 
+ * Why this exists:
+ * - If two HTTP requests attempt to modify stock for the same product at the exact
+ *   same millisecond, both could read the initial stock before either writes back.
+ * - `AsyncLock` chains operations onto a single FIFO Promise queue, ensuring that
+ *   critical stock-out operations are executed sequentially within this Node process.
+ * 
+ * Trade-off to mention in interviews:
+ * - In a single Node.js instance, this in-memory queue eliminates race conditions.
+ * - If horizontally scaled to multiple container replicas, distributed locking (Redis Redlock)
+ *   or PostgreSQL row-level locks (`SELECT ... FOR UPDATE`) would be required across instances.
+ */
 class AsyncLock {
   private queue: Promise<void> = Promise.resolve();
 
   acquire<T>(fn: () => Promise<T>): Promise<T> {
     const result = this.queue.then(fn);
+    // Keep the queue alive regardless of whether the task succeeded or rejected
     this.queue = result.then(
       () => {},
       () => {}
@@ -16,9 +43,24 @@ class AsyncLock {
   }
 }
 
+// Global instance of the mutex for inventory operations
 const stockLock = new AsyncLock();
 
 export class InventoryService {
+  /**
+   * STOCK-IN WORKFLOW: Restock inventory
+   * 
+   * Steps:
+   * 1. Validate that quantity is a positive integer.
+   * 2. Acquire concurrency lock.
+   * 3. Start ACID database transaction:
+   *    a. Read current product quantity.
+   *    b. Calculate newStock = previousStock + quantity.
+   *    c. Update product quantity in `products` table.
+   *    d. Insert an immutable `stock_transactions` record for audit trail.
+   * 4. Log high-level audit record in `audit_logs` table.
+   * 5. Return updated product details and freshly calculated stock status.
+   */
   static async stockIn(
     params: {
       productId: string;
@@ -30,12 +72,15 @@ export class InventoryService {
     userId: string,
     ipAddress?: string
   ) {
+    // 1. Validate input
     const qty = Number(params.quantity);
     if (!qty || qty <= 0) {
       throw new AppError('Quantity must be a positive integer.', 400, 'VALIDATION_ERROR');
     }
 
+    // 2. Serialize execution through AsyncLock to prevent race conditions
     return stockLock.acquire(async () => {
+      // 3. Begin atomic database transaction (all or nothing)
       const result = await prisma.$transaction(async (tx) => {
         const product = await tx.product.findUnique({
           where: { id: params.productId },
@@ -48,11 +93,13 @@ export class InventoryService {
         const previousStock = product.quantity;
         const newStock = previousStock + qty;
 
+        // Update product stock count
         await tx.product.update({
           where: { id: product.id },
           data: { quantity: newStock },
         });
 
+        // Create immutable ledger record
         const txn = await tx.stockTransaction.create({
           data: {
             productId: product.id,
@@ -70,6 +117,7 @@ export class InventoryService {
         return { product, txn, previousStock, newStock };
       });
 
+      // 4. Record audit log outside transaction so business operation is already committed
       await AuditService.log({
         userId,
         action: 'STOCK_IN',
@@ -86,6 +134,7 @@ export class InventoryService {
         ipAddress,
       });
 
+      // 5. Return response with dynamically computed stock status
       return {
         transactionId: result.txn.id,
         productId: result.product.id,
@@ -97,6 +146,15 @@ export class InventoryService {
     });
   }
 
+  /**
+   * STOCK-OUT WORKFLOW: Deduct inventory for fulfillment
+   * 
+   * Critical Business Rule (Negative Stock Prevention):
+   * - `product.quantity >= quantity`. If requested quantity exceeds available stock,
+   *   an `AppError` with code `INSUFFICIENT_STOCK` is thrown immediately.
+   * - Because this is inside `prisma.$transaction`, throwing an error automatically
+   *   ROLLS BACK the transaction: zero database mutations occur.
+   */
   static async stockOut(
     params: {
       productId: string;
@@ -107,12 +165,15 @@ export class InventoryService {
     userId: string,
     ipAddress?: string
   ) {
+    // 1. Input validation
     const qty = Number(params.quantity);
     if (!qty || qty <= 0) {
       throw new AppError('Quantity must be a positive integer.', 400, 'VALIDATION_ERROR');
     }
 
+    // 2. Serialize through AsyncLock
     return stockLock.acquire(async () => {
+      // 3. Begin atomic database transaction
       const result = await prisma.$transaction(async (tx) => {
         const product = await tx.product.findUnique({
           where: { id: params.productId },
@@ -135,11 +196,13 @@ export class InventoryService {
         const previousStock = product.quantity;
         const newStock = previousStock - qty;
 
+        // Deduct inventory in database
         await tx.product.update({
           where: { id: product.id },
           data: { quantity: newStock },
         });
 
+        // Insert immutable stock transaction ledger row
         const txn = await tx.stockTransaction.create({
           data: {
             productId: product.id,
@@ -157,6 +220,7 @@ export class InventoryService {
         return { product, txn, previousStock, newStock };
       });
 
+      // 4. Record audit log
       await AuditService.log({
         userId,
         action: 'STOCK_OUT',
@@ -173,6 +237,7 @@ export class InventoryService {
         ipAddress,
       });
 
+      // 5. Return updated stock and newly calculated status (e.g., 'Low Stock' or 'Out of Stock')
       return {
         transactionId: result.txn.id,
         productId: result.product.id,
@@ -184,6 +249,16 @@ export class InventoryService {
     });
   }
 
+  /**
+   * LIST INVENTORY: Retrieve live stock catalog with computed statuses
+   * 
+   * Features:
+   * - Ignores archived products (`isArchived: false`).
+   * - Supports category filtering and case-insensitive search by product name or SKU.
+   * - Performs relational JOIN with `categories` and `suppliers` via Prisma `include`.
+   * - Dynamically computes product stock status (`In Stock`, `Low Stock`, `Out of Stock`)
+   *   by comparing `currentStock` against `reorderLevel`.
+   */
   static async listInventory(params?: {
     search?: string;
     categoryId?: string;
@@ -227,6 +302,14 @@ export class InventoryService {
     return mapped;
   }
 
+  /**
+   * LIST TRANSACTIONS: Retrieve immutable stock movement audit ledger
+   * 
+   * Features:
+   * - Returns historical record of all STOCK_IN and STOCK_OUT movements.
+   * - Includes performedBy user information and supplier details.
+   * - Sorted descending by creation time (most recent activity first).
+   */
   static async listTransactions(params?: {
     type?: string;
     productId?: string;
@@ -274,6 +357,9 @@ export class InventoryService {
     }));
   }
 
+  /**
+   * GET TRANSACTION BY ID: Retrieve single transaction receipt
+   */
   static async getTransactionById(id: string) {
     const txn = await prisma.stockTransaction.findUnique({
       where: { id },

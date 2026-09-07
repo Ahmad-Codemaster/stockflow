@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-StockFlow has transitioned from an in-memory UI prototype into a production-grade, full-stack inventory management system. It features real PostgreSQL database persistence, HTTP-only session authentication, role-based access control (Admin vs. Staff), ACID inventory transactions with concurrency control, interactive SVG dashboards, and comprehensive automated test coverage.
+StockFlow has transitioned from an in-memory UI prototype into a production-minded, full-stack inventory management foundation. It features real PostgreSQL database persistence, HTTP-only session authentication, role-based access control (Admin vs. Staff), ACID inventory transactions with concurrency control, interactive SVG dashboards, and comprehensive automated test coverage.
 
 ---
 
@@ -49,4 +49,4 @@ Coverage:    ≥ 86% across core server services
 Status:      All passing in CI and local environments
 ```
 
-For complete technical specifications, see [`docs/`](./docs/). For AI toolchain and prompt methodology disclosures, see [`AI_USAGE.md`](./AI_USAGE.md).
+For complete technical specifications, see [`docs/`](./docs/). For all languages, tools, and Docker architecture details, see [`TECH_STACK_GUIDE.md`](./TECH_STACK_GUIDE.md). For AI toolchain and prompt methodology disclosures, see [`AI_USAGE.md`](./AI_USAGE.md).

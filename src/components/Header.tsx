@@ -1,4 +1,4 @@
-import { Bell, Check, ChevronRight, Command, Search, Sparkles, X } from 'lucide-react';
+import { Bell, Check, ChevronRight, Command, Menu, Search, Sparkles, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../context';
 import { Badge } from './ui';
@@ -31,6 +31,8 @@ export default function Header() {
     notifications,
     markNotificationRead,
     markAllNotificationsRead,
+    toggleSidebar,
+    isSidebarCollapsed,
   } = useApp();
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -68,32 +70,53 @@ export default function Header() {
   const isAdmin = currentUser?.role === 'ADMIN';
 
   return (
-    <header className="h-16 shrink-0 glass-header flex items-center justify-between px-6 md:px-8 z-30 sticky top-0">
-      {/* Breadcrumb Navigation */}
-      <nav className="flex items-center gap-2 text-xs font-medium" aria-label="Breadcrumb">
-        <span className="text-slate-400 font-semibold tracking-wider uppercase text-[10px]">StockFlow</span>
-        <ChevronRight size={13} className="text-slate-300" />
-        {crumbs.map((crumb, i) => (
-          <span key={i} className="flex items-center gap-2">
-            {i > 0 && <ChevronRight size={13} className="text-slate-300" />}
-            <span
-              className={
-                i === crumbs.length - 1
-                  ? 'font-bold text-slate-900 bg-slate-100/80 px-2 py-0.5 rounded-md border border-slate-200/60'
-                  : 'text-slate-500 hover:text-slate-800 transition-colors'
-              }
-            >
-              {crumb}
-            </span>
+    <header className="h-16 shrink-0 glass-header flex items-center justify-between px-3 sm:px-6 md:px-8 z-30 sticky top-0">
+      {/* Left Area: Mobile Drawer / Desktop Toggle + Breadcrumb Navigation */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <button
+          type="button"
+          onClick={() => toggleSidebar?.()}
+          className="p-2 -ml-1 sm:ml-0 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-all cursor-pointer flex items-center justify-center shrink-0"
+          title={isSidebarCollapsed ? 'Expand sidebar' : 'Toggle sidebar'}
+          aria-label="Toggle sidebar menu"
+        >
+          <Menu size={20} />
+        </button>
+
+        {/* Breadcrumb Navigation */}
+        <nav className="flex items-center gap-1.5 sm:gap-2 text-xs font-medium min-w-0" aria-label="Breadcrumb">
+          <span className="hidden sm:inline text-slate-400 font-semibold tracking-wider uppercase text-[10px]">
+            StockFlow
           </span>
-        ))}
-      </nav>
+          <ChevronRight size={13} className="hidden sm:inline text-slate-300 shrink-0" />
+          {crumbs.map((crumb, i) => {
+            const isLast = i === crumbs.length - 1;
+            return (
+              <span
+                key={i}
+                className={`items-center gap-1.5 sm:gap-2 ${isLast ? 'flex' : 'hidden md:flex'}`}
+              >
+                {i > 0 && <ChevronRight size={13} className="text-slate-300 shrink-0" />}
+                <span
+                  className={
+                    isLast
+                      ? 'font-bold text-slate-900 bg-slate-100/80 px-2 py-0.5 rounded-md border border-slate-200/60 truncate max-w-[130px] sm:max-w-[200px]'
+                      : 'text-slate-500 hover:text-slate-800 transition-colors truncate max-w-[100px]'
+                  }
+                >
+                  {crumb}
+                </span>
+              </span>
+            );
+          })}
+        </nav>
+      </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Quick Search */}
         <div ref={searchRef} className="relative">
-          <div className="flex items-center gap-2.5 glass-input rounded-xl px-3 py-1.5 w-60 shadow-xs focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
+          <div className="flex items-center gap-2 glass-input rounded-xl px-2.5 sm:px-3 py-1.5 w-28 xs:w-36 sm:w-52 md:w-60 focus-within:w-44 sm:focus-within:w-60 shadow-xs focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
             <Search size={14} className="text-slate-400 shrink-0" />
             <input
               value={search}
@@ -102,7 +125,7 @@ export default function Header() {
                 setShowSearch(true);
               }}
               onFocus={() => setShowSearch(true)}
-              placeholder="Search catalog or SKU..."
+              placeholder="Search..."
               className="bg-transparent text-xs text-slate-800 placeholder-slate-400 outline-none w-full font-medium"
             />
             {search ? (
@@ -113,10 +136,10 @@ export default function Header() {
                   setShowSearch(false);
                 }}
               >
-                <X size={13} className="text-slate-400 hover:text-slate-700" />
+                <X size={13} className="text-slate-400 hover:text-slate-700 shrink-0" />
               </button>
             ) : (
-              <kbd className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+              <kbd className="hidden md:inline-flex items-center gap-0.5 text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
                 <Command size={10} />K
               </kbd>
             )}
@@ -124,7 +147,7 @@ export default function Header() {
 
           {/* Search Dropdown Panel */}
           {showSearch && search.length > 1 && (
-            <div className="absolute top-full right-0 mt-2 w-80 glass-modal rounded-2xl shadow-2xl z-50 overflow-hidden border border-slate-200/90 animate-fade-slide">
+            <div className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm glass-modal rounded-2xl shadow-2xl z-50 overflow-hidden border border-slate-200/90 animate-fade-slide">
               <div className="px-3.5 py-2.5 bg-slate-50/70 border-b border-slate-200/70 flex items-center justify-between text-[11px] font-semibold text-slate-500">
                 <span>Matching Products</span>
                 <span>{searchResults.length} found</span>
@@ -190,7 +213,7 @@ export default function Header() {
           </button>
 
           {showNotif && (
-            <div className="absolute top-full right-0 mt-2 w-84 glass-modal rounded-2xl shadow-2xl z-50 overflow-hidden border border-slate-200/90 animate-fade-slide">
+            <div className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm glass-modal rounded-2xl shadow-2xl z-50 overflow-hidden border border-slate-200/90 animate-fade-slide">
               <div className="flex items-center justify-between px-4 py-3 bg-slate-50/80 border-b border-slate-200/80">
                 <div className="flex items-center gap-2">
                   <h3 className="text-xs font-bold text-slate-900">System Notifications</h3>

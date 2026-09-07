@@ -1,9 +1,23 @@
+/**
+ * ============================================================================
+ * USER MANAGEMENT SERVICE — Administrative Identity & Safeguards
+ * ============================================================================
+ * What this module does:
+ * - Admin-only user provisioning, role assignments, and profile updates.
+ * - Enforces Last-Administrator Protection Guards to prevent system lockout.
+ * - Enforces immediate session termination when an employee is deactivated.
+ * - Preserves relational audit trail integrity when a user account is removed.
+ */
+
 import bcrypt from 'bcryptjs';
 import prisma from '../db';
 import { AppError } from '../middleware/errorHandler';
 import { AuditService } from './auditService';
 
 export class UserService {
+  /**
+   * LIST USERS: Fetch all user accounts (passwords omitted)
+   */
   static async listUsers() {
     return prisma.user.findMany({
       select: {
@@ -20,6 +34,9 @@ export class UserService {
     });
   }
 
+  /**
+   * GET USER BY ID: Fetch single user profile
+   */
   static async getUserById(id: string) {
     const user = await prisma.user.findUnique({
       where: { id },
@@ -42,6 +59,14 @@ export class UserService {
     return user;
   }
 
+  /**
+   * CREATE USER: Provision a new team member
+   * 
+   * Invariants:
+   * - Email normalized to lowercase and checked for uniqueness (HTTP 409).
+   * - Default password hashed with Bcrypt (10 salt rounds).
+   * - Action recorded in immutable audit log.
+   */
   static async createUser(
     data: {
       name: string;
@@ -55,6 +80,7 @@ export class UserService {
   ) {
     const normalizedEmail = data.email.trim().toLowerCase();
 
+    // Enforce email uniqueness constraint
     const existing = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
@@ -62,6 +88,7 @@ export class UserService {
       throw new AppError('A user with this email address already exists.', 409, 'DUPLICATE_EMAIL');
     }
 
+    // Default password if not provided by administrator
     const defaultPassword = data.password || 'StockFlow@123';
     const passwordHash = await bcrypt.hash(defaultPassword, 10);
 
@@ -84,6 +111,7 @@ export class UserService {
       },
     });
 
+    // Record creation in audit log
     await AuditService.log({
       userId: adminUserId,
       action: 'USER_CREATE',
@@ -96,6 +124,14 @@ export class UserService {
     return user;
   }
 
+  /**
+   * UPDATE USER: Modify profile, role, password, or status
+   * 
+   * Critical Safeguards:
+   * 1. LAST-ADMIN GUARD: Prevents demoting or deactivating the last active administrator.
+   * 2. IMMEDIATE SESSION PURGE: If a user is deactivated ('Inactive'), all their active
+   *    sessions are deleted from PostgreSQL immediately to revoke access on their next click.
+   */
   static async updateUser(
     id: string,
     data: {
@@ -113,7 +149,7 @@ export class UserService {
       throw new AppError('User not found.', 404, 'NOT_FOUND');
     }
 
-    // LAST-ADMIN GUARD: Prevent demoting the last admin to staff
+    // LAST-ADMIN GUARD: Prevent demoting the last active admin to staff
     if (user.role === 'ADMIN' && data.role === 'STAFF') {
       const activeAdminCount = await prisma.user.count({ where: { role: 'ADMIN', status: 'Active' } });
       if (activeAdminCount <= 1) {
@@ -125,7 +161,7 @@ export class UserService {
       }
     }
 
-    // LAST-ADMIN GUARD: Prevent deactivating the last admin
+    // LAST-ADMIN GUARD: Prevent deactivating the last active admin
     if (user.role === 'ADMIN' && user.status === 'Active' && data.status === 'Inactive') {
       const activeAdminCount = await prisma.user.count({ where: { role: 'ADMIN', status: 'Active' } });
       if (activeAdminCount <= 1) {
@@ -196,11 +232,24 @@ export class UserService {
     return updated;
   }
 
+  /**
+   * DEACTIVATE USER: Shortcut to set status to Inactive and purge active sessions
+   */
   static async deactivateUser(id: string, adminUserId: string, ipAddress?: string) {
     return this.updateUser(id, { status: 'Inactive' }, adminUserId, ipAddress);
   }
 
+  /**
+   * DELETE USER WORKFLOW
+   * 
+   * Safeguards:
+   * 1. Self-Deletion Forbidden: An admin cannot delete their own active account.
+   * 2. Last-Admin Guard: Prevents deleting the sole remaining administrator.
+   * 3. Referential Integrity Preservation: Reassigns stock transactions to admin
+   *    and nullifies user ID in audit logs so historical business reports never fail.
+   */
   static async deleteUser(id: string, adminUserId: string, ipAddress?: string) {
+    // Prevent accidental self-deletion
     if (id === adminUserId) {
       throw new AppError('You cannot delete your own active administrator account.', 400, 'SELF_DELETION_FORBIDDEN');
     }

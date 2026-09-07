@@ -1,3 +1,15 @@
+/**
+ * ============================================================================
+ * STOCK-IN VIEW (`src/pages/StockIn.tsx`)
+ * ============================================================================
+ * What this screen does:
+ * - Provides the receiving workflow to record inventory replenishment from suppliers.
+ * - Auto-selects the product's default supplier if linked.
+ * - Displays a live preview of new projected stock ($currentStock + qty$).
+ * - Calls `stockIn()` in AppContext, dispatching `POST /api/inventory/stock-in`
+ *   which atomically increments stock and creates an immutable transaction receipt.
+ */
+
 import { ArrowLeft, ArrowUpRight, CheckCircle2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -18,6 +30,7 @@ export default function StockIn() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // Sync selected product if provided via URL query param (?product=p1)
   useEffect(() => {
     if (urlProductId) {
       setProductId(urlProductId);
@@ -28,11 +41,15 @@ export default function StockIn() {
     }
   }, [urlProductId, products]);
 
+  // Derived state: calculate stock levels and project new stock count
   const selectedProduct = products.find((p) => p.id === productId);
   const currentStock = inventory.find((i) => i.productId === productId)?.currentStock ?? 0;
   const qtyNum = parseInt(quantity) || 0;
   const afterStock = currentStock + qtyNum;
 
+  /**
+   * Validate user input
+   */
   function validate() {
     const errs: Record<string, string> = {};
     if (!productId) errs.productId = 'Please select a product.';
@@ -40,6 +57,9 @@ export default function StockIn() {
     return errs;
   }
 
+  /**
+   * Handle receiving submission
+   */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const errs = validate();
@@ -49,6 +69,7 @@ export default function StockIn() {
     }
     setSubmitting(true);
     try {
+      // Calls server API: POST /api/inventory/stock-in
       await stockIn(productId, qtyNum, supplierId || null, reference.trim(), notes.trim());
       navigate('inventory');
     } finally {

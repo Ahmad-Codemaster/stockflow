@@ -2,7 +2,7 @@
 
 > **Stack:** React 19 + TypeScript + Vite + Tailwind CSS v4 | Node.js + Express + Prisma ORM (PostgreSQL) | Docker + Render | Vitest + GitHub Actions CI
 
-StockFlow is an enterprise inventory and operations management system designed for businesses requiring strict stock-in/stock-out workflows, multi-supplier tracking, real-time catalog management, session-based role authorization (Admin vs. Staff), and operational reporting.
+StockFlow is a production-minded inventory and operations management foundation designed for businesses requiring strict stock-in/stock-out workflows, multi-supplier tracking, real-time catalog management, session-based role authorization (Admin vs. Staff), and operational reporting.
 
 ---
 
@@ -13,6 +13,7 @@ StockFlow is an enterprise inventory and operations management system designed f
 | **GitHub Repository** | [https://github.com/Ahmad-Codemaster/stockflow](https://github.com/Ahmad-Codemaster/stockflow) |
 | **Live Production URL** | Deployed on Render with Docker & Managed PostgreSQL |
 | **Default Administrator** | Email: `admin@stockflow.com` \| Password: `Admin@123` |
+| **Tech Stack & Guide** | [`TECH_STACK_GUIDE.md`](./TECH_STACK_GUIDE.md) (All languages, tools, Docker & purpose explained) |
 | **Engineering Build Log** | [`BUILD_LOG.md`](./BUILD_LOG.md) (Chronological phases & architecture) |
 | **AI Usage Disclosure** | [`AI_USAGE.md`](./AI_USAGE.md) (Toolchain, prompt engineering & methodology) |
 
@@ -131,3 +132,4 @@ Comprehensive technical documentation is maintained in [`docs/`](./docs/):
 - [`docs/TEST_PLAN.md`](./docs/TEST_PLAN.md) — QA test matrix and test specifications.
 - [`BUILD_LOG.md`](./BUILD_LOG.md) — Chronological engineering log & architecture traceability.
 - [`AI_USAGE.md`](./AI_USAGE.md) — AI toolchain, prompt engineering, and methodology disclosures.
+- [`TECH_STACK_GUIDE.md`](./TECH_STACK_GUIDE.md) — Technology stack explanation, Docker architecture, and interview prep.

@@ -4,12 +4,14 @@ import {
   Boxes,
   LayoutDashboard,
   LogOut,
+  PanelLeftClose,
   Settings,
   Shield,
   Tag,
   Truck,
   Users,
   Warehouse,
+  X,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useApp } from '../context';
@@ -37,26 +39,81 @@ function isActive(page: Page, current: Page): boolean {
 }
 
 export default function Sidebar() {
-  const { currentUser, currentPage, navigate, logout } = useApp();
+  const {
+    currentUser,
+    currentPage,
+    navigate,
+    logout,
+    isMobileSidebarOpen = false,
+    isSidebarCollapsed = false,
+    closeMobileSidebar,
+    toggleDesktopSidebar,
+  } = useApp();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
+  const handleNavigate = (page: Page) => {
+    navigate(page);
+    closeMobileSidebar?.();
+  };
+
   return (
-    <aside className="w-64 shrink-0 glass-sidebar flex flex-col h-full z-20 select-none">
-      {/* Brand Header */}
-      <div className="px-5 py-5 border-b border-white/8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20 border border-blue-400/30">
-            <Warehouse size={16} className="text-white" />
+    <>
+      {/* Mobile Drawer Backdrop */}
+      {isMobileSidebarOpen && (
+        <div
+          role="presentation"
+          aria-hidden="true"
+          onClick={() => closeMobileSidebar?.()}
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 lg:hidden transition-opacity duration-300"
+        />
+      )}
+
+      <aside
+        className={`shrink-0 glass-sidebar z-50 lg:z-20 select-none transition-all duration-300 ease-in-out fixed inset-y-0 left-0 lg:static lg:h-full ${
+          isMobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
+        } ${
+          isSidebarCollapsed
+            ? 'lg:w-0 lg:-translate-x-full lg:opacity-0 lg:overflow-hidden lg:pointer-events-none lg:border-r-0'
+            : 'lg:w-64 lg:opacity-100'
+        }`}
+      >
+        <div className="w-64 sm:w-72 lg:w-64 flex flex-col h-full">
+          {/* Brand Header */}
+          <div className="px-5 py-5 border-b border-white/8 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20 border border-blue-400/30">
+                <Warehouse size={16} className="text-white" />
+              </div>
+              <div>
+                <span className="text-white font-bold text-[15px] tracking-tight flex items-center gap-1.5">
+                  StockFlow
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 border border-blue-400/20">PRO</span>
+                </span>
+                <p className="text-[11px] text-slate-400 leading-tight">Operations System</p>
+              </div>
+            </div>
+
+            {/* Mobile Close Button */}
+            <button
+              type="button"
+              onClick={() => closeMobileSidebar?.()}
+              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="Close sidebar"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Desktop Collapse Button */}
+            <button
+              type="button"
+              onClick={() => toggleDesktopSidebar?.()}
+              className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
+            >
+              <PanelLeftClose size={16} />
+            </button>
           </div>
-          <div>
-            <span className="text-white font-bold text-[15px] tracking-tight flex items-center gap-1.5">
-              StockFlow
-              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 border border-blue-400/20">PRO</span>
-            </span>
-            <p className="text-[11px] text-slate-400 leading-tight">Operations System</p>
-          </div>
-        </div>
-      </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-1">
@@ -70,7 +127,7 @@ export default function Sidebar() {
             return (
               <button
                 key={item.page}
-                onClick={() => navigate(item.page)}
+                onClick={() => handleNavigate(item.page)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
                   active
                     ? 'bg-gradient-to-r from-blue-600/35 via-blue-600/15 to-transparent text-white border-l-3 border-blue-500 shadow-sm'
@@ -87,7 +144,14 @@ export default function Sidebar() {
           })}
         </div>
 
-        {/* Admin-only Section */}
+        {/* 
+          ROLE-BASED CONDITIONAL UI RENDERING:
+          - The "Administration" section and "User Management" link are rendered ONLY
+          when currentUser.role === 'ADMIN'.
+          - For regular STAFF users, this entire section is omitted from the DOM.
+          - UX Note: While this hides the link from Staff, backend authorization
+            is strictly enforced via `requireRole('ADMIN')` on all `/api/users` routes.
+        */}
         {currentUser?.role === 'ADMIN' && (
           <div className="pt-5 mt-4 border-t border-white/6">
             <div className="flex items-center justify-between px-3 mb-2">
@@ -97,7 +161,7 @@ export default function Sidebar() {
               <Shield size={12} className="text-blue-400" />
             </div>
             <button
-              onClick={() => navigate('users')}
+              onClick={() => handleNavigate('users')}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
                 currentPage === 'users'
                   ? 'bg-gradient-to-r from-blue-600/35 via-blue-600/15 to-transparent text-white border-l-3 border-blue-500 shadow-sm'
@@ -117,7 +181,7 @@ export default function Sidebar() {
       {/* User Mini Profile & Footer */}
       <div className="p-3 border-t border-white/8 space-y-1">
         <button
-          onClick={() => navigate('settings')}
+          onClick={() => handleNavigate('settings')}
           className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
             currentPage === 'settings'
               ? 'bg-white/10 text-white'
@@ -136,6 +200,8 @@ export default function Sidebar() {
           <span>Sign Out</span>
         </button>
       </div>
+        </div>
+      </aside>
 
       {showLogoutConfirm && (
         <Confirm
@@ -145,11 +211,12 @@ export default function Sidebar() {
           variant="danger"
           onConfirm={() => {
             setShowLogoutConfirm(false);
+            closeMobileSidebar?.();
             logout();
           }}
           onCancel={() => setShowLogoutConfirm(false)}
         />
       )}
-    </aside>
+    </>
   );
 }

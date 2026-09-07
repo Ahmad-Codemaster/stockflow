@@ -1,3 +1,16 @@
+/**
+ * ============================================================================
+ * AUTHENTICATION & SESSION LIFECYCLE TEST SUITE
+ * ============================================================================
+ * What this test suite proves:
+ * - Credentials verification using Bcrypt password hashing.
+ * - Issuance and persistence of `stockflow_session` HttpOnly cookie.
+ * - Case-insensitive email normalization.
+ * - Anti-enumeration security: identical 401 responses for both bad passwords and bad emails.
+ * - Immediate blocking of deactivated employee accounts.
+ * - Complete database cleanup on logout.
+ */
+
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../server/app';
@@ -10,6 +23,9 @@ describe('Authentication & Session Management', () => {
     await seedDatabase();
   });
 
+  /**
+   * Test 1: Successful Authentication & Cookie Set
+   */
   it('should authenticate Admin user with valid credentials and return session cookie', async () => {
     const res = await request(app)
       .post('/api/auth/login')
@@ -29,6 +45,9 @@ describe('Authentication & Session Management', () => {
     expect(dbSession?.userId).toBe('u1');
   });
 
+  /**
+   * Test 2: Case-Insensitive Email Matching
+   */
   it('should authenticate case-insensitively on email', async () => {
     const res = await request(app)
       .post('/api/auth/login')
@@ -38,6 +57,9 @@ describe('Authentication & Session Management', () => {
     expect(res.body.success).toBe(true);
   });
 
+  /**
+   * Test 3: Bad Password Rejection
+   */
   it('should reject invalid password with 401 INVALID_CREDENTIALS', async () => {
     const res = await request(app)
       .post('/api/auth/login')

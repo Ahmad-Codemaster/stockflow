@@ -1,3 +1,15 @@
+/**
+ * ============================================================================
+ * STOCK-OUT VIEW (`src/pages/StockOut.tsx`)
+ * ============================================================================
+ * What this screen does:
+ * - Provides the fulfillment workflow to deduct stock for customer orders or internal use.
+ * - Displays a live preview of available stock and projected remaining stock.
+ * - Enforces client-side validation against over-deduction ($qty > available$).
+ * - Calls `stockOut()` in AppContext, which triggers `POST /api/inventory/stock-out`
+ *   where server-side transactions and race condition locks are executed.
+ */
+
 import { AlertTriangle, ArrowDownRight, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -17,18 +29,23 @@ export default function StockOut() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // Sync selected product if provided via URL query param (?product=p1)
   useEffect(() => {
     if (urlProductId) {
       setProductId(urlProductId);
     }
   }, [urlProductId]);
 
+  // Derived state: calculate stock levels and project remaining units
   const selectedProduct = products.find((p) => p.id === productId);
   const currentStock = inventory.find((i) => i.productId === productId)?.currentStock ?? 0;
   const qtyNum = parseInt(quantity) || 0;
   const afterStock = currentStock - qtyNum;
   const exceedsStock = qtyNum > 0 && qtyNum > currentStock;
 
+  /**
+   * Client-side UX validation (Defense-in-depth front line)
+   */
   function validate() {
     const errs: Record<string, string> = {};
     if (!productId) errs.productId = 'Please select a product.';
@@ -38,6 +55,9 @@ export default function StockOut() {
     return errs;
   }
 
+  /**
+   * Handle stock deduction submission
+   */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const errs = validate();
@@ -47,6 +67,7 @@ export default function StockOut() {
     }
     setSubmitting(true);
     try {
+      // Calls server API: POST /api/inventory/stock-out
       const ok = await stockOut(productId, qtyNum, reference.trim(), notes.trim());
       if (ok) {
         navigate('inventory');

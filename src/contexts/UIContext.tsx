@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Notification, Page, Toast } from '../types';
 
@@ -7,6 +7,12 @@ export interface UIContextValue {
   selectedId: string | null;
   toasts: Toast[];
   notifications: Notification[];
+  isMobileSidebarOpen: boolean;
+  isSidebarCollapsed: boolean;
+  toggleSidebar: () => void;
+  toggleDesktopSidebar: () => void;
+  closeMobileSidebar: () => void;
+  openMobileSidebar: () => void;
   showToast: (type: Toast['type'], message: string) => void;
   dismissToast: (id: string) => void;
   markNotificationRead: (id: string) => void;
@@ -40,9 +46,47 @@ function getPageFromPath(path: string): { page: Page; id: string | null } {
 export function UIProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const routerNavigate = useNavigate();
   const location = useLocation();
+
+  // Auto-close mobile drawer whenever user navigates to a different route
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [location.pathname]);
+
+  // Handle ESC key to close mobile drawer when open
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsMobileSidebarOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const closeMobileSidebar = useCallback(() => {
+    setIsMobileSidebarOpen(false);
+  }, []);
+
+  const openMobileSidebar = useCallback(() => {
+    setIsMobileSidebarOpen(true);
+  }, []);
+
+  const toggleDesktopSidebar = useCallback(() => {
+    setIsSidebarCollapsed((prev) => !prev);
+  }, []);
+
+  const toggleSidebar = useCallback(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setIsMobileSidebarOpen((prev) => !prev);
+    } else {
+      setIsSidebarCollapsed((prev) => !prev);
+    }
+  }, []);
 
   const { page: currentPage, id: selectedId } = useMemo(
     () => getPageFromPath(location.pathname),
@@ -140,6 +184,12 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
         selectedId,
         toasts,
         notifications,
+        isMobileSidebarOpen,
+        isSidebarCollapsed,
+        toggleSidebar,
+        toggleDesktopSidebar,
+        closeMobileSidebar,
+        openMobileSidebar,
         showToast,
         dismissToast,
         markNotificationRead,

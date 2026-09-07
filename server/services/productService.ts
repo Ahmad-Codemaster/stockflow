@@ -1,7 +1,31 @@
+/**
+ * ============================================================================
+ * PRODUCT SERVICE — Catalog Management & SKU Governance
+ * ============================================================================
+ * What this module does:
+ * - Product catalog CRUD operations (Create, Read, Update, Delete).
+ * - Enforces case-insensitive SKU uniqueness across the entire system.
+ * - Dynamically calculates stock status ('In Stock', 'Low Stock', 'Out of Stock').
+ * - Atomically writes both the product AND an initial stock transaction when created with stock.
+ * - Implements Soft-Delete (`isArchived = true`) to preserve historical transaction integrity.
+ */
+
 import prisma from '../db';
 import { AppError } from '../middleware/errorHandler';
 import { AuditService } from './auditService';
 
+/**
+ * COMPUTE STOCK STATUS
+ * 
+ * Dynamic status computation based on business invariants:
+ * - `quantity <= 0`              -> 'Out of Stock'
+ * - `quantity <= reorderLevel`   -> 'Low Stock'
+ * - `quantity > reorderLevel`    -> 'In Stock'
+ * 
+ * Why this is computed dynamically rather than stored in the database:
+ * - Storing a redundant status column can lead to desynchronization bugs if stock
+ *   changes without updating the status. Computing on-the-fly guarantees correctness.
+ */
 export function computeStockStatus(
   quantity: number,
   reorderLevel: number
@@ -12,6 +36,15 @@ export function computeStockStatus(
 }
 
 export class ProductService {
+  /**
+   * LIST PRODUCTS: Retrieve catalog with search and filters
+   * 
+   * Features:
+   * - By default, filters out archived products (`isArchived: false`).
+   * - Joins category and supplier details.
+   * - Supports multi-attribute search on name and SKU.
+   * - Attaches computed stock status to each product.
+   */
   static async listProducts(params: {
     search?: string;
     categoryId?: string;
@@ -68,6 +101,9 @@ export class ProductService {
     return mapped;
   }
 
+  /**
+   * GET PRODUCT BY ID: Fetch single product with recent movement history
+   */
   static async getProductById(id: string) {
     const product = await prisma.product.findUnique({
       where: { id },
@@ -123,6 +159,16 @@ export class ProductService {
     };
   }
 
+  /**
+   * CREATE PRODUCT WORKFLOW
+   * 
+   * Safeguards:
+   * 1. Normalizes SKU to uppercase (`wm-001` -> `WM-001`).
+   * 2. Enforces case-insensitive SKU uniqueness; returns HTTP 409 Conflict on collision.
+   * 3. Validates price and reorderLevel are non-negative.
+   * 4. Atomic Transaction: If created with `initialStock > 0`, writes both the product
+   *    and an initial `STOCK_IN` transaction row atomically within `prisma.$transaction`.
+   */
   static async createProduct(
     data: {
       name: string;
@@ -138,6 +184,7 @@ export class ProductService {
     ipAddress?: string
   ) {
     const trimmedName = data.name.trim();
+    // 1. Normalize SKU to uppercase
     const normalizedSku = data.sku.trim().toUpperCase();
 
     if (!trimmedName) throw new AppError('Product name is required.', 400, 'VALIDATION_ERROR');
@@ -147,7 +194,7 @@ export class ProductService {
 
     const initialStock = Math.max(0, Number(data.initialStock) || 0);
 
-    // Enforce case-insensitive SKU uniqueness
+    // 2. Enforce case-insensitive SKU uniqueness
     const existing = await prisma.product.findFirst({
       where: { sku: { equals: normalizedSku } },
     });
@@ -155,13 +202,13 @@ export class ProductService {
       throw new AppError(`A product with SKU "${normalizedSku}" already exists.`, 409, 'DUPLICATE_SKU');
     }
 
-    // Verify category exists
+    // 3. Verify foreign key reference to Category exists
     const category = await prisma.category.findUnique({ where: { id: data.categoryId } });
     if (!category) {
       throw new AppError('Selected category does not exist.', 400, 'INVALID_CATEGORY');
     }
 
-    // Atomic transaction for Product + Initial Stock Transaction
+    // 4. Atomic transaction for Product creation + Initial Stock Transaction
     const result = await prisma.$transaction(async (tx) => {
       const product = await tx.product.create({
         data: {
@@ -176,6 +223,7 @@ export class ProductService {
         },
       });
 
+      // If created with initial stock, log an immutable initial STOCK_IN record
       if (initialStock > 0) {
         await tx.stockTransaction.create({
           data: {
@@ -207,6 +255,11 @@ export class ProductService {
     return this.getProductById(result.id);
   }
 
+  /**
+   * UPDATE PRODUCT WORKFLOW
+   * 
+   * Invariant: SKU is immutable on update to protect historical transaction traceability.
+   */
   static async updateProduct(
     id: string,
     data: {
@@ -273,6 +326,17 @@ export class ProductService {
     return this.getProductById(updated.id);
   }
 
+  /**
+   * DELETE PRODUCT WORKFLOW (Soft-Delete / Archival)
+   * 
+   * Why Soft-Delete (`isArchived = true`) instead of hard SQL `DELETE`?
+   * - In an inventory system, products have historical foreign key relationships to
+   *   `stock_transactions` and `audit_logs`.
+   * - A hard delete would either fail foreign key constraints (`RESTRICT`) or delete
+   *   past audit transactions (`CASCADE`), which destroys financial compliance records.
+   * - Setting `isArchived = true` hides the product from the active catalog while keeping
+   *   all past reports and ledger rows 100% intact.
+   */
   static async deleteProduct(id: string, userId: string, ipAddress?: string) {
     const product = await prisma.product.findUnique({ where: { id } });
     if (!product) {

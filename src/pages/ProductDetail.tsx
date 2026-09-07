@@ -184,7 +184,7 @@ export default function ProductDetail() {
 
       {/* Stock Out Alert Warning if zero or low */}
       {status === 'Out of Stock' && (
-        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-between gap-4 animate-fade-slide">
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-slide">
           <div className="flex items-center gap-3 text-xs text-rose-800">
             <div className="p-2 bg-rose-100 rounded-xl text-rose-600 shrink-0">
               <AlertTriangle size={18} />
@@ -199,7 +199,7 @@ export default function ProductDetail() {
           <button
             type="button"
             onClick={() => navigate('stock-in', product.id)}
-            className="px-4 py-2 gradient-btn-success text-white text-xs font-semibold rounded-xl shrink-0"
+            className="px-4 py-2 gradient-btn-success text-white text-xs font-semibold rounded-xl shrink-0 self-end sm:self-auto cursor-pointer"
           >
             Create Restock Receipt
           </button>

@@ -191,7 +191,7 @@ export default function Dashboard() {
         title="Operations Dashboard"
         subtitle="Real-time catalog valuation, stock health metrics, and ledger movement."
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
               onClick={() => setShowManual(true)}
@@ -261,7 +261,7 @@ export default function Dashboard() {
       )}
 
       {/* KPI Metrics Grid with Visual Sparklines */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <div onClick={() => navigate('products')} className="cursor-pointer">
           <KPICard
             label="Catalog Products"

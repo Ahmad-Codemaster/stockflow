@@ -1,7 +1,23 @@
+/**
+ * ============================================================================
+ * CENTRALIZED ERROR HANDLER & DOMAIN EXCEPTION (`AppError`)
+ * ============================================================================
+ * What this module does:
+ * - Provides a unified, predictable error response contract across all API routes:
+ *   `{ success: false, error: { code, message, details } }`
+ * - Defines `AppError` for throwing domain-specific errors with explicit HTTP statuses.
+ * - Formats Zod schema validation errors with clean field paths.
+ * - Prevents security information leakage by masking internal 500 error stack traces.
+ */
+
 import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 import type { ApiResponse } from '../types/api';
 
+/**
+ * Custom application error class for controlled domain exceptions.
+ * Example: `throw new AppError('Insufficient stock.', 400, 'INSUFFICIENT_STOCK')`
+ */
 export class AppError extends Error {
   public statusCode: number;
   public code: string;
@@ -17,12 +33,17 @@ export class AppError extends Error {
   }
 }
 
+/**
+ * Express 4-argument error-handling middleware.
+ * Must be registered AFTER all API route handlers in `server/app.ts`.
+ */
 export function errorHandler(
   err: any,
   _req: Request,
   res: Response<ApiResponse>,
   _next: NextFunction
 ) {
+  // 1. Handle Zod input validation errors (e.g., malformed JSON payload)
   if (err instanceof ZodError) {
     const details = err.errors.map(e => ({
       path: e.path.join('.'),
@@ -38,6 +59,7 @@ export function errorHandler(
     });
   }
 
+  // 2. Handle controlled domain errors (e.g. Insufficient Stock, Duplicate SKU, Forbidden)
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       success: false,
@@ -49,6 +71,8 @@ export function errorHandler(
     });
   }
 
+  // 3. Fallback for unhandled unexpected runtime crashes (e.g. database disconnect)
+  // Log full stack trace to server console for debugging, but never send to client
   console.error('[Unhandled Server Error]', err);
 
   return res.status(500).json({

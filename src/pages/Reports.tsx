@@ -103,13 +103,13 @@ export default function Reports() {
       <PageHeader title="Intelligence & Analytics" subtitle="Comprehensive financial valuation, inventory turn rates, and velocity reports." />
 
       {/* Glassmorphic Tab Navigator */}
-      <div className="flex gap-1.5 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 w-fit backdrop-blur-xs">
+      <div className="flex gap-1.5 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 w-full sm:w-fit overflow-x-auto backdrop-blur-xs max-w-full">
         {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all shrink-0 cursor-pointer ${
               tab === t.id
                 ? 'bg-white text-slate-900 shadow-sm border border-slate-200/80'
                 : 'text-slate-500 hover:text-slate-900'
@@ -123,7 +123,7 @@ export default function Reports() {
       {/* Summary View */}
       {tab === 'summary' && (
         <div className="space-y-5 animate-fade-slide">
-          <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
             <KPICard label="Total Catalog SKUs" value={products.length} />
             <KPICard label="Total Physical Units" value={totalStock.toLocaleString()} />
             <KPICard
@@ -219,7 +219,7 @@ export default function Reports() {
             </select>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <KPICard label="Total Inbound Stock" value={totalIn} variant="success" />
             <KPICard label="Total Outbound Dispatched" value={totalOut} variant="danger" />
             <KPICard
@@ -275,7 +275,7 @@ export default function Reports() {
       {/* Low Stock View */}
       {tab === 'lowstock' && (
         <div className="space-y-5 animate-fade-slide">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <KPICard
               label="Low Stock Risk Count"
               value={lowCount}
@@ -352,7 +352,7 @@ export default function Reports() {
       {/* Valuation Breakdown View */}
       {tab === 'value' && (
         <div className="space-y-5 animate-fade-slide">
-          <div className="grid xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
             <KPICard
               label="Total Capital Valuation"
               value={`$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}

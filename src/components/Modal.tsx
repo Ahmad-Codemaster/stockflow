@@ -23,20 +23,20 @@ export default function Modal({ title, onClose, children, size = 'md' }: ModalPr
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" onClick={onClose} />
       <div
-        className={`relative w-full ${widths[size]} glass-modal rounded-2xl border border-white/90 shadow-2xl overflow-hidden animate-fade-slide`}
+        className={`relative w-full ${widths[size]} max-h-[90vh] flex flex-col glass-modal rounded-2xl border border-white/90 shadow-2xl overflow-hidden animate-fade-slide`}
       >
-        <div className="flex items-center justify-between px-6 py-4 bg-slate-50/70 border-b border-slate-200/70">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 bg-slate-50/70 border-b border-slate-200/70 shrink-0">
           <h2 className="text-sm font-bold text-slate-900">{title}</h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
             aria-label="Close"
           >
             <X size={16} />
           </button>
         </div>
-        <div className="px-6 py-5">{children}</div>
+        <div className="px-5 sm:px-6 py-4 sm:py-5 overflow-y-auto">{children}</div>
       </div>
     </div>
   );

@@ -1,3 +1,17 @@
+/**
+ * ============================================================================
+ * RATE LIMITING MIDDLEWARE (`rateLimiter`)
+ * ============================================================================
+ * What this module does:
+ * - Protects sensitive authentication endpoints against brute-force credential stuffing.
+ * - Tracks request counts per client IP address within a configurable time window.
+ * - Returns HTTP 429 Too Many Requests and attaches standard `Retry-After` response headers.
+ * 
+ * Trade-off to mention in interviews:
+ * - This uses an in-memory `Map` with automatic interval garbage collection.
+ * - In a horizontally scaled cluster, rate limits would be tracked in a shared Redis cache.
+ */
+
 import type { NextFunction, Request, Response } from 'express';
 import { AppError } from './errorHandler';
 
@@ -6,6 +20,7 @@ interface RateLimitRecord {
   resetTime: number;
 }
 
+// In-memory sliding window store mapping IP address -> { count, resetTime }
 const ipBuckets = new Map<string, RateLimitRecord>();
 
 /**
@@ -13,15 +28,15 @@ const ipBuckets = new Map<string, RateLimitRecord>();
  * Protects sensitive endpoints (like /api/auth/login) from automated brute force attacks.
  */
 export function rateLimiter({
-  windowMs = 15 * 60 * 1000, // 15 minutes
-  max = 20, // 20 attempts per window per IP
+  windowMs = 15 * 60 * 1000, // 15-minute sliding window
+  max = 20, // Maximum 20 attempts per window per IP
   message = 'Too many authentication attempts from this IP. Please try again in 15 minutes.',
 }: {
   windowMs?: number;
   max?: number;
   message?: string;
 } = {}) {
-  // Periodic cleanup of expired entries
+  // Periodic cleanup of expired entries (unref() prevents timer from blocking process exit)
   setInterval(() => {
     const now = Date.now();
     for (const [ip, record] of ipBuckets.entries()) {

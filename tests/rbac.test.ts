@@ -1,3 +1,17 @@
+/**
+ * ============================================================================
+ * ROLE-BASED ACCESS CONTROL (RBAC) TEST SUITE
+ * ============================================================================
+ * What this test suite proves:
+ * - Staff users have full operational access to daily warehouse workflows
+ *   (viewing inventory, recording stock-in, recording stock-out, viewing reports).
+ * - Staff users are strictly BLOCKED with HTTP 403 Forbidden when attempting
+ *   to access administrative endpoints (user management, creating products, editing categories).
+ * - Admin users have unrestricted access to both operational and administrative domains.
+ * - Confirms Defense-in-Depth: authorization is strictly enforced on Express routes,
+ *   not merely hidden in the React UI.
+ */
+
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../server/app';
@@ -9,6 +23,10 @@ describe('Role-Based Access Control (RBAC) Enforcement', () => {
     await seedDatabase();
   });
 
+  /**
+   * Test 1: Staff Operational Read Access
+   * Proves that warehouse staff can view catalog items, inventory, and KPIs.
+   */
   it('Staff user CAN access inventory, dashboard, and reports endpoints', async () => {
     const { cookie } = await loginAsStaff();
 
@@ -22,6 +40,10 @@ describe('Role-Based Access Control (RBAC) Enforcement', () => {
     expect(reportRes.status).toBe(200);
   });
 
+  /**
+   * Test 2: Staff Operational Write Access
+   * Proves that warehouse staff can record daily stock movements.
+   */
   it('Staff user CAN record Stock-In and Stock-Out operations', async () => {
     const { cookie } = await loginAsStaff();
 
@@ -38,6 +60,10 @@ describe('Role-Based Access Control (RBAC) Enforcement', () => {
     expect(stockOutRes.status).toBe(200);
   });
 
+  /**
+   * Test 3: Staff Administrative Rejection (HTTP 403 Forbidden)
+   * Proves that Staff cannot view or manage other employee user accounts.
+   */
   it('Staff user is REJECTED (403 Forbidden) when accessing user management GET /api/users', async () => {
     const { cookie } = await loginAsStaff();
 

@@ -53,4 +53,49 @@ describe('Sidebar Component & RBAC UI Visibility', () => {
     expect(screen.queryByText('Administration')).not.toBeInTheDocument();
     expect(screen.queryByText('User Management')).not.toBeInTheDocument();
   });
+
+  it('supports mobile drawer toggle, backdrop close, and desktop collapse', () => {
+    const closeMobileSidebarMock = vi.fn();
+    const toggleDesktopSidebarMock = vi.fn();
+    const navigateMock = vi.fn();
+
+    vi.spyOn(appContext, 'useApp').mockReturnValue({
+      currentUser: {
+        id: 'u-1',
+        name: 'Admin User',
+        email: 'admin@stockflow.internal',
+        role: 'ADMIN',
+        status: 'Active',
+        createdAt: '2026-01-01',
+      },
+      currentPage: 'dashboard',
+      navigate: navigateMock,
+      logout: vi.fn(),
+      isMobileSidebarOpen: true,
+      isSidebarCollapsed: false,
+      closeMobileSidebar: closeMobileSidebarMock,
+      toggleDesktopSidebar: toggleDesktopSidebarMock,
+    } as any);
+
+    render(<Sidebar />);
+
+    // Mobile close button test
+    const closeBtn = screen.getByLabelText('Close sidebar');
+    expect(closeBtn).toBeInTheDocument();
+    fireEvent.click(closeBtn);
+    expect(closeMobileSidebarMock).toHaveBeenCalledTimes(1);
+
+    // Desktop collapse button test
+    const collapseBtn = screen.getByLabelText('Collapse sidebar');
+    expect(collapseBtn).toBeInTheDocument();
+    fireEvent.click(collapseBtn);
+    expect(toggleDesktopSidebarMock).toHaveBeenCalledTimes(1);
+
+    // Navigation item click should auto-close mobile drawer
+    const productsBtn = screen.getByText('Products');
+    fireEvent.click(productsBtn);
+    expect(navigateMock).toHaveBeenCalledWith('products');
+    expect(closeMobileSidebarMock).toHaveBeenCalledTimes(2);
+  });
 });
+

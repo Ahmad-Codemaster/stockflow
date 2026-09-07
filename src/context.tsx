@@ -1,8 +1,20 @@
 /**
- * StockFlow — Unified Application Context Adapter
+ * ============================================================================
+ * UNIFIED APPLICATION CONTEXT ADAPTER (`src/context.tsx`)
+ * ============================================================================
+ * What this module does:
+ * - Implements the Adapter Pattern for frontend state management.
+ * - Composes three dedicated domain contexts:
+ *   1. `AuthContext`: Manages user login/logout, session restoration, and role state.
+ *   2. `InventoryContext`: Manages catalog entities, stock mutations, and ledger history.
+ *   3. `UIContext`: Manages navigation, toast alerts, and modal dialog states.
  * 
- * Provides backward-compatible unified AppContext & useApp() hook
- * by composing domain contexts (AuthContext, InventoryContext, UIContext).
+ * Why Context Separation Matters (Interview Talking Point):
+ * - A monolithic context causes the ENTIRE component tree to re-render whenever
+ *   ANY state property changes (e.g. a toast appearing would re-render the product table).
+ * - Splitting state into domain slices (`Auth`, `Inventory`, `UI`) minimizes unnecessary re-renders.
+ * - `useApp()` is provided as a unified facade hook so existing components can access
+ *   all methods with clean, ergonomic ergonomics.
  */
 
 import { AppProvider, useAuth, useInventory, useUI } from './contexts';
@@ -40,6 +52,12 @@ export interface AppContextValue {
   isAuthLoading: boolean;
   toasts: Toast[];
   notifications: Notification[];
+  isMobileSidebarOpen: boolean;
+  isSidebarCollapsed: boolean;
+  toggleSidebar: () => void;
+  toggleDesktopSidebar: () => void;
+  closeMobileSidebar: () => void;
+  openMobileSidebar: () => void;
   login: (email: string, password: string) => Promise<LoginResult>;
   logout: () => void;
   navigate: (page: Page, id?: string) => void;
