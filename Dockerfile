@@ -32,4 +32,4 @@ RUN npm install tsx
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "if [ -n \"$DATABASE_URL\" ]; then npx prisma migrate deploy || true; fi && npx tsx server/index.ts"]
+CMD ["sh", "-c", "if [ -n \"$DATABASE_URL\" ]; then npx prisma migrate deploy || true; npx tsx server/seed.ts || true; fi && npx tsx server/index.ts"]
