@@ -12,18 +12,28 @@
  */
 
 import { Router } from 'express';
-import { InventoryController } from '../controllers/inventoryController';
+import {
+  InventoryController,
+  inventoryQuerySchema,
+  stockAdjustSchema,
+  stockInSchema,
+  stockOutSchema,
+  transactionQuerySchema,
+} from '../controllers/inventoryController';
 import { requireAuth } from '../middleware/auth';
+import { validateBody, validateParams, validateQuery } from '../middleware/validate';
+import { idParamSchema } from '../schemas/common';
 
 const router = Router();
 
 // Protect all inventory routes with session authentication
 router.use(requireAuth);
 
-router.get('/', InventoryController.list);
-router.post('/stock-in', InventoryController.stockIn);
-router.post('/stock-out', InventoryController.stockOut);
-router.get('/transactions', InventoryController.listTransactions);
-router.get('/transactions/:id', InventoryController.getTransactionById);
+router.get('/', validateQuery(inventoryQuerySchema), InventoryController.list);
+router.post('/stock-in', validateBody(stockInSchema), InventoryController.stockIn);
+router.post('/stock-out', validateBody(stockOutSchema), InventoryController.stockOut);
+router.post('/adjust', validateBody(stockAdjustSchema), InventoryController.adjust);
+router.get('/transactions', validateQuery(transactionQuerySchema), InventoryController.listTransactions);
+router.get('/transactions/:id', validateParams(idParamSchema), InventoryController.getTransactionById);
 
 export default router;

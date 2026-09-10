@@ -13,9 +13,16 @@
  */
 
 import { Router } from 'express';
-import { ProductController } from '../controllers/productController';
+import {
+  ProductController,
+  createProductSchema,
+  productQuerySchema,
+  updateProductSchema,
+} from '../controllers/productController';
 import { requireAuth } from '../middleware/auth';
 import { requireRole } from '../middleware/rbac';
+import { validateBody, validateParams, validateQuery } from '../middleware/validate';
+import { idParamSchema } from '../schemas/common';
 
 const router = Router();
 
@@ -23,12 +30,12 @@ const router = Router();
 router.use(requireAuth);
 
 // Read endpoints: accessible by both ADMIN and STAFF
-router.get('/', ProductController.list);
-router.get('/:id', ProductController.getById);
+router.get('/', validateQuery(productQuerySchema), ProductController.list);
+router.get('/:id', validateParams(idParamSchema), ProductController.getById);
 
 // Mutation endpoints: strictly guarded for ADMIN role only (returns 403 Forbidden to Staff)
-router.post('/', requireRole('ADMIN'), ProductController.create);
-router.put('/:id', requireRole('ADMIN'), ProductController.update);
-router.delete('/:id', requireRole('ADMIN'), ProductController.delete);
+router.post('/', requireRole('ADMIN'), validateBody(createProductSchema), ProductController.create);
+router.put('/:id', requireRole('ADMIN'), validateParams(idParamSchema), validateBody(updateProductSchema), ProductController.update);
+router.delete('/:id', requireRole('ADMIN'), validateParams(idParamSchema), ProductController.delete);
 
 export default router;

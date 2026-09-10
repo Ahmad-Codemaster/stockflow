@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { SupplierService } from '../services/supplierService';
 import type { AuthenticatedRequest } from '../types/api';
 
-const supplierSchema = z.object({
+export const supplierSchema = z.object({
   name: z.string().min(1, 'Supplier name is required'),
   contactPerson: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
@@ -12,6 +12,8 @@ const supplierSchema = z.object({
   leadTime: z.number().nonnegative().optional(),
 });
 
+export const supplierUpdateSchema = supplierSchema.partial();
+
 export class SupplierController {
   static async list(_req: AuthenticatedRequest, res: Response) {
     const suppliers = await SupplierService.listSuppliers();
@@ -19,11 +21,10 @@ export class SupplierController {
   }
 
   static async create(req: AuthenticatedRequest, res: Response) {
-    const parsed = supplierSchema.parse(req.body);
     const ipAddress = req.ip || req.socket.remoteAddress;
 
     const supplier = await SupplierService.createSupplier(
-      parsed,
+      req.body,
       req.user!.id,
       ipAddress
     );
@@ -31,12 +32,11 @@ export class SupplierController {
   }
 
   static async update(req: AuthenticatedRequest, res: Response) {
-    const parsed = supplierSchema.partial().parse(req.body);
     const ipAddress = req.ip || req.socket.remoteAddress;
 
     const supplier = await SupplierService.updateSupplier(
       req.params.id,
-      parsed,
+      req.body,
       req.user!.id,
       ipAddress
     );

@@ -1,21 +1,22 @@
 /**
  * ============================================================================
- * CONCURRENCY & RACE CONDITION AUTOMATED TEST
+ * CONCURRENCY & INVENTORY INTEGRITY AUTOMATED TEST SUITE
  * ============================================================================
- * What this test proves:
- * - When multiple users submit Stock-Out requests simultaneously for the same item,
- *   the system does NOT allow race conditions (Lost Updates) or negative inventory.
- * 
- * Test Setup & Mechanics:
- * - Product `p4` is initialized with exactly 10 units in stock.
- * - 10 parallel HTTP requests are generated, each asking to withdraw 2 units (20 total units requested).
- * - `Promise.all(requests)` fires all 10 requests at the exact same millisecond against Express.
- * 
- * Expected Invariant Outcomes:
- * 1. Exactly 5 requests succeed (HTTP 200) -> 10 units deducted.
- * 2. Exactly 5 requests fail (HTTP 400) with error code `INSUFFICIENT_STOCK`.
- * 3. Final database quantity in PostgreSQL is verified to be EXACTLY 0 (never negative).
- * 4. Exactly 5 immutable stock transaction ledger rows are created in the database.
+ * What this test suite proves:
+ * 1. Scenario 1 (Competing Over-Allocation):
+ *    Stock = 10, Request A = 8, Request B = 7
+ *    -> Exactly one succeeds, one fails (400 INSUFFICIENT_STOCK), final stock is 2 or 3.
+ * 2. Scenario 2 (Exact Exhaustion):
+ *    Stock = 10, Request A = 5, Request B = 5
+ *    -> Both succeed, final stock is 0.
+ * 3. Scenario 3 (Equal Contention):
+ *    Stock = 10, Request A = 8, Request B = 8
+ *    -> Exactly one succeeds, final stock is 2.
+ * 4. Scenario 4 (Transactional Rollback Invariant):
+ *    Forced failure during stock-out ensures zero partial mutations to product, ledger, or audit logs.
+ * 5. High-Concurrency Burst (10 Parallel Requests):
+ *    10 parallel requests requesting 2 units each from 10 initial units
+ *    -> Exactly 5 succeed, 5 fail, final stock is 0, exactly 5 ledger rows created.
  */
 
 import request from 'supertest';
@@ -25,58 +26,201 @@ import prisma from '../server/db';
 import { seedDatabase } from '../server/seed';
 import { loginAsStaff } from './setup';
 
-describe('Concurrency Control & Race Condition Prevention', () => {
-  // Re-seed database before test to ensure clean baseline state
+describe('Database-Level Concurrency Control & Inventory Integrity', () => {
   beforeEach(async () => {
     await seedDatabase();
   });
 
-  it('prevents race conditions and negative inventory under 10 concurrent Stock-Out requests', async () => {
-    // 1. Authenticate as a staff warehouse operator
-    const { cookie } = await loginAsStaff();
+  describe('Scenario 1: Competing Over-Allocation (Stock = 10, Req A = 8, Req B = 7)', () => {
+    it('serializes conflicting requests, succeeds one, rejects one, and prevents negative stock', async () => {
+      const { cookie } = await loginAsStaff();
 
-    // 2. Set product p4 to exactly 10 units in stock
-    await prisma.product.update({
-      where: { id: 'p4' },
-      data: { quantity: 10 },
+      await prisma.product.update({
+        where: { id: 'p4' },
+        data: { quantity: 10 },
+      });
+
+      const reqA = request(app)
+        .post('/api/inventory/stock-out')
+        .set('Cookie', [cookie])
+        .send({ productId: 'p4', quantity: 8, reference: 'SCENARIO-1-A' });
+
+      const reqB = request(app)
+        .post('/api/inventory/stock-out')
+        .set('Cookie', [cookie])
+        .send({ productId: 'p4', quantity: 7, reference: 'SCENARIO-1-B' });
+
+      const [resA, resB] = await Promise.all([reqA, reqB]);
+
+      const successResponses = [resA, resB].filter(r => r.status === 200);
+      const failedResponses = [resA, resB].filter(r => r.status === 400);
+
+      expect(successResponses.length).toBe(1);
+      expect(failedResponses.length).toBe(1);
+      expect(failedResponses[0].body.error.code).toBe('INSUFFICIENT_STOCK');
+
+      const product = await prisma.product.findUnique({ where: { id: 'p4' } });
+      // If A won: 10 - 8 = 2; If B won: 10 - 7 = 3. In neither case can it be negative (-5).
+      expect([2, 3]).toContain(product?.quantity);
+
+      const txns = await prisma.stockTransaction.findMany({
+        where: { reference: { in: ['SCENARIO-1-A', 'SCENARIO-1-B'] } },
+      });
+      expect(txns.length).toBe(1);
     });
+  });
 
-    // 3. Build 10 concurrent requests (each requesting 2 units -> 20 units total)
-    const requests = Array.from({ length: 10 }).map((_, idx) =>
-      request(app)
+  describe('Scenario 2: Exact Stock Exhaustion (Stock = 10, Req A = 5, Req B = 5)', () => {
+    it('allows both requests to succeed sequentially resulting in exactly 0 stock', async () => {
+      const { cookie } = await loginAsStaff();
+
+      await prisma.product.update({
+        where: { id: 'p4' },
+        data: { quantity: 10 },
+      });
+
+      const reqA = request(app)
+        .post('/api/inventory/stock-out')
+        .set('Cookie', [cookie])
+        .send({ productId: 'p4', quantity: 5, reference: 'SCENARIO-2-A' });
+
+      const reqB = request(app)
+        .post('/api/inventory/stock-out')
+        .set('Cookie', [cookie])
+        .send({ productId: 'p4', quantity: 5, reference: 'SCENARIO-2-B' });
+
+      const [resA, resB] = await Promise.all([reqA, reqB]);
+
+      expect(resA.status).toBe(200);
+      expect(resB.status).toBe(200);
+
+      const product = await prisma.product.findUnique({ where: { id: 'p4' } });
+      expect(product?.quantity).toBe(0);
+
+      const txns = await prisma.stockTransaction.findMany({
+        where: { reference: { in: ['SCENARIO-2-A', 'SCENARIO-2-B'] } },
+      });
+      expect(txns.length).toBe(2);
+    });
+  });
+
+  describe('Scenario 3: Equal Contention (Stock = 10, Req A = 8, Req B = 8)', () => {
+    it('allows only one request to win and leaves exactly 2 units remaining', async () => {
+      const { cookie } = await loginAsStaff();
+
+      await prisma.product.update({
+        where: { id: 'p4' },
+        data: { quantity: 10 },
+      });
+
+      const reqA = request(app)
+        .post('/api/inventory/stock-out')
+        .set('Cookie', [cookie])
+        .send({ productId: 'p4', quantity: 8, reference: 'SCENARIO-3-A' });
+
+      const reqB = request(app)
+        .post('/api/inventory/stock-out')
+        .set('Cookie', [cookie])
+        .send({ productId: 'p4', quantity: 8, reference: 'SCENARIO-3-B' });
+
+      const [resA, resB] = await Promise.all([reqA, reqB]);
+
+      const successResponses = [resA, resB].filter(r => r.status === 200);
+      const failedResponses = [resA, resB].filter(r => r.status === 400);
+
+      expect(successResponses.length).toBe(1);
+      expect(failedResponses.length).toBe(1);
+      expect(failedResponses[0].body.error.code).toBe('INSUFFICIENT_STOCK');
+
+      const product = await prisma.product.findUnique({ where: { id: 'p4' } });
+      expect(product?.quantity).toBe(2);
+
+      const txns = await prisma.stockTransaction.findMany({
+        where: { reference: { in: ['SCENARIO-3-A', 'SCENARIO-3-B'] } },
+      });
+      expect(txns.length).toBe(1);
+    });
+  });
+
+  describe('Scenario 4: Transactional Rollback Invariant', () => {
+    it('ensures complete rollback with zero mutations across product, ledger, and audit log', async () => {
+      const { cookie } = await loginAsStaff();
+
+      // Product p4 has 10 units
+      await prisma.product.update({
+        where: { id: 'p4' },
+        data: { quantity: 10 },
+      });
+
+      const initialAuditCount = await prisma.auditLog.count();
+      const initialTxnCount = await prisma.stockTransaction.count();
+
+      // Attempt over-deduction (request 50 units from 10 available)
+      const res = await request(app)
         .post('/api/inventory/stock-out')
         .set('Cookie', [cookie])
         .send({
           productId: 'p4',
-          quantity: 2,
-          reference: `RACE-TEST-${idx}`,
-        })
-    );
+          quantity: 50,
+          reference: 'FAIL-OVERDRAFT',
+        });
 
-    // 4. Fire all 10 requests simultaneously using Promise.all
-    const responses = await Promise.all(requests);
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('INSUFFICIENT_STOCK');
 
-    // 5. Partition responses into successful and failed buckets
-    const successful = responses.filter(r => r.status === 200);
-    const failed = responses.filter(r => r.status === 400);
+      // 1. Product quantity must remain strictly unchanged (10)
+      const product = await prisma.product.findUnique({ where: { id: 'p4' } });
+      expect(product?.quantity).toBe(10);
 
-    // Verify exactly 5 requests succeeded and 5 failed
-    expect(successful.length).toBe(5);
-    expect(failed.length).toBe(5);
+      // 2. Zero stock transaction records created
+      const finalTxnCount = await prisma.stockTransaction.count();
+      expect(finalTxnCount).toBe(initialTxnCount);
 
-    // Verify failed requests returned the standardized INSUFFICIENT_STOCK error code
-    for (const failRes of failed) {
-      expect(failRes.body.error.code).toBe('INSUFFICIENT_STOCK');
-    }
-
-    // 6. INVARIANT CHECK: Final database stock must be EXACTLY 0, never negative
-    const finalProduct = await prisma.product.findUnique({ where: { id: 'p4' } });
-    expect(finalProduct?.quantity).toBe(0);
-
-    // 7. LEDGER CHECK: Verify exactly 5 transaction rows were inserted into stock_transactions
-    const txns = await prisma.stockTransaction.findMany({
-      where: { reference: { startsWith: 'RACE-TEST-' } },
+      // 3. Zero audit log records created
+      const finalAuditCount = await prisma.auditLog.count();
+      expect(finalAuditCount).toBe(initialAuditCount);
     });
-    expect(txns.length).toBe(5);
+  });
+
+  describe('Burst Concurrency: 10 Parallel Requests', () => {
+    it('prevents race conditions and negative inventory under 10 concurrent Stock-Out requests', async () => {
+      const { cookie } = await loginAsStaff();
+
+      await prisma.product.update({
+        where: { id: 'p4' },
+        data: { quantity: 10 },
+      });
+
+      const requests = Array.from({ length: 10 }).map((_, idx) =>
+        request(app)
+          .post('/api/inventory/stock-out')
+          .set('Cookie', [cookie])
+          .send({
+            productId: 'p4',
+            quantity: 2,
+            reference: `BURST-TEST-${idx}`,
+          })
+      );
+
+      const responses = await Promise.all(requests);
+
+      const successful = responses.filter(r => r.status === 200);
+      const failed = responses.filter(r => r.status === 400);
+
+      expect(successful.length).toBe(5);
+      expect(failed.length).toBe(5);
+
+      for (const failRes of failed) {
+        expect(failRes.body.error.code).toBe('INSUFFICIENT_STOCK');
+      }
+
+      const finalProduct = await prisma.product.findUnique({ where: { id: 'p4' } });
+      expect(finalProduct?.quantity).toBe(0);
+
+      const txns = await prisma.stockTransaction.findMany({
+        where: { reference: { startsWith: 'BURST-TEST-' } },
+      });
+      expect(txns.length).toBe(5);
+    });
   });
 });

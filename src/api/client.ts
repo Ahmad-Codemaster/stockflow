@@ -47,7 +47,7 @@ export const api = {
   // Auth API
   auth: {
     login: (email: string, password: string) =>
-      request<{ user: User; sessionId: string }>('/auth/login', {
+      request<{ user: User }>('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       }),
@@ -183,6 +183,25 @@ export const api = {
         newStock: number;
         status: string;
       }>('/inventory/stock-out', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    stockAdjust: (data: {
+      productId: string;
+      targetQuantity?: number;
+      quantity?: number;
+      reference?: string;
+      notes?: string;
+    }) =>
+      request<{
+        transactionId: string;
+        productId: string;
+        productName: string;
+        previousStock: number;
+        newStock: number;
+        delta: number;
+        status: string;
+      }>('/inventory/adjust', {
         method: 'POST',
         body: JSON.stringify(data),
       }),

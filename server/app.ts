@@ -21,7 +21,10 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { errorHandler } from './middleware/errorHandler';
+import { idempotency } from './middleware/idempotency';
 import { requestLogger } from './middleware/logger';
+import { requestId } from './middleware/requestId';
+import prisma from './db';
 import authRoutes from './routes/authRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 import inventoryRoutes from './routes/inventoryRoutes';
@@ -54,16 +57,47 @@ export function createApp() {
   // 4. JSON Body Parser: Parses incoming JSON request payloads
   app.use(express.json());
 
-  // 5. Audit Request Logger: Logs incoming method, URL, status code, and latency
+  // 5. Request ID & Correlation Tracking
+  app.use(requestId);
+
+  // 6. Idempotency Guard: Enforces Idempotency-Key replay caching for mutating requests
+  app.use(idempotency());
+
+  // 7. Structured Request Logger: Emits structured logs with correlation ID and duration
   app.use(requestLogger);
 
-  // 6. Health Check: Used by cloud container orchestrators (Render / Kubernetes) to verify liveness
-  app.get('/api/health', (_req, res) => {
-    res.status(200).json({
-      status: 'ok',
-      service: 'stockflow-api',
-      timestamp: new Date().toISOString(),
-    });
+  // 8. Deep Health Check: Validates live DB connectivity, latency, uptime, and memory
+  app.get('/api/health', async (_req, res) => {
+    const startTime = Date.now();
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      const dbLatencyMs = Date.now() - startTime;
+      res.status(200).json({
+        status: 'healthy',
+        service: 'stockflow-api',
+        timestamp: new Date().toISOString(),
+        uptimeSeconds: Math.floor(process.uptime()),
+        database: {
+          status: 'connected',
+          latencyMs: dbLatencyMs,
+        },
+        memory: {
+          rssMb: Math.round(process.memoryUsage().rss / 1024 / 1024),
+          heapUsedMb: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        },
+      });
+    } catch (err: any) {
+      res.status(503).json({
+        status: 'degraded',
+        service: 'stockflow-api',
+        timestamp: new Date().toISOString(),
+        uptimeSeconds: Math.floor(process.uptime()),
+        database: {
+          status: 'disconnected',
+          error: err?.message || 'Database ping failed',
+        },
+      });
+    }
   });
 
   // 7. REST API Route Mounts

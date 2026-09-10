@@ -12,9 +12,16 @@
  */
 
 import { Router } from 'express';
-import { UserController } from '../controllers/userController';
+import {
+  UserController,
+  auditLogQuerySchema,
+  createUserSchema,
+  updateUserSchema,
+} from '../controllers/userController';
 import { requireAuth } from '../middleware/auth';
 import { requireRole } from '../middleware/rbac';
+import { validateBody, validateParams, validateQuery } from '../middleware/validate';
+import { idParamSchema } from '../schemas/common';
 
 const router = Router();
 
@@ -22,11 +29,11 @@ const router = Router();
 router.use(requireAuth, requireRole('ADMIN'));
 
 router.get('/', UserController.list);
-router.post('/', UserController.create);
-router.get('/audit-logs', UserController.listAuditLogs);
-router.get('/:id', UserController.getById);
-router.put('/:id', UserController.update);
-router.patch('/:id/deactivate', UserController.deactivate);
-router.delete('/:id', UserController.delete);
+router.post('/', validateBody(createUserSchema), UserController.create);
+router.get('/audit-logs', validateQuery(auditLogQuerySchema), UserController.listAuditLogs);
+router.get('/:id', validateParams(idParamSchema), UserController.getById);
+router.put('/:id', validateParams(idParamSchema), validateBody(updateUserSchema), UserController.update);
+router.patch('/:id/deactivate', validateParams(idParamSchema), UserController.deactivate);
+router.delete('/:id', validateParams(idParamSchema), UserController.delete);
 
 export default router;

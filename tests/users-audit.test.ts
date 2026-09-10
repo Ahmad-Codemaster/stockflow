@@ -61,10 +61,10 @@ describe('User Management & Audit Logging', () => {
       .send({ email: 'ali@stockflow.com', password: 'Staff@123' });
 
     const staffCookie = staffLoginRes.headers['set-cookie'][0];
-    const staffSessionId = staffLoginRes.body.data.sessionId;
+    const staffSessionId = staffCookie.match(/stockflow_session=([^;]+)/)?.[1];
 
     // Verify session exists
-    const sessionBefore = await prisma.session.findUnique({ where: { id: staffSessionId } });
+    const sessionBefore = await prisma.session.findUnique({ where: { id: staffSessionId! } });
     expect(sessionBefore).toBeDefined();
 
     // 2. Admin deactivates staff account

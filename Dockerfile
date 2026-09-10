@@ -17,8 +17,6 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3001
-ENV DATABASE_URL="postgresql://[REDACTED_CREDENTIALS]@localhost:5432/stockflow"
-ENV JWT_SECRET="[REDACTED_JWT_SECRET]"
 
 COPY package.json ./
 RUN npm install --omit=dev
@@ -34,4 +32,4 @@ RUN npm install tsx
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "npx prisma db push --skip-generate && npx tsx server/seed.ts && npx tsx server/index.ts"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx server/index.ts"]

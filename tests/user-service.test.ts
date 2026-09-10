@@ -118,4 +118,60 @@ describe('User Service & Product Filters In-depth', () => {
     expect(deactRes.status).toBe(400);
     expect(deactRes.body.error.code).toBe('LAST_ADMIN');
   });
+
+  it('prevents concurrent admin deletion from leaving zero active administrators', async () => {
+    // 1. Ensure exactly 2 active administrators exist (u0 and u1)
+    const activeAdminsInitial = await prisma.user.findMany({
+      where: { role: 'ADMIN', status: 'Active' },
+    });
+    expect(activeAdminsInitial.length).toBeGreaterThanOrEqual(2);
+
+    const adminA = activeAdminsInitial[0];
+    const adminB = activeAdminsInitial[1];
+
+    // Login as Admin A and Admin B to get their respective auth cookies
+    const loginARes = await request(app)
+      .post('/api/auth/login')
+      .send({ email: adminA.email, password: 'Admin@123' });
+    const cookieA = loginARes.headers['set-cookie'][0];
+
+    const loginBRes = await request(app)
+      .post('/api/auth/login')
+      .send({ email: adminB.email, password: 'Admin@123' });
+    const cookieB = loginBRes.headers['set-cookie'][0];
+
+    // If there are more than 2 active admins in fixtures, prune extra admins down to exactly 2
+    for (let i = 2; i < activeAdminsInitial.length; i++) {
+      await request(app).delete(`/api/users/${activeAdminsInitial[i].id}`).set('Cookie', [cookieA]);
+    }
+
+    const exactTwoAdmins = await prisma.user.count({ where: { role: 'ADMIN', status: 'Active' } });
+    expect(exactTwoAdmins).toBe(2);
+
+    // 2. CONCURRENT RACE:
+    // Admin A requests deletion of Admin B simultaneously as Admin B requests deletion of Admin A
+    const reqDeleteB = request(app)
+      .delete(`/api/users/${adminB.id}`)
+      .set('Cookie', [cookieA]);
+
+    const reqDeleteA = request(app)
+      .delete(`/api/users/${adminA.id}`)
+      .set('Cookie', [cookieB]);
+
+    const [resDeleteB, resDeleteA] = await Promise.all([reqDeleteB, reqDeleteA]);
+
+    const statuses = [resDeleteB.status, resDeleteA.status];
+    // Exactly one should succeed (200), and the other must be rejected (400 with LAST_ADMIN)
+    expect(statuses).toContain(200);
+    expect(statuses).toContain(400);
+
+    const failedRes = resDeleteB.status === 400 ? resDeleteB : resDeleteA;
+    expect(failedRes.body.error.code).toBe('LAST_ADMIN');
+
+    // 3. CRITICAL INVARIANT: System MUST have exactly 1 active admin remaining, NEVER 0!
+    const finalActiveAdminCount = await prisma.user.count({
+      where: { role: 'ADMIN', status: 'Active' },
+    });
+    expect(finalActiveAdminCount).toBe(1);
+  });
 });

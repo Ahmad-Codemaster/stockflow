@@ -13,12 +13,12 @@ import { z } from 'zod';
 import { AuthService } from '../services/authService';
 import type { AuthenticatedRequest } from '../types/api';
 
-const loginSchema = z.object({
+export const loginSchema = z.object({
   email: z.string().email('Valid email is required'),
   password: z.string().min(1, 'Password is required'),
 });
 
-const changePasswordSchema = z.object({
+export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
   newPassword: z.string().min(8, 'New password must be at least 8 characters'),
 });
@@ -28,7 +28,7 @@ export class AuthController {
    * POST /api/auth/login: Verify credentials and issue HttpOnly session cookie
    */
   static async login(req: Request, res: Response) {
-    const { email, password } = loginSchema.parse(req.body);
+    const { email, password } = req.body;
     const ipAddress = req.ip || req.socket.remoteAddress;
 
     const { user, sessionToken, expiresAt } = await AuthService.login(
@@ -56,7 +56,6 @@ export class AuthController {
       success: true,
       data: {
         user,
-        sessionId: sessionToken,
       },
     });
   }
@@ -101,7 +100,7 @@ export class AuthController {
    * POST /api/auth/change-password: Update user credentials
    */
   static async changePassword(req: AuthenticatedRequest, res: Response) {
-    const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+    const { currentPassword, newPassword } = req.body;
     const ipAddress = req.ip || req.socket.remoteAddress;
 
     await AuthService.changePassword(

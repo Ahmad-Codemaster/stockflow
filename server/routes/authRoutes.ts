@@ -9,9 +9,14 @@
  */
 
 import { Router } from 'express';
-import { AuthController } from '../controllers/authController';
+import {
+  AuthController,
+  changePasswordSchema,
+  loginSchema,
+} from '../controllers/authController';
 import { requireAuth } from '../middleware/auth';
 import { rateLimiter } from '../middleware/rateLimiter';
+import { validateBody } from '../middleware/validate';
 
 const router = Router();
 
@@ -23,11 +28,11 @@ const loginLimiter = rateLimiter({
 });
 
 // Public endpoints
-router.post('/login', loginLimiter, AuthController.login);
+router.post('/login', loginLimiter, validateBody(loginSchema), AuthController.login);
 router.post('/logout', AuthController.logout);
 
 // Protected endpoints (require valid session cookie)
 router.get('/me', requireAuth, AuthController.me);
-router.post('/change-password', requireAuth, AuthController.changePassword);
+router.post('/change-password', requireAuth, validateBody(changePasswordSchema), AuthController.changePassword);
 
 export default router;

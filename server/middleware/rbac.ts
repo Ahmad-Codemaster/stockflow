@@ -17,6 +17,39 @@ import type { NextFunction, Response } from 'express';
 import type { AuthenticatedRequest } from '../types/api';
 import { AppError } from './errorHandler';
 
+export type Permission =
+  | 'inventory:read'
+  | 'inventory:transact'
+  | 'products:read'
+  | 'products:manage'
+  | 'categories:manage'
+  | 'suppliers:manage'
+  | 'users:manage'
+  | 'reports:read'
+  | 'audit:read'
+  | 'system:wipe';
+
+export const ROLE_PERMISSIONS: Record<'ADMIN' | 'STAFF', Permission[]> = {
+  ADMIN: [
+    'inventory:read',
+    'inventory:transact',
+    'products:read',
+    'products:manage',
+    'categories:manage',
+    'suppliers:manage',
+    'users:manage',
+    'reports:read',
+    'audit:read',
+    'system:wipe',
+  ],
+  STAFF: [
+    'inventory:read',
+    'inventory:transact',
+    'products:read',
+    'reports:read',
+  ],
+};
+
 /**
  * Middleware factory that restricts route access to specific roles
  * Example usage: `router.post('/users', requireAuth, requireRole('ADMIN'), UserController.create)`
@@ -40,6 +73,31 @@ export function requireRole(...allowedRoles: Array<'ADMIN' | 'STAFF'>) {
     }
 
     // Role authorized -> proceed to controller
+    next();
+  };
+}
+
+/**
+ * Middleware factory that restricts route access based on granular permissions
+ * Example usage: `router.delete('/wipe', requireAuth, requirePermission('system:wipe'), handler)`
+ */
+export function requirePermission(permission: Permission) {
+  return (req: AuthenticatedRequest, _res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return next(new AppError('Authentication required.', 401, 'UNAUTHORIZED'));
+    }
+
+    const permissions = ROLE_PERMISSIONS[req.user.role] || [];
+    if (!permissions.includes(permission)) {
+      return next(
+        new AppError(
+          `Access denied. Missing required permission: '${permission}'.`,
+          403,
+          'FORBIDDEN'
+        )
+      );
+    }
+
     next();
   };
 }

@@ -3,10 +3,12 @@ import { z } from 'zod';
 import { CategoryService } from '../services/categoryService';
 import type { AuthenticatedRequest } from '../types/api';
 
-const categorySchema = z.object({
+export const categorySchema = z.object({
   name: z.string().min(1, 'Category name is required'),
   description: z.string().optional(),
 });
+
+export const categoryUpdateSchema = categorySchema.partial();
 
 export class CategoryController {
   static async list(_req: AuthenticatedRequest, res: Response) {
@@ -15,11 +17,10 @@ export class CategoryController {
   }
 
   static async create(req: AuthenticatedRequest, res: Response) {
-    const parsed = categorySchema.parse(req.body);
     const ipAddress = req.ip || req.socket.remoteAddress;
 
     const category = await CategoryService.createCategory(
-      parsed,
+      req.body,
       req.user!.id,
       ipAddress
     );
@@ -27,12 +28,11 @@ export class CategoryController {
   }
 
   static async update(req: AuthenticatedRequest, res: Response) {
-    const parsed = categorySchema.partial().parse(req.body);
     const ipAddress = req.ip || req.socket.remoteAddress;
 
     const category = await CategoryService.updateCategory(
       req.params.id,
-      parsed,
+      req.body,
       req.user!.id,
       ipAddress
     );

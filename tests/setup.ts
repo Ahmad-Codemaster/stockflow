@@ -10,7 +10,7 @@ beforeAll(async () => {
   const dbUrl = process.env.DATABASE_URL;
   if (dbUrl && (dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://'))) {
     try {
-      execSync('npx prisma db push --skip-generate --accept-data-loss', {
+      execSync('npx prisma migrate deploy', {
         env: { ...process.env, DATABASE_URL: dbUrl },
         stdio: 'ignore',
       });

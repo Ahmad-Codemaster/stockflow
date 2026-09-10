@@ -254,51 +254,82 @@ export class UserService {
       throw new AppError('You cannot delete your own active administrator account.', 400, 'SELF_DELETION_FORBIDDEN');
     }
 
-    const user = await prisma.user.findUnique({ where: { id } });
-    if (!user) {
-      throw new AppError('User not found.', 404, 'NOT_FOUND');
-    }
+    // Execute cascading updates, last-admin guard, and user deletion atomically inside an ACID transaction
+    const deletedUser = await prisma.$transaction(async (tx) => {
+      // 1. Fetch and lock all active administrators in deterministic order to prevent race conditions and deadlocks
+      const activeAdmins = await tx.$queryRaw<
+        Array<{ id: string; name: string; email: string; role: string; status: string }>
+      >`
+        SELECT id, name, email, role, status
+        FROM users
+        WHERE role = 'ADMIN' AND status = 'Active'
+        ORDER BY id
+        FOR UPDATE
+      `;
 
-    // LAST-ADMIN GUARD: Prevent deleting the last admin
-    if (user.role === 'ADMIN') {
-      const activeAdminCount = await prisma.user.count({ where: { role: 'ADMIN', status: 'Active' } });
-      if (activeAdminCount <= 1) {
+      // 2. Locate target user under lock
+      let targetUser = activeAdmins.find(u => u.id === id);
+      if (!targetUser) {
+        const rows = await tx.$queryRaw<
+          Array<{ id: string; name: string; email: string; role: string; status: string }>
+        >`
+          SELECT id, name, email, role, status
+          FROM users
+          WHERE id = ${id}
+          FOR UPDATE
+        `;
+        targetUser = rows[0];
+      }
+
+      if (!targetUser) {
+        throw new AppError('User not found.', 404, 'NOT_FOUND');
+      }
+
+      // 3. CONCURRENCY-SAFE LAST-ADMIN GUARD:
+      // If the target user being deleted is an active admin, fail if remaining active admins <= 1
+      const isTargetActiveAdmin = activeAdmins.some(u => u.id === id);
+      if (isTargetActiveAdmin && activeAdmins.length <= 1) {
         throw new AppError(
           'Cannot delete the last administrator account. At least one active admin must exist at all times.',
           400,
           'LAST_ADMIN'
         );
       }
-    }
 
-    // 1. Delete all active sessions for this user
-    await prisma.session.deleteMany({ where: { userId: id } });
+      // 4. Delete all active sessions for this user
+      await tx.session.deleteMany({ where: { userId: id } });
 
-    // 2. Reassign any existing stock transactions performed by this user to the admin to maintain historical movement integrity
-    await prisma.stockTransaction.updateMany({
-      where: { performedById: id },
-      data: { performedById: adminUserId },
+      // 5. Reassign any existing stock transactions performed by this user to the admin to maintain historical movement integrity
+      await tx.stockTransaction.updateMany({
+        where: { performedById: id },
+        data: { performedById: adminUserId },
+      });
+
+      // 6. Nullify user reference in audit logs
+      await tx.auditLog.updateMany({
+        where: { userId: id },
+        data: { userId: null },
+      });
+
+      // 7. Delete user record
+      await tx.user.delete({ where: { id } });
+
+      // 8. Log audit action atomically INSIDE transaction
+      await AuditService.log(
+        {
+          userId: adminUserId,
+          action: 'USER_DELETE',
+          entity: 'USER',
+          entityId: id,
+          details: { name: targetUser.name, email: targetUser.email, role: targetUser.role },
+          ipAddress,
+        },
+        tx
+      );
+
+      return targetUser;
     });
 
-    // 3. Nullify user reference in audit logs
-    await prisma.auditLog.updateMany({
-      where: { userId: id },
-      data: { userId: null },
-    });
-
-    // 4. Delete user record
-    await prisma.user.delete({ where: { id } });
-
-    // 5. Log audit action
-    await AuditService.log({
-      userId: adminUserId,
-      action: 'USER_DELETE',
-      entity: 'USER',
-      entityId: id,
-      details: { name: user.name, email: user.email, role: user.role },
-      ipAddress,
-    });
-
-    return { message: `User "${user.name}" removed successfully.` };
+    return { message: `User "${deletedUser.name}" removed successfully.` };
   }
 }

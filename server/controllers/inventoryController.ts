@@ -15,7 +15,7 @@ import { InventoryService } from '../services/inventoryService';
 import type { AuthenticatedRequest } from '../types/api';
 
 // Validation schema for Stock-In request payload
-const stockInSchema = z.object({
+export const stockInSchema = z.object({
   productId: z.string().min(1, 'Product is required'),
   quantity: z.number().int().positive('Quantity must be greater than 0'),
   supplierId: z.string().nullable().optional(),
@@ -24,11 +24,38 @@ const stockInSchema = z.object({
 });
 
 // Validation schema for Stock-Out request payload
-const stockOutSchema = z.object({
+export const stockOutSchema = z.object({
   productId: z.string().min(1, 'Product is required'),
   quantity: z.number().int().positive('Quantity must be greater than 0'),
   reference: z.string().optional(),
   notes: z.string().optional(),
+});
+
+// Validation schema for Stock-Adjustment request payload
+export const stockAdjustSchema = z
+  .object({
+    productId: z.string().min(1, 'Product is required'),
+    targetQuantity: z.number().int().min(0, 'Target quantity cannot be negative').optional(),
+    quantity: z.number().int().optional(),
+    reference: z.string().optional(),
+    notes: z.string().optional(),
+  })
+  .refine(data => data.targetQuantity !== undefined || data.quantity !== undefined, {
+    message: 'Either targetQuantity or quantity delta must be provided',
+  });
+
+export const inventoryQuerySchema = z.object({
+  search: z.string().trim().max(100).optional(),
+  categoryId: z.string().trim().optional(),
+  status: z.enum(['All', 'all', 'In Stock', 'Low Stock', 'Out of Stock']).optional(),
+});
+
+export const transactionQuerySchema = z.object({
+  type: z.enum(['all', 'ALL', 'stock_in', 'STOCK_IN', 'stock_out', 'STOCK_OUT', 'adjustment', 'ADJUSTMENT', 'Stock In', 'Stock Out', 'Adjustment']).optional(),
+  productId: z.string().trim().optional(),
+  limit: z
+    .preprocess((val) => (val !== undefined && val !== '' ? Number(val) : 100), z.number().int().positive().max(500))
+    .optional(),
 });
 
 export class InventoryController {
@@ -36,10 +63,11 @@ export class InventoryController {
    * GET /api/inventory: List live stock levels with query filters
    */
   static async list(req: AuthenticatedRequest, res: Response) {
+    const query = req.query as any;
     const inventory = await InventoryService.listInventory({
-      search: req.query.search as string,
-      categoryId: req.query.categoryId as string,
-      status: req.query.status as string,
+      search: query.search,
+      categoryId: query.categoryId,
+      status: query.status,
     });
     return res.status(200).json({ success: true, data: inventory });
   }
@@ -48,12 +76,10 @@ export class InventoryController {
    * POST /api/inventory/stock-in: Record receiving restock
    */
   static async stockIn(req: AuthenticatedRequest, res: Response) {
-    // Validate request body against schema (throws ZodError if invalid)
-    const parsed = stockInSchema.parse(req.body);
     const ipAddress = req.ip || req.socket.remoteAddress;
 
     const result = await InventoryService.stockIn(
-      parsed,
+      req.body,
       req.user!.id,
       ipAddress
     );
@@ -64,12 +90,24 @@ export class InventoryController {
    * POST /api/inventory/stock-out: Record order fulfillment deduction
    */
   static async stockOut(req: AuthenticatedRequest, res: Response) {
-    // Validate request body against schema
-    const parsed = stockOutSchema.parse(req.body);
     const ipAddress = req.ip || req.socket.remoteAddress;
 
     const result = await InventoryService.stockOut(
-      parsed,
+      req.body,
+      req.user!.id,
+      ipAddress
+    );
+    return res.status(200).json({ success: true, data: result });
+  }
+
+  /**
+   * POST /api/inventory/adjust: Record inventory count adjustment / shrinkage
+   */
+  static async adjust(req: AuthenticatedRequest, res: Response) {
+    const ipAddress = req.ip || req.socket.remoteAddress;
+
+    const result = await InventoryService.stockAdjustment(
+      req.body,
       req.user!.id,
       ipAddress
     );
@@ -80,10 +118,11 @@ export class InventoryController {
    * GET /api/inventory/transactions: Retrieve stock ledger
    */
   static async listTransactions(req: AuthenticatedRequest, res: Response) {
+    const query = req.query as any;
     const txns = await InventoryService.listTransactions({
-      type: req.query.type as string,
-      productId: req.query.productId as string,
-      limit: Number(req.query.limit) || 100,
+      type: query.type,
+      productId: query.productId,
+      limit: query.limit || 100,
     });
     return res.status(200).json({ success: true, data: txns });
   }

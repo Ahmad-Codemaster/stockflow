@@ -3,12 +3,21 @@ services:
     name: stockflow
     runtime: node
     plan: free
-    buildCommand: npm install && npx prisma db push --skip-generate && npm run build
-    startCommand: npm start
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: file:./dev.db
-      - key: JWT_SECRET
-        generateValue: true
+        fromDatabase:
+          name: stockflow-postgres
+          property: connectionString
+      - key: CORS_ORIGIN
+        value: https://stockflow.onrender.com
+
+databases:
+  - name: stockflow-postgres
+    plan: free
+    databaseName: stockflow
+    user: stockflow_user
+

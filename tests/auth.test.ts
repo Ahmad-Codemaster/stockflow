@@ -38,9 +38,14 @@ describe('Authentication & Session Management', () => {
     expect(res.headers['set-cookie']).toBeDefined();
     expect(res.headers['set-cookie'][0]).toContain('stockflow_session=');
 
-    // Verify session row exists in DB
-    const sessionId = res.body.data.sessionId;
-    const dbSession = await prisma.session.findUnique({ where: { id: sessionId } });
+    // SECURITY INVARIANT: Raw session token MUST NOT be exposed in response body
+    expect(res.body.data.sessionId).toBeUndefined();
+
+    // Verify session row exists in DB by extracting token from HttpOnly cookie
+    const cookie = res.headers['set-cookie'][0];
+    const sessionId = cookie.match(/stockflow_session=([^;]+)/)?.[1];
+    expect(sessionId).toBeDefined();
+    const dbSession = await prisma.session.findUnique({ where: { id: sessionId! } });
     expect(dbSession).toBeDefined();
     expect(dbSession?.userId).toBe('u1');
   });

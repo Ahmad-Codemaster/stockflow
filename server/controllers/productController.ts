@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { ProductService } from '../services/productService';
 import type { AuthenticatedRequest } from '../types/api';
 
-const createProductSchema = z.object({
+export const createProductSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
   sku: z.string().min(1, 'SKU is required'),
   categoryId: z.string().min(1, 'Category is required'),
@@ -14,7 +14,7 @@ const createProductSchema = z.object({
   description: z.string().optional(),
 });
 
-const updateProductSchema = z.object({
+export const updateProductSchema = z.object({
   name: z.string().min(1).optional(),
   categoryId: z.string().min(1).optional(),
   supplierId: z.string().nullable().optional(),
@@ -23,13 +23,23 @@ const updateProductSchema = z.object({
   description: z.string().optional(),
 });
 
+export const productQuerySchema = z.object({
+  search: z.string().trim().max(100).optional(),
+  categoryId: z.string().trim().optional(),
+  status: z.enum(['All', 'all', 'In Stock', 'Low Stock', 'Out of Stock']).optional(),
+  includeArchived: z
+    .preprocess((val) => val === 'true' || val === true, z.boolean())
+    .optional(),
+});
+
 export class ProductController {
   static async list(req: AuthenticatedRequest, res: Response) {
+    const query = req.query as any;
     const products = await ProductService.listProducts({
-      search: req.query.search as string,
-      categoryId: req.query.categoryId as string,
-      status: req.query.status as any,
-      includeArchived: req.query.includeArchived === 'true',
+      search: query.search,
+      categoryId: query.categoryId,
+      status: query.status,
+      includeArchived: query.includeArchived === true,
     });
     return res.status(200).json({ success: true, data: products });
   }
@@ -40,11 +50,9 @@ export class ProductController {
   }
 
   static async create(req: AuthenticatedRequest, res: Response) {
-    const parsed = createProductSchema.parse(req.body);
     const ipAddress = req.ip || req.socket.remoteAddress;
-
     const product = await ProductService.createProduct(
-      parsed,
+      req.body,
       req.user!.id,
       ipAddress
     );
@@ -52,12 +60,10 @@ export class ProductController {
   }
 
   static async update(req: AuthenticatedRequest, res: Response) {
-    const parsed = updateProductSchema.parse(req.body);
     const ipAddress = req.ip || req.socket.remoteAddress;
-
     const product = await ProductService.updateProduct(
       req.params.id,
-      parsed,
+      req.body,
       req.user!.id,
       ipAddress
     );

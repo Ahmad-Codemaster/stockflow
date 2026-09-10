@@ -5,7 +5,7 @@
  * What this module does:
  * - Executes Stock-In (receiving/restocking) and Stock-Out (fulfillment/deduction).
  * - Enforces the strict domain invariant: inventory can NEVER drop below zero.
- * - Prevents race conditions using an in-process Promise-chained Mutex (`AsyncLock`).
+ * - Prevents race conditions across instances using PostgreSQL row-level locking (`SELECT ... FOR UPDATE`).
  * - Executes all multi-table mutations inside atomic ACID transactions (`prisma.$transaction`).
  * - Writes immutable audit logs and ledger transactions for every inventory movement.
  */
@@ -15,51 +15,14 @@ import { AppError } from '../middleware/errorHandler';
 import { AuditService } from './auditService';
 import { computeStockStatus } from './productService';
 
-/**
- * AsyncLock: In-Memory Concurrency Mutex
- * 
- * Why this exists:
- * - If two HTTP requests attempt to modify stock for the same product at the exact
- *   same millisecond, both could read the initial stock before either writes back.
- * - `AsyncLock` chains operations onto a single FIFO Promise queue, ensuring that
- *   critical stock-out operations are executed sequentially within this Node process.
- * 
- * Trade-off to mention in interviews:
- * - In a single Node.js instance, this in-memory queue eliminates race conditions.
- * - If horizontally scaled to multiple container replicas, distributed locking (Redis Redlock)
- *   or PostgreSQL row-level locks (`SELECT ... FOR UPDATE`) would be required across instances.
- */
-class AsyncLock {
-  private queue: Promise<void> = Promise.resolve();
-
-  acquire<T>(fn: () => Promise<T>): Promise<T> {
-    const result = this.queue.then(fn);
-    // Keep the queue alive regardless of whether the task succeeded or rejected
-    this.queue = result.then(
-      () => {},
-      () => {}
-    );
-    return result;
-  }
-}
-
-// Global instance of the mutex for inventory operations
-const stockLock = new AsyncLock();
-
 export class InventoryService {
   /**
    * STOCK-IN WORKFLOW: Restock inventory
    * 
-   * Steps:
-   * 1. Validate that quantity is a positive integer.
-   * 2. Acquire concurrency lock.
-   * 3. Start ACID database transaction:
-   *    a. Read current product quantity.
-   *    b. Calculate newStock = previousStock + quantity.
-   *    c. Update product quantity in `products` table.
-   *    d. Insert an immutable `stock_transactions` record for audit trail.
-   * 4. Log high-level audit record in `audit_logs` table.
-   * 5. Return updated product details and freshly calculated stock status.
+   * Concurrency & Atomicity:
+   * - Uses PostgreSQL row-level locking (`SELECT ... FOR UPDATE`) inside an ACID transaction.
+   * - Serializes concurrent updates to the same product across all application instances.
+   * - Ledger transaction and audit log are committed atomically together.
    */
   static async stockIn(
     params: {
@@ -78,82 +41,108 @@ export class InventoryService {
       throw new AppError('Quantity must be a positive integer.', 400, 'VALIDATION_ERROR');
     }
 
-    // 2. Serialize execution through AsyncLock to prevent race conditions
-    return stockLock.acquire(async () => {
-      // 3. Begin atomic database transaction (all or nothing)
-      const result = await prisma.$transaction(async (tx) => {
-        const product = await tx.product.findUnique({
-          where: { id: params.productId },
-        });
+    // 2. Execute within an atomic transaction with row-level locking
+    const result = await prisma.$transaction(async (tx) => {
+      // Row-level lock: prevents concurrent mutations on this product across all instances
+      const rows = await tx.$queryRaw<
+        Array<{
+          id: string;
+          name: string;
+          sku: string;
+          categoryId: string;
+          supplierId: string | null;
+          price: number;
+          quantity: number;
+          reorderLevel: number;
+          isArchived: boolean;
+        }>
+      >`
+        SELECT 
+          id,
+          name,
+          sku,
+          category_id AS "categoryId",
+          supplier_id AS "supplierId",
+          price,
+          quantity,
+          reorder_level AS "reorderLevel",
+          is_archived AS "isArchived"
+        FROM products
+        WHERE id = ${params.productId}
+        FOR UPDATE
+      `;
 
-        if (!product || product.isArchived) {
-          throw new AppError('Product not found or is archived.', 404, 'NOT_FOUND');
-        }
+      const product = rows[0];
+      if (!product || product.isArchived) {
+        throw new AppError('Product not found or is archived.', 404, 'NOT_FOUND');
+      }
 
-        const previousStock = product.quantity;
-        const newStock = previousStock + qty;
+      const previousStock = product.quantity;
+      const newStock = previousStock + qty;
 
-        // Update product stock count
-        await tx.product.update({
-          where: { id: product.id },
-          data: { quantity: newStock },
-        });
+      // Update product stock count
+      await tx.product.update({
+        where: { id: product.id },
+        data: { quantity: newStock },
+      });
 
-        // Create immutable ledger record
-        const txn = await tx.stockTransaction.create({
-          data: {
-            productId: product.id,
-            type: 'STOCK_IN',
+      // Create immutable ledger record
+      const txn = await tx.stockTransaction.create({
+        data: {
+          productId: product.id,
+          type: 'STOCK_IN',
+          quantity: qty,
+          previousStock,
+          newStock,
+          supplierId: params.supplierId || product.supplierId || null,
+          performedById: userId,
+          reference: params.reference?.trim() || null,
+          notes: params.notes?.trim() || null,
+        },
+      });
+
+      // Record audit log atomically INSIDE transaction
+      await AuditService.log(
+        {
+          userId,
+          action: 'STOCK_IN',
+          entity: 'INVENTORY',
+          entityId: product.id,
+          details: {
+            product: product.name,
+            sku: product.sku,
             quantity: qty,
             previousStock,
             newStock,
-            supplierId: params.supplierId || product.supplierId || null,
-            performedById: userId,
-            reference: params.reference?.trim() || null,
-            notes: params.notes?.trim() || null,
+            transactionId: txn.id,
           },
-        });
-
-        return { product, txn, previousStock, newStock };
-      });
-
-      // 4. Record audit log outside transaction so business operation is already committed
-      await AuditService.log({
-        userId,
-        action: 'STOCK_IN',
-        entity: 'INVENTORY',
-        entityId: result.product.id,
-        details: {
-          product: result.product.name,
-          sku: result.product.sku,
-          quantity: qty,
-          previousStock: result.previousStock,
-          newStock: result.newStock,
-          transactionId: result.txn.id,
+          ipAddress,
         },
-        ipAddress,
-      });
+        tx
+      );
 
-      // 5. Return response with dynamically computed stock status
-      return {
-        transactionId: result.txn.id,
-        productId: result.product.id,
-        productName: result.product.name,
-        previousStock: result.previousStock,
-        newStock: result.newStock,
-        status: computeStockStatus(result.newStock, result.product.reorderLevel),
-      };
+      return { product, txn, previousStock, newStock };
     });
+
+    // 3. Return response with dynamically computed stock status
+    return {
+      transactionId: result.txn.id,
+      productId: result.product.id,
+      productName: result.product.name,
+      previousStock: result.previousStock,
+      newStock: result.newStock,
+      status: computeStockStatus(result.newStock, result.product.reorderLevel),
+    };
   }
 
   /**
    * STOCK-OUT WORKFLOW: Deduct inventory for fulfillment
    * 
-   * Critical Business Rule (Negative Stock Prevention):
-   * - `product.quantity >= quantity`. If requested quantity exceeds available stock,
-   *   an `AppError` with code `INSUFFICIENT_STOCK` is thrown immediately.
-   * - Because this is inside `prisma.$transaction`, throwing an error automatically
-   *   ROLLS BACK the transaction: zero database mutations occur.
+   * Concurrency & Atomicity:
+   * - Row-level locking (`SELECT ... FOR UPDATE`) prevents lost updates and over-deduction race conditions.
+   * - Invariant `product.quantity >= quantity` verified under row lock.
+   * - Negative stock prevention enforced at both application layer and DB CHECK constraint level.
+   * - If stock is insufficient, throws AppError which automatically rolls back the transaction.
    */
   static async stockOut(
     params: {
@@ -171,82 +160,244 @@ export class InventoryService {
       throw new AppError('Quantity must be a positive integer.', 400, 'VALIDATION_ERROR');
     }
 
-    // 2. Serialize through AsyncLock
-    return stockLock.acquire(async () => {
-      // 3. Begin atomic database transaction
-      const result = await prisma.$transaction(async (tx) => {
-        const product = await tx.product.findUnique({
-          where: { id: params.productId },
-        });
+    // 2. Execute within atomic transaction with row-level locking
+    const result = await prisma.$transaction(async (tx) => {
+      // Row-level lock: acquires exclusive row lock on this product row
+      const rows = await tx.$queryRaw<
+        Array<{
+          id: string;
+          name: string;
+          sku: string;
+          categoryId: string;
+          supplierId: string | null;
+          price: number;
+          quantity: number;
+          reorderLevel: number;
+          isArchived: boolean;
+        }>
+      >`
+        SELECT 
+          id,
+          name,
+          sku,
+          category_id AS "categoryId",
+          supplier_id AS "supplierId",
+          price,
+          quantity,
+          reorder_level AS "reorderLevel",
+          is_archived AS "isArchived"
+        FROM products
+        WHERE id = ${params.productId}
+        FOR UPDATE
+      `;
 
-        if (!product || product.isArchived) {
-          throw new AppError('Product not found or is archived.', 404, 'NOT_FOUND');
-        }
+      const product = rows[0];
+      if (!product || product.isArchived) {
+        throw new AppError('Product not found or is archived.', 404, 'NOT_FOUND');
+      }
 
-        // CRITICAL BUSINESS INVARIANT: Zero negative stock allowed
-        if (product.quantity < qty) {
-          throw new AppError(
-            `Insufficient stock. Only ${product.quantity} units are available.`,
-            400,
-            'INSUFFICIENT_STOCK',
-            { available: product.quantity, requested: qty }
-          );
-        }
+      // CRITICAL BUSINESS INVARIANT: Zero negative stock allowed
+      if (product.quantity < qty) {
+        throw new AppError(
+          `Insufficient stock. Only ${product.quantity} units are available.`,
+          400,
+          'INSUFFICIENT_STOCK',
+          { available: product.quantity, requested: qty }
+        );
+      }
 
-        const previousStock = product.quantity;
-        const newStock = previousStock - qty;
+      const previousStock = product.quantity;
+      const newStock = previousStock - qty;
 
-        // Deduct inventory in database
-        await tx.product.update({
-          where: { id: product.id },
-          data: { quantity: newStock },
-        });
+      // Deduct inventory in database
+      await tx.product.update({
+        where: { id: product.id },
+        data: { quantity: newStock },
+      });
 
-        // Insert immutable stock transaction ledger row
-        const txn = await tx.stockTransaction.create({
-          data: {
-            productId: product.id,
-            type: 'STOCK_OUT',
+      // Insert immutable stock transaction ledger row
+      const txn = await tx.stockTransaction.create({
+        data: {
+          productId: product.id,
+          type: 'STOCK_OUT',
+          quantity: qty,
+          previousStock,
+          newStock,
+          supplierId: null,
+          performedById: userId,
+          reference: params.reference?.trim() || null,
+          notes: params.notes?.trim() || null,
+        },
+      });
+
+      // Record audit log atomically INSIDE transaction
+      await AuditService.log(
+        {
+          userId,
+          action: 'STOCK_OUT',
+          entity: 'INVENTORY',
+          entityId: product.id,
+          details: {
+            product: product.name,
+            sku: product.sku,
             quantity: qty,
             previousStock,
             newStock,
-            supplierId: null,
-            performedById: userId,
-            reference: params.reference?.trim() || null,
-            notes: params.notes?.trim() || null,
+            transactionId: txn.id,
           },
-        });
-
-        return { product, txn, previousStock, newStock };
-      });
-
-      // 4. Record audit log
-      await AuditService.log({
-        userId,
-        action: 'STOCK_OUT',
-        entity: 'INVENTORY',
-        entityId: result.product.id,
-        details: {
-          product: result.product.name,
-          sku: result.product.sku,
-          quantity: qty,
-          previousStock: result.previousStock,
-          newStock: result.newStock,
-          transactionId: result.txn.id,
+          ipAddress,
         },
-        ipAddress,
+        tx
+      );
+
+      return { product, txn, previousStock, newStock };
+    });
+
+    // 3. Return updated stock and newly calculated status (e.g., 'Low Stock' or 'Out of Stock')
+    return {
+      transactionId: result.txn.id,
+      productId: result.product.id,
+      productName: result.product.name,
+      previousStock: result.previousStock,
+      newStock: result.newStock,
+      status: computeStockStatus(result.newStock, result.product.reorderLevel),
+    };
+  }
+
+  /**
+   * STOCK-ADJUSTMENT WORKFLOW: Reconcile physical inventory counts / shrinkage / audit adjustments
+   * 
+   * Features:
+   * - Supports targetQuantity (absolute stock count) or quantity delta (+/-).
+   * - Uses PostgreSQL row-level locking (`SELECT ... FOR UPDATE`) inside an ACID transaction.
+   * - Enforces non-negative inventory invariant.
+   * - Records immutable 'ADJUSTMENT' transaction record.
+   * - Records atomic 'STOCK_ADJUSTMENT' audit log.
+   */
+  static async stockAdjustment(
+    params: {
+      productId: string;
+      targetQuantity?: number;
+      quantity?: number;
+      reference?: string;
+      notes?: string;
+    },
+    userId: string,
+    ipAddress?: string
+  ) {
+    if (params.targetQuantity === undefined && params.quantity === undefined) {
+      throw new AppError('Either targetQuantity or quantity delta must be provided.', 400, 'VALIDATION_ERROR');
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const rows = await tx.$queryRaw<
+        Array<{
+          id: string;
+          name: string;
+          sku: string;
+          categoryId: string;
+          supplierId: string | null;
+          price: number;
+          quantity: number;
+          reorderLevel: number;
+          isArchived: boolean;
+        }>
+      >`
+        SELECT 
+          id,
+          name,
+          sku,
+          category_id AS "categoryId",
+          supplier_id AS "supplierId",
+          price,
+          quantity,
+          reorder_level AS "reorderLevel",
+          is_archived AS "isArchived"
+        FROM products
+        WHERE id = ${params.productId}
+        FOR UPDATE
+      `;
+
+      const product = rows[0];
+      if (!product || product.isArchived) {
+        throw new AppError('Product not found or is archived.', 404, 'NOT_FOUND');
+      }
+
+      const previousStock = product.quantity;
+      let newStock: number;
+      let delta: number;
+
+      if (params.targetQuantity !== undefined) {
+        newStock = Number(params.targetQuantity);
+        delta = newStock - previousStock;
+      } else {
+        delta = Number(params.quantity);
+        newStock = previousStock + delta;
+      }
+
+      if (newStock < 0) {
+        throw new AppError(
+          `Adjustment would result in negative stock (${newStock}).`,
+          400,
+          'INSUFFICIENT_STOCK',
+          { available: previousStock, target: newStock, delta }
+        );
+      }
+
+      // Update product stock
+      await tx.product.update({
+        where: { id: product.id },
+        data: { quantity: newStock },
       });
 
-      // 5. Return updated stock and newly calculated status (e.g., 'Low Stock' or 'Out of Stock')
-      return {
-        transactionId: result.txn.id,
-        productId: result.product.id,
-        productName: result.product.name,
-        previousStock: result.previousStock,
-        newStock: result.newStock,
-        status: computeStockStatus(result.newStock, result.product.reorderLevel),
-      };
+      // Create ledger entry
+      const txn = await tx.stockTransaction.create({
+        data: {
+          productId: product.id,
+          type: 'ADJUSTMENT',
+          quantity: Math.abs(delta),
+          previousStock,
+          newStock,
+          supplierId: product.supplierId || null,
+          performedById: userId,
+          reference: params.reference?.trim() || null,
+          notes: params.notes?.trim() || null,
+        },
+      });
+
+      // Atomic audit logging
+      await AuditService.log(
+        {
+          userId,
+          action: 'STOCK_ADJUSTMENT',
+          entity: 'INVENTORY',
+          entityId: product.id,
+          details: {
+            product: product.name,
+            sku: product.sku,
+            previousStock,
+            newStock,
+            delta,
+            transactionId: txn.id,
+            notes: params.notes,
+          },
+          ipAddress,
+        },
+        tx
+      );
+
+      return { product, txn, previousStock, newStock, delta };
     });
+
+    return {
+      transactionId: result.txn.id,
+      productId: result.product.id,
+      productName: result.product.name,
+      previousStock: result.previousStock,
+      newStock: result.newStock,
+      delta: result.delta,
+      status: computeStockStatus(result.newStock, result.product.reorderLevel),
+    };
   }
 
   /**

@@ -1,16 +1,21 @@
 import prisma from '../db';
+import type { Prisma } from '@prisma/client';
 
 export class AuditService {
-  static async log(params: {
-    userId?: string | null;
-    action: string;
-    entity: string;
-    entityId?: string | null;
-    details?: Record<string, any> | string;
-    ipAddress?: string | null;
-  }) {
+  static async log(
+    params: {
+      userId?: string | null;
+      action: string;
+      entity: string;
+      entityId?: string | null;
+      details?: Record<string, any> | string;
+      ipAddress?: string | null;
+    },
+    tx?: Prisma.TransactionClient
+  ) {
+    const client = tx ?? prisma;
     try {
-      return await prisma.auditLog.create({
+      return await client.auditLog.create({
         data: {
           userId: params.userId ?? null,
           action: params.action,
@@ -25,6 +30,7 @@ export class AuditService {
       });
     } catch (err) {
       console.error('[AuditService.log Error]', err);
+      if (tx) throw err;
     }
   }
 
