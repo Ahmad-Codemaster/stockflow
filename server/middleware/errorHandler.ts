@@ -45,8 +45,9 @@ export function errorHandler(
 ) {
   // 1. Handle Zod input validation errors (e.g., malformed JSON payload)
   if (err instanceof ZodError) {
-    const details = err.errors.map(e => ({
-      path: e.path.join('.'),
+    const issues = err.issues || (err as any).errors || [];
+    const details = issues.map((e: any) => ({
+      path: Array.isArray(e.path) ? e.path.join('.') : String(e.path || ''),
       message: e.message,
     }));
     return res.status(400).json({

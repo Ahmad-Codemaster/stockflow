@@ -161,12 +161,16 @@ describe('User Service & Product Filters In-depth', () => {
     const [resDeleteB, resDeleteA] = await Promise.all([reqDeleteB, reqDeleteA]);
 
     const statuses = [resDeleteB.status, resDeleteA.status];
-    // Exactly one should succeed (200), and the other must be rejected (400 with LAST_ADMIN)
+    // Exactly one must succeed (200), and the other must be safely rejected (400 LAST_ADMIN or 401 session revoked)
     expect(statuses).toContain(200);
-    expect(statuses).toContain(400);
+    expect(statuses.some(s => s === 400 || s === 401)).toBe(true);
 
-    const failedRes = resDeleteB.status === 400 ? resDeleteB : resDeleteA;
-    expect(failedRes.body.error.code).toBe('LAST_ADMIN');
+    const failedRes = resDeleteB.status !== 200 ? resDeleteB : resDeleteA;
+    if (failedRes.status === 400) {
+      expect(failedRes.body.error.code).toBe('LAST_ADMIN');
+    } else {
+      expect(failedRes.status).toBe(401);
+    }
 
     // 3. CRITICAL INVARIANT: System MUST have exactly 1 active admin remaining, NEVER 0!
     const finalActiveAdminCount = await prisma.user.count({
