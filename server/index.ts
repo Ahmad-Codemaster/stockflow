@@ -5,7 +5,7 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3001;
 
-const server = app.listen(PORT, () => {
+const server = app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`🚀 StockFlow Backend API Server running on port ${PORT}`);
   console.log(`📊 Health Check: http://localhost:${PORT}/api/health`);
 });
