@@ -44,10 +44,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Generate Prisma Client & Push PostgreSQL Schema
+      - name: Generate Prisma Client & Deploy Migrations
         run: |
           npx prisma generate
-          npx prisma db push --skip-generate
+          npx prisma migrate deploy
           npx tsx server/seed.ts
         env:
           DATABASE_URL: "postgresql://postgres:password@localhost:5432/stockflow_test"
