@@ -70,7 +70,7 @@ export default function Header() {
   const isAdmin = currentUser?.role === 'ADMIN';
 
   return (
-    <header className="h-16 shrink-0 glass-header rounded-[24px] border border-white/50 flex items-center justify-between px-3 sm:px-6 md:px-7 z-30 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+    <header className="h-16 shrink-0 glass-header rounded-[17px] border border-white/50 flex items-center justify-between px-3 sm:px-6 md:px-7 z-30 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
       {/* Left Area: Mobile Drawer / Desktop Toggle + Breadcrumb Navigation */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <button
@@ -147,7 +147,7 @@ export default function Header() {
 
           {/* Search Dropdown Panel */}
           {showSearch && search.length > 1 && (
-            <div className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm glass-modal rounded-[24px] shadow-[0_16px_40px_rgba(0,0,0,0.08)] z-50 overflow-hidden border border-white/70 animate-fade-slide">
+            <div className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm glass-modal rounded-[17px] shadow-[0_16px_40px_rgba(0,0,0,0.08)] z-50 overflow-hidden border border-white/70 animate-fade-slide">
               <div className="px-4 py-3 bg-white/40 border-b border-white/60 flex items-center justify-between text-[11px] font-bold text-slate-600">
                 <span>Matching Products</span>
                 <span className="bg-white/80 px-2 py-0.5 rounded-full border border-white/80 text-[10px]">{searchResults.length} found</span>
@@ -213,7 +213,7 @@ export default function Header() {
           </button>
 
           {showNotif && (
-            <div className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm glass-modal rounded-[24px] shadow-[0_16px_40px_rgba(0,0,0,0.08)] z-50 overflow-hidden border border-white/70 animate-fade-slide">
+            <div className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm glass-modal rounded-[17px] shadow-[0_16px_40px_rgba(0,0,0,0.08)] z-50 overflow-hidden border border-white/70 animate-fade-slide">
               <div className="flex items-center justify-between px-4 py-3 bg-white/40 border-b border-white/60">
                 <div className="flex items-center gap-2">
                   <h3 className="text-xs font-bold text-slate-900">System Notifications</h3>

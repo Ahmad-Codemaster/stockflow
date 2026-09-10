@@ -23,7 +23,7 @@ export default function Modal({ title, onClose, children, size = 'md' }: ModalPr
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" onClick={onClose} />
       <div
-        className={`relative w-full ${widths[size]} max-h-[90vh] flex flex-col glass-modal rounded-[24px] border border-white/70 shadow-[0_24px_60px_rgba(0,0,0,0.08)] overflow-hidden animate-fade-slide`}
+        className={`relative w-full ${widths[size]} max-h-[90vh] flex flex-col glass-modal rounded-[17px] border border-white/70 shadow-[0_24px_60px_rgba(0,0,0,0.08)] overflow-hidden animate-fade-slide`}
       >
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 bg-white/40 border-b border-white/60 shrink-0">
           <h2 className="text-sm font-bold text-slate-900 tracking-[-0.025em]">{title}</h2>

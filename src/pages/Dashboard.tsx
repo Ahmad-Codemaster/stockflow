@@ -222,7 +222,7 @@ export default function Dashboard() {
 
       {/* Operational Quick-Start Banner (Apple Accent Card) */}
       {showGuideBanner && (
-        <div className="p-5 rounded-[24px] apple-accent-card text-white shadow-[0_12px_32px_rgba(99,102,241,0.25)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative overflow-hidden animate-fade-slide border border-white/30">
+        <div className="p-5 rounded-[17px] apple-accent-card text-white shadow-[0_12px_32px_rgba(99,102,241,0.25)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative overflow-hidden animate-fade-slide border border-white/30">
           <div className="flex items-center gap-3.5 z-10">
             <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shrink-0 shadow-sm">
               <Sparkles size={20} className="text-white" />
@@ -308,7 +308,7 @@ export default function Dashboard() {
       {/* Modern Graphical Visualizations Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* 7-Day Inbound / Outbound Bar Activity Chart */}
-        <div className="glass-card rounded-[24px] border border-white/60 p-5 md:p-6 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+        <div className="glass-card rounded-[17px] border border-white/60 p-5 md:p-6 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 border border-indigo-200/50">
@@ -331,7 +331,7 @@ export default function Dashboard() {
         </div>
 
         {/* Category Asset Valuation Donut Chart */}
-        <div className="glass-card rounded-[24px] border border-white/60 p-5 md:p-6 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+        <div className="glass-card rounded-[17px] border border-white/60 p-5 md:p-6 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 border border-purple-200/50">
@@ -357,7 +357,7 @@ export default function Dashboard() {
       {/* Main Grid: Inventory Distribution & Recent Ledger */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         {/* Inventory Status Breakdown */}
-        <div className="glass-card rounded-[24px] border border-white/60 p-5 md:p-6 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+        <div className="glass-card rounded-[17px] border border-white/60 p-5 md:p-6 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2 tracking-[-0.025em]">
@@ -389,7 +389,7 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Transactions Table Card */}
-        <div className="xl:col-span-2 glass-card rounded-[24px] border border-white/60 overflow-hidden flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+        <div className="xl:col-span-2 glass-card rounded-[17px] border border-white/60 overflow-hidden flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <div className="px-5 py-4 bg-white/40 border-b border-white/60 flex items-center justify-between">
             <div>
               <h2 className="text-sm font-bold text-slate-900 tracking-[-0.025em]">Recent Movement Ledger</h2>
@@ -479,7 +479,7 @@ export default function Dashboard() {
 
         {/* Low Stock Urgent Replenishment Priority Queue */}
         {lowStockProducts.length > 0 && (
-          <div className="xl:col-span-3 glass-card rounded-[24px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+          <div className="xl:col-span-3 glass-card rounded-[17px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
             <div className="px-5 py-4 bg-amber-500/10 border-b border-amber-200/50 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-amber-500/20 text-amber-700">

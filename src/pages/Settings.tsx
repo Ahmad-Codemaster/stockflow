@@ -70,7 +70,7 @@ export default function Settings() {
 
       <div className="space-y-5">
         {/* Profile Card */}
-        <section className="glass-card rounded-[24px] border border-white/60 p-6 md:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+        <section className="glass-card rounded-[17px] border border-white/60 p-6 md:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-2 mb-5">
             <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 border border-indigo-200/50">
               <User size={15} />
@@ -135,7 +135,7 @@ export default function Settings() {
         </section>
 
         {/* Change Password Card */}
-        <section className="glass-card rounded-[24px] border border-white/60 p-6 md:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+        <section className="glass-card rounded-[17px] border border-white/60 p-6 md:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-2 mb-5">
             <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 border border-purple-200/50">
               <KeyRound size={15} />
@@ -195,7 +195,7 @@ export default function Settings() {
         </section>
 
         {/* Preferences & Appearance Card */}
-        <section className="glass-card rounded-[24px] border border-white/60 p-6 md:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+        <section className="glass-card rounded-[17px] border border-white/60 p-6 md:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-2 mb-5">
             <div className="p-2 rounded-xl bg-teal-500/10 text-teal-600 border border-teal-200/50">
               <Palette size={15} />
@@ -234,7 +234,7 @@ export default function Settings() {
 
         {/* Store Data Management (ADMIN Only) */}
         {currentUser?.role === 'ADMIN' && (
-          <section className="glass-card rounded-[24px] border border-white/60 p-6 md:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+          <section className="glass-card rounded-[17px] border border-white/60 p-6 md:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 border border-indigo-200/50">
                 <Database size={15} />

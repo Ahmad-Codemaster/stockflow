@@ -94,7 +94,7 @@ export default function StockIn() {
       </div>
 
       {products.length === 0 && (
-        <div className="p-4.5 rounded-[24px] border border-indigo-200/60 bg-indigo-500/10 text-indigo-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-slide backdrop-blur-md">
+        <div className="p-4.5 rounded-[17px] border border-indigo-200/60 bg-indigo-500/10 text-indigo-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-slide backdrop-blur-md">
           <div>
             <p className="font-bold">No Products Available in Catalog</p>
             <p className="text-[11px] text-indigo-700 mt-0.5">
@@ -119,7 +119,7 @@ export default function StockIn() {
       )}
 
       <form onSubmit={handleSubmit} noValidate>
-        <div className="glass-card rounded-[24px] border border-white/60 p-6 md:p-8 space-y-5 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+        <div className="glass-card rounded-[17px] border border-white/60 p-6 md:p-8 space-y-5 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <FormField label="Target SKU / Product" required error={errors.productId}>
             <select
               value={productId}

@@ -56,7 +56,7 @@ const kpiIconTints = {
 
 export function KPICard({ label, value, sub, variant = 'default', icon, sparkline }: KPICardProps) {
   return (
-    <div className="glass-card glass-card-hover rounded-[24px] p-5.5 relative overflow-hidden flex flex-col justify-between border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+    <div className="glass-card glass-card-hover rounded-[17px] p-5.5 relative overflow-hidden flex flex-col justify-between border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
       {/* Subtle Top Gradient Accent Strip */}
       <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r ${kpiTopStripe[variant]}`} />
 
@@ -89,7 +89,7 @@ interface EmptyStateProps {
 
 export function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
-    <div className="glass-card rounded-[24px] flex flex-col items-center justify-center py-16 px-6 text-center border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+    <div className="glass-card rounded-[17px] flex flex-col items-center justify-center py-16 px-6 text-center border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
       <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 flex items-center justify-center mb-4 shadow-sm text-indigo-600 backdrop-blur-md">
         <Package size={26} />
       </div>
@@ -124,7 +124,7 @@ export function SkeletonRow({ cols }: { cols: number }) {
 
 export function SkeletonCard() {
   return (
-    <div className="glass-card rounded-[24px] p-5.5 animate-pulse border border-white/60">
+    <div className="glass-card rounded-[17px] p-5.5 animate-pulse border border-white/60">
       <div className="h-3.5 bg-slate-200/70 rounded w-24 mb-4" />
       <div className="h-8 bg-slate-200/70 rounded w-20 mb-2" />
       <div className="h-3 bg-slate-200/50 rounded w-32" />
@@ -158,7 +158,7 @@ export function Confirm({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-950/30 backdrop-blur-md" onClick={onCancel} />
-      <div className="relative w-full max-w-sm glass-modal rounded-[24px] p-6.5 animate-fade-slide border border-white/80 shadow-2xl">
+      <div className="relative w-full max-w-sm glass-modal rounded-[17px] p-6.5 animate-fade-slide border border-white/80 shadow-2xl">
         <div className="flex items-start gap-3.5 mb-4">
           <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0 text-rose-600">
             <AlertTriangle size={20} />

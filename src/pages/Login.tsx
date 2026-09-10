@@ -146,7 +146,7 @@ export default function Login() {
       {/* Main Authentication Card */}
       <main className="w-full max-w-md z-10">
         <div
-          className={`glass-card rounded-[24px] border border-white/60 shadow-[0_16px_40px_rgba(0,0,0,0.06)] p-7 md:p-9 transition-all duration-300 ${
+          className={`glass-card rounded-[17px] border border-white/60 shadow-[0_16px_40px_rgba(0,0,0,0.06)] p-7 md:p-9 transition-all duration-300 ${
             isShaking ? 'animate-shake' : ''
           }`}
         >
@@ -356,7 +356,7 @@ export default function Login() {
       {helpOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fade-slide">
           <div
-            className="glass-modal rounded-[24px] border border-white/70 shadow-[0_24px_60px_rgba(0,0,0,0.08)] max-w-sm w-full p-6 relative"
+            className="glass-modal rounded-[17px] border border-white/70 shadow-[0_24px_60px_rgba(0,0,0,0.08)] max-w-sm w-full p-6 relative"
             role="dialog"
             aria-modal="true"
           >

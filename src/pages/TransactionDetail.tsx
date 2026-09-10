@@ -78,7 +78,7 @@ export default function TransactionDetail() {
         </div>
       </div>
 
-      <div className="glass-card rounded-[24px] border border-white/60 overflow-hidden divide-y divide-white/50 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+      <div className="glass-card rounded-[17px] border border-white/60 overflow-hidden divide-y divide-white/50 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
         {rows.map(({ label, value }) => (
           <div key={label} className="flex items-start px-6 py-4 hover:bg-white/50 transition-colors text-xs">
             <dt className="w-52 shrink-0 font-bold text-slate-500">{label}</dt>

@@ -184,7 +184,7 @@ export default function ProductDetail() {
 
       {/* Stock Out Alert Warning if zero or low */}
       {status === 'Out of Stock' && (
-        <div className="p-4.5 bg-rose-500/10 border border-rose-200/60 rounded-[24px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-slide backdrop-blur-md">
+        <div className="p-4.5 bg-rose-500/10 border border-rose-200/60 rounded-[17px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-slide backdrop-blur-md">
           <div className="flex items-center gap-3 text-xs text-rose-800">
             <div className="p-2 bg-rose-500/20 rounded-xl text-rose-600 shrink-0">
               <AlertTriangle size={18} />
@@ -211,7 +211,7 @@ export default function ProductDetail() {
         {/* Left Column: Stock Analytics & Specifications */}
         <div className="space-y-5">
           {/* Stock Metrics Card */}
-          <div className="glass-card rounded-[24px] border border-white/60 p-5 md:p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+          <div className="glass-card rounded-[17px] border border-white/60 p-5 md:p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Physical Stock Level</h3>
               <StatusDot status={status} />
@@ -253,7 +253,7 @@ export default function ProductDetail() {
           </div>
 
           {/* Pricing & Valuation Card */}
-          <div className="glass-card rounded-[24px] border border-white/60 p-5 md:p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+          <div className="glass-card rounded-[17px] border border-white/60 p-5 md:p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">Financial Valuation</h3>
             <div className="space-y-3 text-xs">
               <div className="flex justify-between items-center py-1.5 border-b border-white/60">
@@ -274,7 +274,7 @@ export default function ProductDetail() {
           </div>
 
           {/* Supplier Directory Quick Card */}
-          <div className="glass-card rounded-[24px] border border-white/60 p-5 md:p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+          <div className="glass-card rounded-[17px] border border-white/60 p-5 md:p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Vendor Information</h3>
               <button
@@ -302,7 +302,7 @@ export default function ProductDetail() {
         {/* Right Column: Item Description & Immutable Ledger Table */}
         <div className="xl:col-span-2 space-y-5">
           {/* Specification / Description */}
-          <div className="glass-card rounded-[24px] border border-white/60 p-5 md:p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+          <div className="glass-card rounded-[17px] border border-white/60 p-5 md:p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Technical Description</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
               {product.description || 'No detailed technical specification provided for this product.'}
@@ -310,7 +310,7 @@ export default function ProductDetail() {
           </div>
 
           {/* Transaction Ledger for this product */}
-          <div className="glass-card rounded-[24px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+          <div className="glass-card rounded-[17px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
             <div className="px-5 py-4 bg-white/40 border-b border-white/60 flex items-center justify-between">
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">SKU Movement Audit Trail</h3>
