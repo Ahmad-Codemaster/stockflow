@@ -267,6 +267,12 @@ export class UserService {
         FOR UPDATE
       `;
 
+      // Verify that the caller is still an active administrator under lock
+      const callerAdmin = activeAdmins.find(u => u.id === adminUserId);
+      if (!callerAdmin) {
+        throw new AppError('Your administrator account is no longer active.', 401, 'UNAUTHORIZED');
+      }
+
       // 2. Locate target user under lock
       let targetUser = activeAdmins.find(u => u.id === id);
       if (!targetUser) {
