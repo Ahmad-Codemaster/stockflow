@@ -56,16 +56,19 @@ Default `.env` values:
 ```ini
 NODE_ENV=development
 PORT=3001
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/stockflow?schema=public"
 SESSION_SECRET="stockflow-secure-random-session-secret-key-32-chars-min"
 CORS_ORIGIN="http://localhost:5173"
 ```
 
 ### 3. Database Initialization
 ```bash
-# Generate Prisma Client and initialize SQLite schema
+# Generate Prisma Client and apply database migrations
 npx prisma generate
-npx prisma db push
+npx prisma migrate deploy
+
+# (Optional) Seed initial demo fixtures
+npm run db:seed
 ```
 
 ### 4. Running the Application Locally
