@@ -4,22 +4,53 @@ import Sidebar from './Sidebar';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-full overflow-hidden ambient-mesh-bg font-sans relative">
-      {/* Soft Ethereal Ambient Orbs */}
-      <div className="fixed top-12 left-64 w-96 h-96 bg-blue-400/8 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
-      <div className="fixed bottom-10 right-20 w-[30rem] h-[30rem] bg-indigo-400/6 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
-      <div className="fixed top-1/2 right-1/3 w-80 h-80 bg-teal-400/5 rounded-full blur-3xl pointer-events-none" />
+    <div className="flex h-screen w-screen overflow-hidden ambient-mesh-bg font-sans relative p-2.5 sm:p-3.5 lg:p-4.5 gap-2.5 sm:gap-3.5 lg:gap-4.5">
+      {/* 4 Large Ambient Background Lighting Orbs with Extreme Blur and 15%-20% Opacity */}
+      <div
+        className="fixed -top-16 left-[10%] w-[32rem] h-[32rem] rounded-full pointer-events-none animate-pulse-glow"
+        style={{
+          backgroundColor: '#818CF8',
+          filter: 'blur(140px)',
+          opacity: 0.18,
+        }}
+      />
+      <div
+        className="fixed -bottom-20 right-[8%] w-[36rem] h-[36rem] rounded-full pointer-events-none animate-pulse-glow"
+        style={{
+          backgroundColor: '#C084FC',
+          filter: 'blur(150px)',
+          opacity: 0.18,
+          animationDelay: '2.5s',
+        }}
+      />
+      <div
+        className="fixed top-[32%] right-[22%] w-[28rem] h-[28rem] rounded-full pointer-events-none"
+        style={{
+          backgroundColor: '#60A5FA',
+          filter: 'blur(130px)',
+          opacity: 0.16,
+        }}
+      />
+      <div
+        className="fixed bottom-[18%] left-[22%] w-[26rem] h-[26rem] rounded-full pointer-events-none"
+        style={{
+          backgroundColor: '#818CF8',
+          filter: 'blur(140px)',
+          opacity: 0.15,
+        }}
+      />
 
-      {/* Sidebar with Frosted Glass */}
+      {/* Floating Apple Glass Sidebar */}
       <Sidebar />
 
-      {/* Content Main Area */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative z-10">
+      {/* Main Structural Column (Header + Scrollable Body) */}
+      <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden relative z-10 gap-2.5 sm:gap-3.5">
         <Header />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 min-h-0 overflow-y-auto pr-0.5 sm:pr-1">
           {children}
         </main>
       </div>
     </div>
   );
 }
+

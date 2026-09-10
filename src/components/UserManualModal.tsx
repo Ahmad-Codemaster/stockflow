@@ -55,9 +55,9 @@ export default function UserManualModal({ isOpen, onClose }: UserManualModalProp
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-2xl border border-slate-200/90 shadow-2xl flex flex-col overflow-hidden animate-fade-slide">
+      <div className="relative w-full max-w-4xl max-h-[90vh] glass-modal rounded-[24px] border border-white/70 shadow-[0_24px_60px_rgba(0,0,0,0.08)] flex flex-col overflow-hidden animate-fade-slide">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 bg-slate-50/70 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/60 bg-white/40 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
               <Warehouse size={20} />

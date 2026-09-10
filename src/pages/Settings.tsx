@@ -70,27 +70,27 @@ export default function Settings() {
 
       <div className="space-y-5">
         {/* Profile Card */}
-        <section className="glass-card rounded-2xl p-6">
+        <section className="glass-card rounded-[24px] border border-white/60 p-6 md:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-2 mb-5">
-            <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
+            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 border border-indigo-200/50">
               <User size={15} />
             </div>
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800">Operator Identity</h2>
           </div>
 
           <form onSubmit={saveProfile} className="space-y-4">
-            <div className="flex items-center gap-4 mb-5 p-3.5 bg-slate-50/80 rounded-xl border border-slate-200/60">
+            <div className="flex items-center gap-4 mb-5 p-4 bg-white/50 rounded-2xl border border-white/60 backdrop-blur-xs">
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-bold shadow-sm ${
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white text-lg font-bold shadow-sm ${
                   currentUser?.role === 'ADMIN'
-                    ? 'bg-gradient-to-br from-blue-600 to-indigo-600'
+                    ? 'bg-gradient-to-br from-indigo-600 to-purple-600'
                     : 'bg-gradient-to-br from-emerald-600 to-teal-600'
                 }`}
               >
                 {currentUser?.name.charAt(0)}
               </div>
               <div>
-                <p className="font-bold text-slate-900 text-sm">{currentUser?.name}</p>
+                <p className="font-bold text-slate-900 text-sm tracking-[-0.025em]">{currentUser?.name}</p>
                 <p className="text-xs text-slate-400 font-mono">{currentUser?.email}</p>
                 <div className="mt-1">
                   <Badge variant={currentUser?.role === 'ADMIN' ? 'Admin' : 'Staff'} />
@@ -102,7 +102,7 @@ export default function Settings() {
               <input
                 value={profileName}
                 onChange={(e) => setProfileName(e.target.value)}
-                className="w-full px-3.5 py-2 text-xs rounded-xl glass-input text-slate-900 placeholder-slate-400 focus:outline-none"
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl glass-input text-slate-900 placeholder-slate-400 focus:outline-none"
               />
             </FormField>
 
@@ -110,7 +110,7 @@ export default function Settings() {
               <input
                 value={currentUser?.email ?? ''}
                 disabled
-                className="w-full px-3.5 py-2 text-xs rounded-xl glass-input text-slate-400 bg-slate-100/60 cursor-not-allowed font-mono"
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl glass-input text-slate-400 bg-white/40 cursor-not-allowed font-mono"
               />
             </FormField>
 
@@ -118,7 +118,7 @@ export default function Settings() {
               <input
                 value={currentUser?.role === 'ADMIN' ? 'Administrator (Full Authority)' : 'Staff (Operations Terminal)'}
                 disabled
-                className="w-full px-3.5 py-2 text-xs rounded-xl glass-input text-slate-400 bg-slate-100/60 cursor-not-allowed"
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl glass-input text-slate-400 bg-white/40 cursor-not-allowed"
               />
             </FormField>
 
@@ -126,7 +126,7 @@ export default function Settings() {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 gradient-btn-primary text-white text-xs font-semibold rounded-xl shadow-md disabled:opacity-60"
+                className="px-4 py-2 gradient-btn-primary text-white text-xs font-semibold rounded-xl shadow-md disabled:opacity-60 cursor-pointer"
               >
                 {saving ? 'Saving...' : 'Update Profile'}
               </button>
@@ -135,9 +135,9 @@ export default function Settings() {
         </section>
 
         {/* Change Password Card */}
-        <section className="glass-card rounded-2xl p-6">
+        <section className="glass-card rounded-[24px] border border-white/60 p-6 md:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-2 mb-5">
-            <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100">
+            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 border border-purple-200/50">
               <KeyRound size={15} />
             </div>
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800">Security Credentials</h2>
@@ -153,7 +153,7 @@ export default function Settings() {
                   if (pwErrors.current) setPwErrors((er) => ({ ...er, current: undefined as any }));
                 }}
                 placeholder="••••••••"
-                className="w-full px-3.5 py-2 text-xs rounded-xl glass-input text-slate-900 placeholder-slate-400 focus:outline-none"
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl glass-input text-slate-900 placeholder-slate-400 focus:outline-none"
               />
             </FormField>
 
@@ -166,7 +166,7 @@ export default function Settings() {
                   if (pwErrors.next) setPwErrors((er) => ({ ...er, next: undefined as any }));
                 }}
                 placeholder="••••••••"
-                className="w-full px-3.5 py-2 text-xs rounded-xl glass-input text-slate-900 placeholder-slate-400 focus:outline-none"
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl glass-input text-slate-900 placeholder-slate-400 focus:outline-none"
               />
             </FormField>
 
@@ -179,14 +179,14 @@ export default function Settings() {
                   if (pwErrors.confirm) setPwErrors((er) => ({ ...er, confirm: undefined as any }));
                 }}
                 placeholder="••••••••"
-                className="w-full px-3.5 py-2 text-xs rounded-xl glass-input text-slate-900 placeholder-slate-400 focus:outline-none"
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl glass-input text-slate-900 placeholder-slate-400 focus:outline-none"
               />
             </FormField>
 
             <div className="flex justify-end pt-2">
               <button
                 type="submit"
-                className="px-4 py-2 gradient-btn-primary text-white text-xs font-semibold rounded-xl shadow-md"
+                className="px-4 py-2 gradient-btn-primary text-white text-xs font-semibold rounded-xl shadow-md cursor-pointer"
               >
                 Change Password
               </button>
@@ -195,16 +195,16 @@ export default function Settings() {
         </section>
 
         {/* Preferences & Appearance Card */}
-        <section className="glass-card rounded-2xl p-6">
+        <section className="glass-card rounded-[24px] border border-white/60 p-6 md:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-2 mb-5">
-            <div className="p-1.5 rounded-lg bg-teal-50 text-teal-600 border border-teal-100">
+            <div className="p-2 rounded-xl bg-teal-500/10 text-teal-600 border border-teal-200/50">
               <Palette size={15} />
             </div>
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800">Interface & Alerts</h2>
           </div>
 
           <div className="space-y-4 text-xs">
-            <div className="flex items-center justify-between py-2 border-b border-slate-100">
+            <div className="flex items-center justify-between py-2.5 border-b border-white/60">
               <div>
                 <p className="font-bold text-slate-900">Low Stock Alert Banners</p>
                 <p className="text-slate-400 text-[11px]">Show proactive warning badges when thresholds trigger</p>
@@ -213,11 +213,11 @@ export default function Settings() {
                 type="checkbox"
                 checked={notifLowStock}
                 onChange={(e) => setNotifLowStock(e.target.checked)}
-                className="w-4 h-4 rounded text-blue-600 accent-blue-600 cursor-pointer"
+                className="w-4 h-4 rounded text-indigo-600 accent-indigo-600 cursor-pointer"
               />
             </div>
 
-            <div className="flex items-center justify-between py-2">
+            <div className="flex items-center justify-between py-2.5">
               <div>
                 <p className="font-bold text-slate-900">Stock Receipt Email Notifications</p>
                 <p className="text-slate-400 text-[11px]">Send daily ledger digest to registered email</p>
@@ -226,7 +226,7 @@ export default function Settings() {
                 type="checkbox"
                 checked={notifEmail}
                 onChange={(e) => setNotifEmail(e.target.checked)}
-                className="w-4 h-4 rounded text-blue-600 accent-blue-600 cursor-pointer"
+                className="w-4 h-4 rounded text-indigo-600 accent-indigo-600 cursor-pointer"
               />
             </div>
           </div>
@@ -234,9 +234,9 @@ export default function Settings() {
 
         {/* Store Data Management (ADMIN Only) */}
         {currentUser?.role === 'ADMIN' && (
-          <section className="glass-card rounded-2xl p-6 border border-slate-200/80 bg-white/90">
+          <section className="glass-card rounded-[24px] border border-white/60 p-6 md:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
             <div className="flex items-center gap-2 mb-4">
-              <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
+              <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 border border-indigo-200/50">
                 <Database size={15} />
               </div>
               <div>
@@ -250,7 +250,7 @@ export default function Settings() {
             </div>
 
             <div className="space-y-4 pt-2">
-              <div className="p-4 rounded-xl border border-rose-200/80 bg-rose-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="p-4.5 rounded-2xl border border-rose-200/60 bg-rose-500/10 backdrop-blur-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <p className="font-bold text-xs text-rose-900 flex items-center gap-1.5">
                     <Trash2 size={13} className="text-rose-600" />
@@ -264,7 +264,7 @@ export default function Settings() {
                   type="button"
                   disabled={wiping}
                   onClick={() => setConfirmWipe(true)}
-                  className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all disabled:opacity-60 cursor-pointer shrink-0 inline-flex items-center gap-1.5"
+                  className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all disabled:opacity-60 cursor-pointer shrink-0 inline-flex items-center gap-1.5"
                 >
                   <Trash2 size={13} className={wiping ? 'animate-spin' : ''} />
                   <span>{wiping ? 'Wiping Store...' : 'Wipe to Blank Store'}</span>

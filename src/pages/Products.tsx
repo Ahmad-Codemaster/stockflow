@@ -68,7 +68,7 @@ export default function Products() {
       />
 
       {/* Glassmorphic Search & Filters Toolbar */}
-      <div className="glass-card rounded-2xl p-3 md:p-4 flex flex-wrap items-center gap-3">
+      <div className="glass-card rounded-[24px] border border-white/60 p-3.5 md:p-4.5 flex flex-wrap items-center gap-3 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
         <div className="flex items-center gap-2.5 glass-input rounded-xl px-3 py-2 min-w-[240px] flex-1 sm:flex-initial">
           <Search size={14} className="text-slate-400 shrink-0" />
           <input
@@ -145,11 +145,11 @@ export default function Products() {
       </div>
 
       {/* Glassmorphic Data Table */}
-      <div className="glass-card rounded-2xl overflow-hidden">
+      <div className="glass-card rounded-[24px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+              <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                 {['Product Name', 'SKU', 'Category', 'Unit Price', 'Current Stock', 'Threshold', 'Status', 'Actions'].map(
                   (h) => (
                     <th
@@ -166,7 +166,7 @@ export default function Products() {
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100/80">
+            <tbody className="divide-y divide-white/50">
               {paged.length === 0 ? (
                 <tr>
                   <td colSpan={8}>
@@ -190,12 +190,12 @@ export default function Products() {
                   const stock = getStock(p.id);
                   const status = getStockStatus(p.id);
                   return (
-                    <tr key={p.id} className="hover:bg-blue-50/30 transition-colors">
+                    <tr key={p.id} className="hover:bg-white/50 transition-colors">
                       <td className="px-4 py-3.5">
                         <button
                           type="button"
                           onClick={() => navigate('product-detail', p.id)}
-                          className="font-bold text-slate-900 hover:text-blue-600 transition-colors text-left"
+                          className="font-bold text-slate-900 hover:text-indigo-600 transition-colors text-left cursor-pointer"
                         >
                           {p.name}
                         </button>
@@ -205,14 +205,14 @@ export default function Products() {
                         <button
                           type="button"
                           onClick={() => setFilterCat(p.categoryId)}
-                          className="hover:text-blue-600 transition-colors"
+                          className="hover:text-indigo-600 transition-colors cursor-pointer"
                           title="Click to filter by this category"
                         >
                           {getCatName(p.categoryId)}
                         </button>
                       </td>
                       <td className="px-4 py-3.5 text-right font-bold text-slate-900">${p.price.toFixed(2)}</td>
-                      <td className="px-4 py-3.5 text-right font-extrabold text-slate-900">{stock}</td>
+                      <td className="px-4 py-3.5 text-right font-black tracking-[-0.025em] text-slate-900">{stock}</td>
                       <td className="px-4 py-3.5 text-right font-mono text-slate-400">{p.reorderLevel}</td>
                       <td className="px-4 py-3.5">
                         <Badge variant={status} />
@@ -222,7 +222,7 @@ export default function Products() {
                           <button
                             type="button"
                             onClick={() => setMenuId((v) => (v === p.id ? null : p.id))}
-                            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+                            className="p-1.5 rounded-lg hover:bg-white/80 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
                             aria-label="Actions"
                           >
                             <MoreVertical size={14} />
@@ -230,14 +230,14 @@ export default function Products() {
                           {menuId === p.id && (
                             <>
                               <div className="fixed inset-0 z-10" onClick={() => setMenuId(null)} />
-                              <div className="absolute right-0 top-full mt-1 w-40 glass-modal rounded-xl shadow-xl z-20 overflow-hidden border border-slate-200/80 animate-fade-slide">
+                              <div className="absolute right-0 top-full mt-1 w-40 glass-modal rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.08)] z-20 overflow-hidden border border-white/70 animate-fade-slide">
                                 <button
                                   type="button"
                                   onClick={() => {
                                     navigate('product-detail', p.id);
                                     setMenuId(null);
                                   }}
-                                  className="w-full text-left px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                                  className="w-full text-left px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-white/70 transition-colors flex items-center gap-2 cursor-pointer"
                                 >
                                   <Eye size={12} />
                                   <span>View Details</span>

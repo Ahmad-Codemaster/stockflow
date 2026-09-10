@@ -70,17 +70,17 @@ export default function Header() {
   const isAdmin = currentUser?.role === 'ADMIN';
 
   return (
-    <header className="h-16 shrink-0 glass-header flex items-center justify-between px-3 sm:px-6 md:px-8 z-30 sticky top-0">
+    <header className="h-16 shrink-0 glass-header rounded-[24px] border border-white/50 flex items-center justify-between px-3 sm:px-6 md:px-7 z-30 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
       {/* Left Area: Mobile Drawer / Desktop Toggle + Breadcrumb Navigation */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <button
           type="button"
           onClick={() => toggleSidebar?.()}
-          className="p-2 -ml-1 sm:ml-0 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-all cursor-pointer flex items-center justify-center shrink-0"
+          className="p-2 -ml-1 sm:ml-0 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/70 transition-all cursor-pointer flex items-center justify-center shrink-0 border border-transparent hover:border-white/60"
           title={isSidebarCollapsed ? 'Expand sidebar' : 'Toggle sidebar'}
           aria-label="Toggle sidebar menu"
         >
-          <Menu size={20} />
+          <Menu size={18} />
         </button>
 
         {/* Breadcrumb Navigation */}
@@ -100,7 +100,7 @@ export default function Header() {
                 <span
                   className={
                     isLast
-                      ? 'font-bold text-slate-900 bg-slate-100/80 px-2 py-0.5 rounded-md border border-slate-200/60 truncate max-w-[130px] sm:max-w-[200px]'
+                      ? 'font-bold text-slate-900 bg-white/70 px-2.5 py-0.5 rounded-full border border-white/80 shadow-2xs truncate max-w-[130px] sm:max-w-[200px]'
                       : 'text-slate-500 hover:text-slate-800 transition-colors truncate max-w-[100px]'
                   }
                 >
@@ -116,7 +116,7 @@ export default function Header() {
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Quick Search */}
         <div ref={searchRef} className="relative">
-          <div className="flex items-center gap-2 glass-input rounded-xl px-2.5 sm:px-3 py-1.5 w-28 xs:w-36 sm:w-52 md:w-60 focus-within:w-44 sm:focus-within:w-60 shadow-xs focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
+          <div className="flex items-center gap-2 glass-input rounded-full px-3 sm:px-3.5 py-1.5 w-28 xs:w-36 sm:w-52 md:w-60 focus-within:w-44 sm:focus-within:w-64 shadow-xs focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400 transition-all">
             <Search size={14} className="text-slate-400 shrink-0" />
             <input
               value={search}
@@ -139,7 +139,7 @@ export default function Header() {
                 <X size={13} className="text-slate-400 hover:text-slate-700 shrink-0" />
               </button>
             ) : (
-              <kbd className="hidden md:inline-flex items-center gap-0.5 text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
+              <kbd className="hidden md:inline-flex items-center gap-0.5 text-[10px] font-mono text-slate-400 bg-white/80 px-1.5 py-0.5 rounded-md border border-white/90 shrink-0">
                 <Command size={10} />K
               </kbd>
             )}
@@ -147,15 +147,15 @@ export default function Header() {
 
           {/* Search Dropdown Panel */}
           {showSearch && search.length > 1 && (
-            <div className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm glass-modal rounded-2xl shadow-2xl z-50 overflow-hidden border border-slate-200/90 animate-fade-slide">
-              <div className="px-3.5 py-2.5 bg-slate-50/70 border-b border-slate-200/70 flex items-center justify-between text-[11px] font-semibold text-slate-500">
+            <div className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm glass-modal rounded-[24px] shadow-[0_16px_40px_rgba(0,0,0,0.08)] z-50 overflow-hidden border border-white/70 animate-fade-slide">
+              <div className="px-4 py-3 bg-white/40 border-b border-white/60 flex items-center justify-between text-[11px] font-bold text-slate-600">
                 <span>Matching Products</span>
-                <span>{searchResults.length} found</span>
+                <span className="bg-white/80 px-2 py-0.5 rounded-full border border-white/80 text-[10px]">{searchResults.length} found</span>
               </div>
               {searchResults.length === 0 ? (
                 <p className="px-4 py-4 text-xs text-slate-500 text-center">No matching products found.</p>
               ) : (
-                <ul className="divide-y divide-slate-100 max-h-72 overflow-y-auto">
+                <ul className="divide-y divide-white/50 max-h-72 overflow-y-auto">
                   {searchResults.map((p) => {
                     const stock = getStockForProduct(p.id);
                     return (
@@ -167,10 +167,10 @@ export default function Header() {
                             setSearch('');
                             setShowSearch(false);
                           }}
-                          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-blue-50/60 transition-colors text-left group"
+                          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/60 transition-colors text-left group"
                         >
                           <div className="min-w-0 pr-2">
-                            <p className="text-xs font-semibold text-slate-900 truncate group-hover:text-blue-600">
+                            <p className="text-xs font-semibold text-slate-900 truncate group-hover:text-indigo-600">
                               {p.name}
                             </p>
                             <p className="text-[11px] text-slate-400 font-mono">{p.sku}</p>
@@ -179,10 +179,10 @@ export default function Header() {
                             <span
                               className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                                 stock === 0
-                                  ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                  ? 'bg-rose-500/10 text-rose-700 border border-rose-200/60'
                                   : stock <= p.reorderLevel
-                                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                  : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  ? 'bg-amber-500/10 text-amber-700 border border-amber-200/60'
+                                  : 'bg-emerald-500/10 text-emerald-700 border border-emerald-200/60'
                               }`}
                             >
                               {stock} in stock
@@ -203,7 +203,7 @@ export default function Header() {
           <button
             type="button"
             onClick={() => setShowNotif((v) => !v)}
-            className="relative w-9 h-9 flex items-center justify-center rounded-xl glass-input text-slate-600 hover:text-slate-900 hover:bg-white transition-all shadow-xs"
+            className="relative w-9 h-9 flex items-center justify-center rounded-xl glass-input text-slate-600 hover:text-slate-900 hover:bg-white/80 transition-all shadow-2xs"
             aria-label="Notifications"
           >
             <Bell size={16} />
@@ -213,12 +213,12 @@ export default function Header() {
           </button>
 
           {showNotif && (
-            <div className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm glass-modal rounded-2xl shadow-2xl z-50 overflow-hidden border border-slate-200/90 animate-fade-slide">
-              <div className="flex items-center justify-between px-4 py-3 bg-slate-50/80 border-b border-slate-200/80">
+            <div className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm glass-modal rounded-[24px] shadow-[0_16px_40px_rgba(0,0,0,0.08)] z-50 overflow-hidden border border-white/70 animate-fade-slide">
+              <div className="flex items-center justify-between px-4 py-3 bg-white/40 border-b border-white/60">
                 <div className="flex items-center gap-2">
                   <h3 className="text-xs font-bold text-slate-900">System Notifications</h3>
                   {unreadCount > 0 && (
-                    <span className="text-[10px] bg-rose-100 text-rose-700 font-bold px-1.5 py-0.2 rounded-full">
+                    <span className="text-[10px] bg-rose-500/10 text-rose-700 font-bold px-1.5 py-0.5 rounded-full border border-rose-200/50">
                       {unreadCount}
                     </span>
                   )}
@@ -227,13 +227,13 @@ export default function Header() {
                   <button
                     type="button"
                     onClick={markAllNotificationsRead}
-                    className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                    className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer"
                   >
                     <Check size={12} /> Mark all read
                   </button>
                 )}
               </div>
-              <ul className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+              <ul className="max-h-80 overflow-y-auto divide-y divide-white/50">
                 {notifications.length === 0 ? (
                   <li className="px-4 py-6 text-xs text-slate-400 text-center">No notifications at this time</li>
                 ) : (
@@ -242,7 +242,7 @@ export default function Header() {
                       key={n.id}
                       onClick={() => markNotificationRead(n.id)}
                       className={`px-4 py-3 cursor-pointer transition-colors ${
-                        n.read ? 'bg-white hover:bg-slate-50/60' : 'bg-blue-50/30 hover:bg-blue-50/60'
+                        n.read ? 'bg-white/40 hover:bg-white/70' : 'bg-indigo-50/40 hover:bg-indigo-50/70'
                       }`}
                     >
                       <p className={`text-xs leading-relaxed ${n.read ? 'text-slate-600' : 'text-slate-900 font-medium'}`}>
@@ -258,12 +258,12 @@ export default function Header() {
         </div>
 
         {/* User Identity Pill */}
-        <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200/80">
+        <div className="flex items-center gap-2.5 pl-2.5 border-l border-white/60">
           <div
             className={`w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold shadow-sm ${
               isAdmin
-                ? 'bg-gradient-to-br from-blue-600 to-indigo-600 ring-2 ring-blue-500/20'
-                : 'bg-gradient-to-br from-emerald-600 to-teal-600 ring-2 ring-emerald-500/20'
+                ? 'bg-gradient-to-br from-indigo-500 to-purple-600 ring-2 ring-indigo-500/20'
+                : 'bg-gradient-to-br from-emerald-500 to-teal-600 ring-2 ring-emerald-500/20'
             }`}
           >
             {currentUser?.name ? currentUser.name.charAt(0) : 'U'}

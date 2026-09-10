@@ -146,15 +146,13 @@ export default function Users() {
   function handleDeactivate(id: string) {
     updateUser(id, { status: 'Inactive' });
     setConfirmDeactivate(null);
-  }
-
-  if (currentUser?.role !== 'ADMIN') {
+  }  if (currentUser?.role !== 'ADMIN') {
     return (
-      <div className="glass-card rounded-2xl p-12 flex flex-col items-center justify-center text-center max-w-md mx-auto mt-12">
-        <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center mb-4 text-rose-600">
+      <div className="glass-card rounded-[24px] border border-white/60 p-12 flex flex-col items-center justify-center text-center max-w-md mx-auto mt-12 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+        <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-200/50 flex items-center justify-center mb-4 text-rose-600">
           <UserX size={26} />
         </div>
-        <h2 className="text-base font-bold text-slate-900">Access Restricted</h2>
+        <h2 className="text-base font-bold text-slate-900 tracking-[-0.025em]">Access Restricted</h2>
         <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
           Administrator privileges are required to provision accounts, modify roles, or deactivate sessions.
         </p>
@@ -165,119 +163,119 @@ export default function Users() {
   return (
     <div className="max-w-6xl space-y-5">
       <PageHeader
-        title="User Access Management"
-        subtitle="Manage administrative authority, warehouse staff profiles, and session security."
+        title="User & Access Control"
+        subtitle="Provision organization members, assign authorization roles, and audit operational access."
         action={
           <button
             type="button"
             onClick={() => setShowAdd(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 gradient-btn-primary text-white text-xs font-semibold rounded-xl"
+            className="inline-flex items-center gap-1.5 px-4 py-2 gradient-btn-primary text-white text-xs font-semibold rounded-xl shadow-sm cursor-pointer"
           >
             <Plus size={15} />
-            <span>Add User</span>
+            <span>Add Member</span>
           </button>
         }
       />
 
-      <div className="glass-card rounded-2xl overflow-hidden">
+      <div className="glass-card rounded-[24px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                {['User Name', 'Corporate Email', 'Assigned Role', 'Account Status', 'Created', 'Last Active', 'Actions'].map(
-                  (h) => (
-                    <th key={h} className={`px-5 py-3.5 ${h === 'Actions' ? 'text-right' : 'text-left'}`}>
-                      {h}
-                    </th>
-                  )
-                )}
+          <thead>
+            <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+              <th className="px-5 py-3.5 text-left">Member</th>
+              <th className="px-5 py-3.5 text-left">Email Address</th>
+              <th className="px-5 py-3.5 text-left">Assigned Role</th>
+              <th className="px-5 py-3.5 text-left">Status</th>
+              <th className="px-5 py-3.5 text-left">Created Date</th>
+              <th className="px-5 py-3.5 text-left">Last Active</th>
+              <th className="px-5 py-3.5 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/50">
+            {loadingUsers ? (
+              <tr>
+                <td colSpan={7} className="px-5 py-12 text-center text-slate-400">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+                    <span>Loading team accounts...</span>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100/80">
-              {loadingUsers && users.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-                      <span>Loading team accounts...</span>
+            ) : users.length === 0 ? (
+              <tr>
+                <td colSpan={7}>
+                  <EmptyState title="No users found" description="Provision user accounts to begin team collaboration." />
+                </td>
+              </tr>
+            ) : (
+              users.map((u) => (
+                <tr key={u.id} className="hover:bg-white/50 transition-colors">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shadow-2xs ${
+                          u.role === 'ADMIN'
+                            ? 'bg-indigo-500/15 text-indigo-700 border border-indigo-200/50'
+                            : 'bg-emerald-500/15 text-emerald-700 border border-emerald-200/50'
+                        }`}
+                      >
+                        {u.name.charAt(0)}
+                      </div>
+                      <span className="font-bold text-slate-900">{u.name}</span>
+                      {u.id === currentUser?.id && (
+                        <span className="text-[10px] bg-white/80 text-slate-500 font-bold px-2 py-0.5 rounded-full border border-white/80">
+                          you
+                        </span>
+                      )}
                     </div>
                   </td>
-                </tr>
-              ) : users.length === 0 ? (
-                <tr>
-                  <td colSpan={7}>
-                    <EmptyState title="No users found" description="Provision user accounts to begin team collaboration." />
+                  <td className="px-5 py-4 font-mono text-slate-500">{u.email}</td>
+                  <td className="px-5 py-4">
+                    <Badge variant={u.role === 'ADMIN' ? 'Admin' : 'Staff'} />
                   </td>
-                </tr>
-              ) : (
-                users.map((u) => (
-                  <tr key={u.id} className="hover:bg-blue-50/30 transition-colors">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs ${
-                            u.role === 'ADMIN'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-emerald-100 text-emerald-800'
-                          }`}
+                  <td className="px-5 py-4">
+                    <Badge variant={u.status} />
+                  </td>
+                  <td className="px-5 py-4 text-slate-400 font-mono text-[11px]">{u.createdAt}</td>
+                  <td className="px-5 py-4 text-slate-400 font-mono text-[11px]">{u.lastActivity}</td>
+                  <td className="px-5 py-4 text-right">
+                    {u.id !== currentUser?.id && (
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(u.id)}
+                          className="px-2.5 py-1 text-xs font-semibold border border-white/80 bg-white/60 rounded-lg hover:bg-white text-slate-700 transition-colors cursor-pointer"
                         >
-                          {u.name.charAt(0)}
-                        </div>
-                        <span className="font-bold text-slate-900">{u.name}</span>
-                        {u.id === currentUser?.id && (
-                          <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-1.5 py-0.2 rounded">
-                            you
-                          </span>
+                          Edit
+                        </button>
+                        {u.status === 'Active' && (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeactivate(u.id)}
+                            className="px-2.5 py-1 text-xs font-semibold border border-amber-200/60 bg-amber-500/10 rounded-lg hover:bg-amber-500/20 text-amber-700 transition-colors cursor-pointer"
+                          >
+                            Deactivate
+                          </button>
                         )}
+                        {u.status === 'Inactive' && (
+                          <button
+                            type="button"
+                            onClick={() => updateUser(u.id, { status: 'Active' })}
+                            className="px-2.5 py-1 text-xs font-semibold border border-emerald-200/60 bg-emerald-500/10 rounded-lg hover:bg-emerald-500/20 text-emerald-600 transition-colors cursor-pointer"
+                          >
+                            Activate
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDelete({ id: u.id, name: u.name })}
+                          className="p-1 text-xs font-semibold border border-rose-200/60 bg-rose-500/10 rounded-lg hover:bg-rose-500/20 text-rose-600 transition-colors inline-flex items-center justify-center cursor-pointer"
+                          title={`Remove user "${u.name}"`}
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
-                    </td>
-                    <td className="px-5 py-4 font-mono text-slate-500">{u.email}</td>
-                    <td className="px-5 py-4">
-                      <Badge variant={u.role === 'ADMIN' ? 'Admin' : 'Staff'} />
-                    </td>
-                    <td className="px-5 py-4">
-                      <Badge variant={u.status} />
-                    </td>
-                    <td className="px-5 py-4 text-slate-400 font-mono text-[11px]">{u.createdAt}</td>
-                    <td className="px-5 py-4 text-slate-400 font-mono text-[11px]">{u.lastActivity}</td>
-                    <td className="px-5 py-4 text-right">
-                      {u.id !== currentUser?.id && (
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => openEdit(u.id)}
-                            className="px-2.5 py-1 text-xs font-semibold border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700 transition-colors"
-                          >
-                            Edit
-                          </button>
-                          {u.status === 'Active' && (
-                            <button
-                              type="button"
-                              onClick={() => setConfirmDeactivate(u.id)}
-                              className="px-2.5 py-1 text-xs font-semibold border border-amber-200 rounded-lg hover:bg-amber-50 text-amber-700 transition-colors"
-                            >
-                              Deactivate
-                            </button>
-                          )}
-                          {u.status === 'Inactive' && (
-                            <button
-                              type="button"
-                              onClick={() => updateUser(u.id, { status: 'Active' })}
-                              className="px-2.5 py-1 text-xs font-semibold border border-emerald-200 rounded-lg hover:bg-emerald-50 text-emerald-600 transition-colors"
-                            >
-                              Activate
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => setConfirmDelete({ id: u.id, name: u.name })}
-                            className="p-1 text-xs font-semibold border border-rose-200 rounded-lg hover:bg-rose-50 text-rose-600 transition-colors inline-flex items-center justify-center"
-                            title={`Remove user "${u.name}"`}
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-                      )}
+                    )}
                     </td>
                   </tr>
                 ))

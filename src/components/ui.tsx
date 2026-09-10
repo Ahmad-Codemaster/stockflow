@@ -6,23 +6,23 @@ import type { StockStatus, ToastType, TransactionType, UserStatus } from '../typ
 type BadgeVariant = StockStatus | TransactionType | UserStatus | 'Admin' | 'Staff';
 
 const badgeStyles: Record<string, string> = {
-  'In Stock': 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 shadow-2xs',
-  'Low Stock': 'bg-amber-500/10 text-amber-700 border border-amber-500/25 shadow-2xs',
-  'Out of Stock': 'bg-rose-500/10 text-rose-700 border border-rose-500/25 shadow-2xs',
-  'Stock In': 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 shadow-2xs',
-  'Stock Out': 'bg-blue-500/10 text-blue-700 border border-blue-500/20 shadow-2xs',
-  'Adjustment': 'bg-amber-500/10 text-amber-700 border border-amber-500/25 shadow-2xs',
-  'Active': 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 shadow-2xs',
-  'Inactive': 'bg-slate-500/10 text-slate-600 border border-slate-300 shadow-2xs',
-  'Admin': 'bg-gradient-to-r from-blue-500/15 to-indigo-500/15 text-blue-700 border border-blue-400/30 shadow-2xs',
-  'Staff': 'bg-slate-100 text-slate-700 border border-slate-200/80 shadow-2xs',
+  'In Stock': 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shadow-2xs',
+  'Low Stock': 'bg-amber-500/10 text-amber-600 border border-amber-500/25 shadow-2xs',
+  'Out of Stock': 'bg-rose-500/10 text-rose-600 border border-rose-500/25 shadow-2xs',
+  'Stock In': 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shadow-2xs',
+  'Stock Out': 'bg-indigo-500/10 text-indigo-600 border border-indigo-500/20 shadow-2xs',
+  'Adjustment': 'bg-purple-500/10 text-purple-600 border border-purple-500/20 shadow-2xs',
+  'Active': 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shadow-2xs',
+  'Inactive': 'bg-slate-500/10 text-slate-500 border border-slate-300/40 shadow-2xs',
+  'Admin': 'bg-indigo-500/10 text-indigo-700 border border-indigo-500/25 shadow-2xs',
+  'Staff': 'bg-slate-500/10 text-slate-600 border border-slate-300/40 shadow-2xs',
 };
 
 export function Badge({ variant, label }: { variant: BadgeVariant; label?: string }) {
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold tracking-tight transition-all ${
-        badgeStyles[variant] ?? 'bg-slate-100 text-slate-600 border border-slate-200'
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-tight transition-all backdrop-blur-xs ${
+        badgeStyles[variant] ?? 'bg-slate-500/10 text-slate-600 border border-slate-200'
       }`}
     >
       {label ?? variant}
@@ -41,29 +41,29 @@ interface KPICardProps {
 }
 
 const kpiTopStripe = {
-  default: 'from-blue-500 to-indigo-500',
+  default: 'from-indigo-500 to-purple-500',
   warning: 'from-amber-400 to-amber-600',
   danger: 'from-rose-500 to-red-600',
   success: 'from-emerald-400 to-teal-500',
 };
 
 const kpiIconTints = {
-  default: 'bg-blue-50 text-blue-600 border-blue-200/60',
-  warning: 'bg-amber-50 text-amber-600 border-amber-200/60',
-  danger: 'bg-rose-50 text-rose-600 border-rose-200/60',
-  success: 'bg-emerald-50 text-emerald-600 border-emerald-200/60',
+  default: 'bg-indigo-50/80 text-indigo-600 border-indigo-200/60',
+  warning: 'bg-amber-50/80 text-amber-600 border-amber-200/60',
+  danger: 'bg-rose-50/80 text-rose-600 border-rose-200/60',
+  success: 'bg-emerald-50/80 text-emerald-600 border-emerald-200/60',
 };
 
 export function KPICard({ label, value, sub, variant = 'default', icon, sparkline }: KPICardProps) {
   return (
-    <div className="glass-card glass-card-hover rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between">
+    <div className="glass-card glass-card-hover rounded-[24px] p-5.5 relative overflow-hidden flex flex-col justify-between border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
       {/* Subtle Top Gradient Accent Strip */}
       <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r ${kpiTopStripe[variant]}`} />
 
-      <div className="flex items-start justify-between mb-3">
-        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{label}</span>
+      <div className="flex items-start justify-between mb-3.5">
+        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
         {icon && (
-          <div className={`p-2 rounded-xl border flex items-center justify-center shadow-2xs ${kpiIconTints[variant]}`}>
+          <div className={`p-2.5 rounded-2xl border flex items-center justify-center shadow-2xs backdrop-blur-md ${kpiIconTints[variant]}`}>
             {icon}
           </div>
         )}
@@ -71,8 +71,8 @@ export function KPICard({ label, value, sub, variant = 'default', icon, sparklin
 
       <div className="flex items-end justify-between gap-2">
         <div>
-          <div className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">{value}</div>
-          {sub && <p className="text-xs text-slate-400 font-medium mt-1">{sub}</p>}
+          <div className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-[-0.025em]">{value}</div>
+          {sub && <p className="text-xs text-slate-500 font-medium mt-1">{sub}</p>}
         </div>
         {sparkline && <div className="shrink-0 mb-1">{sparkline}</div>}
       </div>
@@ -89,17 +89,17 @@ interface EmptyStateProps {
 
 export function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
-    <div className="glass-card rounded-2xl flex flex-col items-center justify-center py-16 px-6 text-center border-dashed border-2 border-slate-200">
-      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center mb-4 shadow-sm text-blue-600">
+    <div className="glass-card rounded-[24px] flex flex-col items-center justify-center py-16 px-6 text-center border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 flex items-center justify-center mb-4 shadow-sm text-indigo-600 backdrop-blur-md">
         <Package size={26} />
       </div>
       <h3 className="text-sm font-bold text-slate-900 mb-1">{title}</h3>
-      {description && <p className="text-xs text-slate-500 mb-5 max-w-sm leading-relaxed">{description}</p>}
+      {description && <p className="text-xs text-slate-500 mb-5 max-w-sm leading-relaxed font-medium">{description}</p>}
       {action && (
         <button
           type="button"
           onClick={action.onClick}
-          className="inline-flex items-center gap-1.5 px-4 py-2 gradient-btn-primary text-white text-xs font-semibold rounded-xl"
+          className="inline-flex items-center gap-1.5 px-4.5 py-2.5 gradient-btn-primary text-white text-xs font-semibold rounded-2xl cursor-pointer"
         >
           <Plus size={14} />
           {action.label}
@@ -112,7 +112,7 @@ export function EmptyState({ title, description, action }: EmptyStateProps) {
 // --- Skeleton ---
 export function SkeletonRow({ cols }: { cols: number }) {
   return (
-    <tr className="border-b border-slate-100">
+    <tr className="border-b border-white/40">
       {Array.from({ length: cols }).map((_, i) => (
         <td key={i} className="px-4 py-3.5">
           <div className="h-4 bg-slate-200/60 rounded-md animate-pulse" style={{ width: `${60 + Math.random() * 30}%` }} />
@@ -124,7 +124,7 @@ export function SkeletonRow({ cols }: { cols: number }) {
 
 export function SkeletonCard() {
   return (
-    <div className="glass-card rounded-2xl p-5 animate-pulse">
+    <div className="glass-card rounded-[24px] p-5.5 animate-pulse border border-white/60">
       <div className="h-3.5 bg-slate-200/70 rounded w-24 mb-4" />
       <div className="h-8 bg-slate-200/70 rounded w-20 mb-2" />
       <div className="h-3 bg-slate-200/50 rounded w-32" />
@@ -152,15 +152,15 @@ export function Confirm({
 }: ConfirmProps) {
   const btnClass =
     variant === 'danger'
-      ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20'
-      : 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-600/20';
+      ? 'bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white shadow-rose-600/20'
+      : 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white shadow-amber-600/20';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs" onClick={onCancel} />
-      <div className="relative w-full max-w-sm glass-modal rounded-2xl p-6 animate-fade-slide">
+      <div className="absolute inset-0 bg-slate-950/30 backdrop-blur-md" onClick={onCancel} />
+      <div className="relative w-full max-w-sm glass-modal rounded-[24px] p-6.5 animate-fade-slide border border-white/80 shadow-2xl">
         <div className="flex items-start gap-3.5 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0 text-rose-600">
+          <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0 text-rose-600">
             <AlertTriangle size={20} />
           </div>
           <div>
@@ -168,18 +168,18 @@ export function Confirm({
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">{message}</p>
           </div>
         </div>
-        <div className="flex gap-2 justify-end mt-6">
+        <div className="flex gap-2.5 justify-end mt-6">
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-xs font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+            className="px-4 py-2 text-xs font-semibold text-slate-600 glass-input hover:bg-white transition-colors cursor-pointer rounded-xl"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className={`px-4 py-2 text-xs font-semibold rounded-xl shadow-md transition-all ${btnClass}`}
+            className={`px-4.5 py-2 text-xs font-semibold rounded-xl shadow-md transition-all cursor-pointer ${btnClass}`}
           >
             {confirmLabel}
           </button>
@@ -214,7 +214,7 @@ export function FormField({
 }
 
 export const inputClass =
-  'w-full px-3.5 py-2 text-xs md:text-sm rounded-xl glass-input text-slate-900 placeholder-slate-400 focus:outline-none transition-all';
+  'w-full px-4 py-2.5 text-xs md:text-sm rounded-2xl glass-input text-slate-900 placeholder-slate-400 focus:outline-none transition-all';
 export const selectClass = `${inputClass} cursor-pointer`;
 
 // --- Pagination ---
@@ -231,7 +231,7 @@ export function Pagination({ page, totalPages, total, pageSize, onPage }: Pagina
   const start = (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, total);
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 text-xs text-slate-500">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3.5 border-t border-white/50 text-xs text-slate-500">
       <span>
         Showing <span className="font-semibold text-slate-800">{start}</span>–
         <span className="font-semibold text-slate-800">{end}</span> of{' '}
@@ -242,7 +242,7 @@ export function Pagination({ page, totalPages, total, pageSize, onPage }: Pagina
           type="button"
           onClick={() => onPage(page - 1)}
           disabled={page === 1}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium disabled:opacity-40 hover:bg-slate-50 transition-colors"
+          className="px-3.5 py-1.5 rounded-xl glass-input text-xs font-medium disabled:opacity-40 hover:bg-white transition-colors cursor-pointer"
         >
           Previous
         </button>
@@ -251,10 +251,10 @@ export function Pagination({ page, totalPages, total, pageSize, onPage }: Pagina
             key={p}
             type="button"
             onClick={() => onPage(p)}
-            className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${
+            className={`w-7.5 h-7.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               p === page
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs'
-                : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
+                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xs'
+                : 'glass-input hover:bg-white text-slate-700'
             }`}
           >
             {p}
@@ -264,7 +264,7 @@ export function Pagination({ page, totalPages, total, pageSize, onPage }: Pagina
           type="button"
           onClick={() => onPage(page + 1)}
           disabled={page === totalPages}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium disabled:opacity-40 hover:bg-slate-50 transition-colors"
+          className="px-3.5 py-1.5 rounded-xl glass-input text-xs font-medium disabled:opacity-40 hover:bg-white transition-colors cursor-pointer"
         >
           Next
         </button>
@@ -286,7 +286,7 @@ export function PageHeader({
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">{title}</h1>
+        <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-[-0.025em]">{title}</h1>
         {subtitle && <p className="text-xs md:text-sm text-slate-500 mt-1 font-medium leading-relaxed">{subtitle}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}

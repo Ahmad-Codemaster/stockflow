@@ -83,28 +83,28 @@ export default function StockIn() {
         <button
           type="button"
           onClick={() => (selectedProduct ? navigate('product-detail', selectedProduct.id) : navigate('inventory'))}
-          className="p-2 rounded-xl glass-card text-slate-400 hover:text-slate-700 transition-colors"
+          className="p-2.5 rounded-xl glass-card border border-white/60 text-slate-500 hover:text-slate-900 transition-colors shadow-2xs cursor-pointer"
         >
           <ArrowLeft size={16} />
         </button>
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Stock-In Receiving</h1>
+          <h1 className="text-2xl font-black text-slate-900 tracking-[-0.025em]">Stock-In Receiving</h1>
           <p className="text-xs text-slate-500 font-medium">Record physical inbound freight and purchase orders.</p>
         </div>
       </div>
 
       {products.length === 0 && (
-        <div className="p-4 rounded-xl border border-blue-200/80 bg-blue-50/70 text-blue-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-slide">
+        <div className="p-4.5 rounded-[24px] border border-indigo-200/60 bg-indigo-500/10 text-indigo-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-slide backdrop-blur-md">
           <div>
             <p className="font-bold">No Products Available in Catalog</p>
-            <p className="text-[11px] text-blue-700 mt-0.5">
+            <p className="text-[11px] text-indigo-700 mt-0.5">
               Before receiving inbound inventory, at least one product must be registered in the catalog.
             </p>
           </div>
           <button
             type="button"
             onClick={() => navigate('product-add')}
-            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-xs shrink-0 cursor-pointer"
+            className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shrink-0 cursor-pointer shadow-xs"
           >
             Add Product
           </button>
@@ -112,14 +112,14 @@ export default function StockIn() {
       )}
 
       {success && (
-        <div className="flex items-center gap-2.5 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-bold animate-fade-slide">
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-emerald-500/15 border border-emerald-200/60 rounded-2xl text-emerald-800 text-xs font-bold animate-fade-slide">
           <CheckCircle2 size={16} className="text-emerald-600" />
           <span>Inbound stock incremented and transaction logged to immutable ledger!</span>
         </div>
       )}
 
       <form onSubmit={handleSubmit} noValidate>
-        <div className="glass-card rounded-2xl p-6 space-y-4">
+        <div className="glass-card rounded-[24px] border border-white/60 p-6 md:p-8 space-y-5 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <FormField label="Target SKU / Product" required error={errors.productId}>
             <select
               value={productId}
@@ -142,7 +142,7 @@ export default function StockIn() {
           </FormField>
 
           {selectedProduct && (
-            <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-4 animate-fade-slide">
+            <div className="bg-white/50 border border-white/60 rounded-2xl p-4.5 animate-fade-slide backdrop-blur-xs">
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-xs font-bold text-slate-900">{selectedProduct.name}</p>
@@ -150,13 +150,13 @@ export default function StockIn() {
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] uppercase font-bold text-slate-400">Current Stock</p>
-                  <p className="text-base font-extrabold text-slate-900">{currentStock}</p>
+                  <p className="text-base font-black tracking-[-0.025em] text-slate-900">{currentStock}</p>
                 </div>
               </div>
               {qtyNum > 0 && (
-                <div className="mt-3 pt-3 border-t border-slate-200/60 flex items-center justify-between">
+                <div className="mt-3 pt-3 border-t border-white/60 flex items-center justify-between">
                   <span className="text-xs text-slate-500 font-medium">Projected stock after receiving:</span>
-                  <span className="text-base font-extrabold text-emerald-600">{afterStock} units</span>
+                  <span className="text-base font-black tracking-[-0.025em] text-emerald-600">{afterStock} units</span>
                 </div>
               )}
             </div>

@@ -184,9 +184,9 @@ export default function ProductDetail() {
 
       {/* Stock Out Alert Warning if zero or low */}
       {status === 'Out of Stock' && (
-        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-slide">
+        <div className="p-4.5 bg-rose-500/10 border border-rose-200/60 rounded-[24px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-slide backdrop-blur-md">
           <div className="flex items-center gap-3 text-xs text-rose-800">
-            <div className="p-2 bg-rose-100 rounded-xl text-rose-600 shrink-0">
+            <div className="p-2 bg-rose-500/20 rounded-xl text-rose-600 shrink-0">
               <AlertTriangle size={18} />
             </div>
             <div>
@@ -199,7 +199,7 @@ export default function ProductDetail() {
           <button
             type="button"
             onClick={() => navigate('stock-in', product.id)}
-            className="px-4 py-2 gradient-btn-success text-white text-xs font-semibold rounded-xl shrink-0 self-end sm:self-auto cursor-pointer"
+            className="px-4 py-2 gradient-btn-success text-white text-xs font-semibold rounded-xl shrink-0 self-end sm:self-auto cursor-pointer shadow-sm"
           >
             Create Restock Receipt
           </button>
@@ -211,7 +211,7 @@ export default function ProductDetail() {
         {/* Left Column: Stock Analytics & Specifications */}
         <div className="space-y-5">
           {/* Stock Metrics Card */}
-          <div className="glass-card rounded-2xl p-5">
+          <div className="glass-card rounded-[24px] border border-white/60 p-5 md:p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Physical Stock Level</h3>
               <StatusDot status={status} />
@@ -220,9 +220,9 @@ export default function ProductDetail() {
             <div className="mb-4">
               <div className="flex items-end justify-between mb-2">
                 <span className="text-xs text-slate-500 font-medium">Available Units</span>
-                <span className="text-3xl font-extrabold text-slate-900">{stock}</span>
+                <span className="text-3xl font-black tracking-[-0.025em] text-slate-900">{stock}</span>
               </div>
-              <div className="h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/60">
+              <div className="h-3 bg-white/50 rounded-full overflow-hidden p-0.5 border border-white/60 backdrop-blur-xs">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
                     status === 'In Stock'
@@ -240,29 +240,29 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-100">
-              <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/60">
+            <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-white/60">
+              <div className="p-3 rounded-xl bg-white/50 border border-white/60">
                 <p className="text-[10px] uppercase font-bold text-slate-400">Total Received</p>
-                <p className="text-base font-extrabold text-emerald-600">+{totalIn}</p>
+                <p className="text-base font-black tracking-[-0.025em] text-emerald-600">+{totalIn}</p>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/60">
+              <div className="p-3 rounded-xl bg-white/50 border border-white/60">
                 <p className="text-[10px] uppercase font-bold text-slate-400">Total Dispatched</p>
-                <p className="text-base font-extrabold text-rose-600">-{totalOut}</p>
+                <p className="text-base font-black tracking-[-0.025em] text-rose-600">-{totalOut}</p>
               </div>
             </div>
           </div>
 
           {/* Pricing & Valuation Card */}
-          <div className="glass-card rounded-2xl p-5">
+          <div className="glass-card rounded-[24px] border border-white/60 p-5 md:p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">Financial Valuation</h3>
             <div className="space-y-3 text-xs">
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+              <div className="flex justify-between items-center py-1.5 border-b border-white/60">
                 <span className="text-slate-500 font-medium">Unit Retail Price</span>
-                <span className="font-extrabold text-slate-900 text-sm">${product.price.toFixed(2)}</span>
+                <span className="font-black tracking-[-0.025em] text-slate-900 text-sm">${product.price.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+              <div className="flex justify-between items-center py-1.5 border-b border-white/60">
                 <span className="text-slate-500 font-medium">Current Stock Asset Value</span>
-                <span className="font-extrabold text-blue-700 text-sm">
+                <span className="font-black tracking-[-0.025em] text-indigo-700 text-sm">
                   ${inventoryValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
@@ -274,13 +274,13 @@ export default function ProductDetail() {
           </div>
 
           {/* Supplier Directory Quick Card */}
-          <div className="glass-card rounded-2xl p-5">
+          <div className="glass-card rounded-[24px] border border-white/60 p-5 md:p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Vendor Information</h3>
               <button
                 type="button"
                 onClick={() => navigate('suppliers')}
-                className="text-[11px] font-semibold text-blue-600 hover:underline flex items-center gap-0.5"
+                className="text-[11px] font-semibold text-indigo-600 hover:underline flex items-center gap-0.5 cursor-pointer"
               >
                 <span>Directory</span>
                 <ExternalLink size={10} />
@@ -302,7 +302,7 @@ export default function ProductDetail() {
         {/* Right Column: Item Description & Immutable Ledger Table */}
         <div className="xl:col-span-2 space-y-5">
           {/* Specification / Description */}
-          <div className="glass-card rounded-2xl p-5">
+          <div className="glass-card rounded-[24px] border border-white/60 p-5 md:p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Technical Description</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
               {product.description || 'No detailed technical specification provided for this product.'}
@@ -310,13 +310,13 @@ export default function ProductDetail() {
           </div>
 
           {/* Transaction Ledger for this product */}
-          <div className="glass-card rounded-2xl overflow-hidden">
-            <div className="px-5 py-4 bg-slate-50/60 border-b border-slate-200/60 flex items-center justify-between">
+          <div className="glass-card rounded-[24px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+            <div className="px-5 py-4 bg-white/40 border-b border-white/60 flex items-center justify-between">
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">SKU Movement Audit Trail</h3>
                 <p className="text-[11px] text-slate-400">Click any row to open the cryptographic audit record</p>
               </div>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-700 border border-indigo-200/50">
                 {productTxns.length} records
               </span>
             </div>
@@ -324,7 +324,7 @@ export default function ProductDetail() {
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/40 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                  <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                     {['Timestamp', 'Movement Type', 'Quantity', 'Previous', 'New Stock', 'Operator', 'Reference'].map(
                       (h) => (
                         <th
@@ -339,7 +339,7 @@ export default function ProductDetail() {
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100/80">
+                <tbody className="divide-y divide-white/50">
                   {productTxns.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-4 py-12 text-center text-slate-400">
@@ -351,7 +351,7 @@ export default function ProductDetail() {
                       <tr
                         key={t.id}
                         onClick={() => navigate('transaction-detail', t.id)}
-                        className="hover:bg-blue-50/40 transition-colors cursor-pointer group"
+                        className="hover:bg-white/50 transition-colors cursor-pointer group"
                       >
                         <td className="px-4 py-3 text-slate-400 font-mono text-[11px] flex items-center gap-1.5">
                           <Clock size={11} className="text-slate-300" />

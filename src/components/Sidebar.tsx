@@ -69,7 +69,7 @@ export default function Sidebar() {
       )}
 
       <aside
-        className={`shrink-0 glass-sidebar z-50 lg:z-20 select-none transition-all duration-300 ease-in-out fixed inset-y-0 left-0 lg:static lg:h-full ${
+        className={`shrink-0 glass-sidebar z-50 lg:z-20 select-none transition-all duration-300 ease-in-out fixed inset-y-0 left-0 lg:static lg:h-full overflow-hidden ${
           isMobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
         } ${
           isSidebarCollapsed
@@ -79,17 +79,17 @@ export default function Sidebar() {
       >
         <div className="w-64 sm:w-72 lg:w-64 flex flex-col h-full">
           {/* Brand Header */}
-          <div className="px-5 py-5 border-b border-white/8 flex items-center justify-between">
+          <div className="px-5 py-4.5 border-b border-white/60 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20 border border-blue-400/30">
-                <Warehouse size={16} className="text-white" />
+              <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 rounded-2xl flex items-center justify-center shadow-md shadow-indigo-500/20 border border-white/40">
+                <Warehouse size={18} className="text-white" />
               </div>
               <div>
-                <span className="text-white font-bold text-[15px] tracking-tight flex items-center gap-1.5">
+                <span className="text-slate-900 font-extrabold text-[15px] tracking-tight flex items-center gap-1.5">
                   StockFlow
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 border border-blue-400/20">PRO</span>
+                  <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-indigo-500/10 text-indigo-700 border border-indigo-500/20">PRO</span>
                 </span>
-                <p className="text-[11px] text-slate-400 leading-tight">Operations System</p>
+                <p className="text-[11px] text-slate-500 font-medium leading-tight">Operations System</p>
               </div>
             </div>
 
@@ -97,7 +97,7 @@ export default function Sidebar() {
             <button
               type="button"
               onClick={() => closeMobileSidebar?.()}
-              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="lg:hidden p-1.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-white/50 transition-colors cursor-pointer"
               aria-label="Close sidebar"
             >
               <X size={18} />
@@ -107,7 +107,7 @@ export default function Sidebar() {
             <button
               type="button"
               onClick={() => toggleDesktopSidebar?.()}
-              className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="hidden lg:flex p-1.5 rounded-xl text-slate-400 hover:text-slate-800 hover:bg-white/50 transition-colors cursor-pointer"
               title="Collapse sidebar"
               aria-label="Collapse sidebar"
             >
@@ -115,91 +115,94 @@ export default function Sidebar() {
             </button>
           </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-1">
-        <p className="px-3 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-          Core Operations
-        </p>
-        <div className="space-y-1">
-          {navItems.map((item) => {
-            const active = isActive(item.page, currentPage);
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.page}
-                onClick={() => handleNavigate(item.page)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
-                  active
-                    ? 'bg-gradient-to-r from-blue-600/35 via-blue-600/15 to-transparent text-white border-l-3 border-blue-500 shadow-sm'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <Icon
-                  size={16}
-                  className={`transition-colors ${active ? 'text-blue-400' : 'text-slate-400'}`}
-                />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 
-          ROLE-BASED CONDITIONAL UI RENDERING:
-          - The "Administration" section and "User Management" link are rendered ONLY
-          when currentUser.role === 'ADMIN'.
-          - For regular STAFF users, this entire section is omitted from the DOM.
-          - UX Note: While this hides the link from Staff, backend authorization
-            is strictly enforced via `requireRole('ADMIN')` on all `/api/users` routes.
-        */}
-        {currentUser?.role === 'ADMIN' && (
-          <div className="pt-5 mt-4 border-t border-white/6">
-            <div className="flex items-center justify-between px-3 mb-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                Administration
-              </span>
-              <Shield size={12} className="text-blue-400" />
+          {/* Navigation */}
+          <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-1">
+            <p className="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Core Operations
+            </p>
+            <div className="space-y-1">
+              {navItems.map((item) => {
+                const active = isActive(item.page, currentPage);
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.page}
+                    onClick={() => handleNavigate(item.page)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                      active
+                        ? 'bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-transparent text-indigo-700 font-bold border border-indigo-200/60 shadow-xs'
+                        : 'text-slate-600 hover:bg-white/45 hover:text-slate-900'
+                    }`}
+                  >
+                    <Icon
+                      size={16}
+                      className={`transition-colors ${active ? 'text-indigo-600' : 'text-slate-400'}`}
+                    />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
             </div>
+
+            {/* Admin Section */}
+            {currentUser?.role === 'ADMIN' && (
+              <div className="pt-4 mt-4 border-t border-white/60">
+                <div className="flex items-center justify-between px-3 mb-2">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Administration
+                  </span>
+                  <Shield size={12} className="text-indigo-500" />
+                </div>
+                <button
+                  onClick={() => handleNavigate('users')}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                    currentPage === 'users'
+                      ? 'bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-transparent text-indigo-700 font-bold border border-indigo-200/60 shadow-xs'
+                      : 'text-slate-600 hover:bg-white/45 hover:text-slate-900'
+                  }`}
+                >
+                  <Users
+                    size={16}
+                    className={`transition-colors ${currentPage === 'users' ? 'text-indigo-600' : 'text-slate-400'}`}
+                  />
+                  <span>User Management</span>
+                </button>
+              </div>
+            )}
+          </nav>
+
+          {/* User Profile Card & Footer */}
+          <div className="p-3 border-t border-white/60 space-y-2">
+            <div className="flex items-center gap-2.5 p-2 rounded-2xl bg-white/40 border border-white/60 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-extrabold flex items-center justify-center text-xs shadow-xs shrink-0">
+                {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-slate-900 truncate leading-tight">
+                  {currentUser?.name || 'User'}
+                </p>
+                <p className="text-[10px] text-slate-500 font-medium truncate capitalize">
+                  {currentUser?.role?.toLowerCase() || 'Staff'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleNavigate('settings')}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-white/60 transition-colors cursor-pointer"
+                title="Settings"
+              >
+                <Settings size={14} />
+              </button>
+            </div>
+
             <button
-              onClick={() => handleNavigate('users')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
-                currentPage === 'users'
-                  ? 'bg-gradient-to-r from-blue-600/35 via-blue-600/15 to-transparent text-white border-l-3 border-blue-500 shadow-sm'
-                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-              }`}
+              onClick={() => setShowLogoutConfirm(true)}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 transition-all duration-200 cursor-pointer"
             >
-              <Users
-                size={16}
-                className={`transition-colors ${currentPage === 'users' ? 'text-blue-400' : 'text-slate-400'}`}
-              />
-              <span>User Management</span>
+              <LogOut size={14} />
+              <span>Sign Out</span>
             </button>
           </div>
-        )}
-      </nav>
-
-      {/* User Mini Profile & Footer */}
-      <div className="p-3 border-t border-white/8 space-y-1">
-        <button
-          onClick={() => handleNavigate('settings')}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
-            currentPage === 'settings'
-              ? 'bg-white/10 text-white'
-              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-          }`}
-        >
-          <Settings size={15} className="text-slate-400" />
-          <span>System Settings</span>
-        </button>
-
-        <button
-          onClick={() => setShowLogoutConfirm(true)}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all duration-200 cursor-pointer"
-        >
-          <LogOut size={15} />
-          <span>Sign Out</span>
-        </button>
-      </div>
         </div>
       </aside>
 

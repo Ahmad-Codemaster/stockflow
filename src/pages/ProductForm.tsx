@@ -112,12 +112,12 @@ export default function ProductForm({ mode }: Props) {
         <button
           type="button"
           onClick={() => (mode === 'edit' && editing ? navigate('product-detail', editing.id) : navigate('products'))}
-          className="p-2 rounded-xl glass-card text-slate-400 hover:text-slate-700 transition-colors"
+          className="p-2.5 rounded-xl glass-card border border-white/60 text-slate-500 hover:text-slate-900 transition-colors shadow-2xs cursor-pointer"
         >
           <ArrowLeft size={16} />
         </button>
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-black text-slate-900 tracking-[-0.025em]">
             {mode === 'add' ? 'Create Catalog SKU' : 'Edit Product Specification'}
           </h1>
           <p className="text-xs text-slate-500 font-medium">
@@ -127,7 +127,7 @@ export default function ProductForm({ mode }: Props) {
       </div>
 
       {categories.length === 0 && (
-        <div className="p-4 rounded-xl border border-amber-200/80 bg-amber-50/70 text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-slide">
+        <div className="p-4.5 rounded-[24px] border border-amber-200/60 bg-amber-500/10 text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-slide backdrop-blur-md">
           <div>
             <p className="font-bold">No Categories Defined</p>
             <p className="text-[11px] text-amber-700 mt-0.5">
@@ -137,7 +137,7 @@ export default function ProductForm({ mode }: Props) {
           <button
             type="button"
             onClick={() => navigate('categories')}
-            className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold text-xs shrink-0 cursor-pointer"
+            className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs shrink-0 cursor-pointer shadow-xs"
           >
             Create Category
           </button>
@@ -145,7 +145,7 @@ export default function ProductForm({ mode }: Props) {
       )}
 
       <form onSubmit={handleSubmit} noValidate>
-        <div className="glass-card rounded-2xl p-6 space-y-4">
+        <div className="glass-card rounded-[24px] border border-white/60 p-6 md:p-8 space-y-5 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <FormField label="Product Full Name" required error={errors.name}>

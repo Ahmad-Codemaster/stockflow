@@ -8,6 +8,7 @@ import {
   Lock,
   Mail,
   Shield,
+  Sparkles,
   Warehouse,
   X,
 } from 'lucide-react';
@@ -92,35 +93,50 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen login-mesh-bg flex flex-col justify-between items-center px-4 py-8 md:py-12 relative overflow-x-hidden">
-      {/* Subtle ambient lighting glows */}
+    <div className="min-h-screen ambient-mesh-bg flex flex-col justify-between items-center px-4 py-8 md:py-12 relative overflow-hidden font-sans">
+      {/* 4 Large Ambient Background Lighting Orbs */}
       <div
-        className={`absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl pointer-events-none transition-colors duration-700 ${
-          isAdmin ? 'bg-blue-500/10' : 'bg-emerald-500/10'
-        }`}
+        className="fixed -top-20 left-[10%] w-[32rem] h-[32rem] rounded-full pointer-events-none animate-pulse-glow"
+        style={{
+          backgroundColor: '#818CF8',
+          filter: 'blur(140px)',
+          opacity: 0.2,
+        }}
       />
       <div
-        className={`absolute -bottom-24 -right-24 w-96 h-96 rounded-full blur-3xl pointer-events-none transition-colors duration-700 ${
-          isAdmin ? 'bg-indigo-500/10' : 'bg-teal-500/10'
-        }`}
+        className="fixed -bottom-24 right-[10%] w-[36rem] h-[36rem] rounded-full pointer-events-none animate-pulse-glow"
+        style={{
+          backgroundColor: '#C084FC',
+          filter: 'blur(150px)',
+          opacity: 0.2,
+          animationDelay: '2.5s',
+        }}
+      />
+      <div
+        className="fixed top-[30%] right-[20%] w-[26rem] h-[26rem] rounded-full pointer-events-none"
+        style={{
+          backgroundColor: '#60A5FA',
+          filter: 'blur(130px)',
+          opacity: 0.16,
+        }}
       />
 
       {/* Top Header */}
       <header className="w-full max-w-md flex items-center justify-between mb-4 z-10">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 bg-slate-900 rounded-xl flex items-center justify-center shadow-md shadow-slate-900/10">
-            <Warehouse size={18} className="text-white" />
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/25 border border-white/30">
+            <Warehouse size={20} className="text-white" />
           </div>
           <div>
-            <span className="font-bold text-base text-slate-900 tracking-tight">StockFlow</span>
-            <p className="text-[11px] text-slate-500">Inventory Management</p>
+            <span className="font-black text-base text-slate-900 tracking-[-0.025em]">StockFlow</span>
+            <p className="text-[11px] text-slate-500 font-medium">Operations Terminal</p>
           </div>
         </div>
 
         <button
           type="button"
           onClick={() => setHelpOpen(true)}
-          className="text-xs text-slate-500 hover:text-slate-900 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-200/50 transition-colors cursor-pointer"
+          className="text-xs text-slate-500 hover:text-slate-900 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/50 border border-white/60 hover:bg-white/80 transition-all shadow-2xs cursor-pointer backdrop-blur-xs"
         >
           <HelpCircle size={14} />
           <span>Need help?</span>
@@ -130,17 +146,17 @@ export default function Login() {
       {/* Main Authentication Card */}
       <main className="w-full max-w-md z-10">
         <div
-          className={`bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-xl shadow-slate-200/50 p-6 md:p-8 transition-all duration-300 ${
+          className={`glass-card rounded-[24px] border border-white/60 shadow-[0_16px_40px_rgba(0,0,0,0.06)] p-7 md:p-9 transition-all duration-300 ${
             isShaking ? 'animate-shake' : ''
           }`}
         >
           {/* Role Tab Switcher with Sliding Pill Animation */}
           <div className="mb-6">
-            <div className="relative bg-slate-100 p-1 rounded-xl border border-slate-200 flex select-none">
+            <div className="relative bg-white/50 p-1.5 rounded-2xl border border-white/60 flex select-none backdrop-blur-xs">
               {/* Sliding Pill Indicator */}
               <div
-                className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-white border border-slate-200/80 shadow-xs transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                  isAdmin ? 'left-1' : 'left-[calc(50%+2px)]'
+                className={`absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] rounded-xl bg-white border border-white/80 shadow-xs transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                  isAdmin ? 'left-1.5' : 'left-[calc(50%+3px)]'
                 }`}
               />
 
@@ -148,11 +164,11 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => handleRoleChange('ADMIN')}
-                className={`relative z-10 flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors duration-200 cursor-pointer ${
-                  isAdmin ? 'text-blue-700' : 'text-slate-600 hover:text-slate-900'
+                className={`relative z-10 flex-1 py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-colors duration-200 cursor-pointer ${
+                  isAdmin ? 'text-indigo-700' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
-                <Shield size={14} className={isAdmin ? 'text-blue-600' : 'text-slate-400'} />
+                <Shield size={14} className={isAdmin ? 'text-indigo-600' : 'text-slate-400'} />
                 <span>Admin Console</span>
               </button>
 
@@ -160,8 +176,8 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => handleRoleChange('STAFF')}
-                className={`relative z-10 flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors duration-200 cursor-pointer ${
-                  !isAdmin ? 'text-emerald-700' : 'text-slate-600 hover:text-slate-900'
+                className={`relative z-10 flex-1 py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-colors duration-200 cursor-pointer ${
+                  !isAdmin ? 'text-emerald-700' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 <Boxes size={14} className={!isAdmin ? 'text-emerald-600' : 'text-slate-400'} />
@@ -172,24 +188,24 @@ export default function Login() {
 
           {/* Heading */}
           <div key={activeRole} className="mb-5 animate-fade-slide">
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+            <h1 className="text-xl font-black text-slate-900 tracking-[-0.025em]">
               {isAdmin ? 'Admin Sign-In' : 'Staff Sign-In'}
             </h1>
             <p className="text-xs text-slate-500 mt-1">
               {isAdmin
-                ? 'Sign in with your administrator credentials.'
-                : 'Sign in to access inventory operations.'}
+                ? 'Sign in with your enterprise administrator credentials.'
+                : 'Sign in to access inventory movement operations.'}
             </p>
           </div>
 
           {/* Error Banner */}
           {errors.form && (
             <div
-              className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5 animate-shake"
+              className="mb-4 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-200/60 text-rose-700 text-xs flex items-start gap-2.5 animate-shake backdrop-blur-xs"
               role="alert"
             >
               <AlertCircle size={15} className="shrink-0 text-rose-600 mt-0.5" />
-              <div className="flex-1 leading-relaxed">{errors.form}</div>
+              <div className="flex-1 leading-relaxed font-medium">{errors.form}</div>
               <button
                 type="button"
                 onClick={() => setErrors((e) => ({ ...e, form: undefined }))}
@@ -205,11 +221,11 @@ export default function Login() {
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             {/* Email Field */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Email
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Corporate Email Address
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                   <Mail size={16} />
                 </div>
                 <input
@@ -222,17 +238,15 @@ export default function Login() {
                   }}
                   placeholder={isAdmin ? 'admin@stockflow.com' : 'staff@stockflow.com'}
                   autoComplete="email"
-                  className={`w-full pl-9 pr-3.5 py-2.5 text-sm rounded-xl border bg-slate-50/50 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
+                  className={`w-full pl-10 pr-3.5 py-2.5 text-xs rounded-xl glass-input text-slate-900 placeholder-slate-400 focus:outline-none transition-all ${
                     errors.email
-                      ? 'border-rose-400 focus:ring-rose-100 focus:border-rose-500'
-                      : isAdmin
-                      ? 'border-slate-300 focus:ring-blue-100 focus:border-blue-600'
-                      : 'border-slate-300 focus:ring-emerald-100 focus:border-emerald-600'
+                      ? 'border-rose-400 focus:ring-2 focus:ring-rose-500/20'
+                      : 'focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400'
                   }`}
                 />
               </div>
               {errors.email && (
-                <p className="mt-1.5 text-xs text-rose-600 flex items-center gap-1">
+                <p className="mt-1.5 text-xs text-rose-600 flex items-center gap-1 font-medium">
                   <AlertCircle size={12} />
                   <span>{errors.email}</span>
                 </p>
@@ -242,19 +256,19 @@ export default function Login() {
             {/* Password Field */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-slate-700">
+                <label className="block text-xs font-bold text-slate-700">
                   Password
                 </label>
                 <button
                   type="button"
                   onClick={() => setHelpOpen(true)}
-                  className="text-xs text-slate-500 hover:text-slate-800 font-medium hover:underline cursor-pointer"
+                  className="text-xs text-indigo-600 hover:text-indigo-800 font-medium hover:underline cursor-pointer"
                 >
                   Forgot password?
                 </button>
               </div>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                   <Lock size={16} />
                 </div>
                 <input
@@ -267,12 +281,10 @@ export default function Login() {
                   }}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  className={`w-full pl-9 pr-10 py-2.5 text-sm rounded-xl border bg-slate-50/50 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
+                  className={`w-full pl-10 pr-10 py-2.5 text-xs rounded-xl glass-input text-slate-900 placeholder-slate-400 focus:outline-none transition-all ${
                     errors.password
-                      ? 'border-rose-400 focus:ring-rose-100 focus:border-rose-500'
-                      : isAdmin
-                      ? 'border-slate-300 focus:ring-blue-100 focus:border-blue-600'
-                      : 'border-slate-300 focus:ring-emerald-100 focus:border-emerald-600'
+                      ? 'border-rose-400 focus:ring-2 focus:ring-rose-500/20'
+                      : 'focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400'
                   }`}
                 />
                 <button
@@ -285,7 +297,7 @@ export default function Login() {
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-1.5 text-xs text-rose-600 flex items-center gap-1">
+                <p className="mt-1.5 text-xs text-rose-600 flex items-center gap-1 font-medium">
                   <AlertCircle size={12} />
                   <span>{errors.password}</span>
                 </p>
@@ -300,10 +312,10 @@ export default function Login() {
                   checked={remember}
                   onChange={(e) => setRemember(e.target.checked)}
                   className={`w-4 h-4 rounded border-slate-300 cursor-pointer ${
-                    isAdmin ? 'text-blue-600 accent-blue-600' : 'text-emerald-600 accent-emerald-600'
+                    isAdmin ? 'text-indigo-600 accent-indigo-600' : 'text-emerald-600 accent-emerald-600'
                   }`}
                 />
-                <span className="text-xs text-slate-600 font-medium">Remember me</span>
+                <span className="text-xs text-slate-600 font-medium">Remember terminal session</span>
               </label>
             </div>
 
@@ -311,20 +323,20 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-2.5 px-4 text-white text-sm font-semibold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer ${
+              className={`w-full py-3 px-4 text-white text-xs font-bold rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer ${
                 isAdmin
-                  ? 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-blue-600/20'
-                  : 'bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 shadow-emerald-600/20'
+                  ? 'gradient-btn-primary hover:scale-[1.01] active:scale-[0.99]'
+                  : 'gradient-btn-success hover:scale-[1.01] active:scale-[0.99]'
               }`}
             >
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Signing in...</span>
+                  <span>Authenticating...</span>
                 </>
               ) : (
                 <>
-                  <span>Sign In as {isAdmin ? 'Administrator' : 'Staff'}</span>
+                  <span>Sign In as {isAdmin ? 'Administrator' : 'Operations Staff'}</span>
                   <ArrowRight size={15} />
                 </>
               )}
@@ -333,9 +345,9 @@ export default function Login() {
         </div>
       </main>
 
-      {/* Clean Subtle Footer */}
+      {/* Footer */}
       <footer className="w-full max-w-md mt-6 text-center z-10">
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-400 font-medium">
           &copy; {new Date().getFullYear()} StockFlow. All rights reserved.
         </p>
       </footer>
@@ -344,28 +356,28 @@ export default function Login() {
       {helpOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fade-slide">
           <div
-            className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-sm w-full p-6 relative"
+            className="glass-modal rounded-[24px] border border-white/70 shadow-[0_24px_60px_rgba(0,0,0,0.08)] max-w-sm w-full p-6 relative"
             role="dialog"
             aria-modal="true"
           >
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-indigo-500/15 text-indigo-600 border border-indigo-200/50 rounded-2xl flex items-center justify-center shadow-xs">
                 <HelpCircle size={20} />
               </div>
               <div>
-                <h3 className="font-semibold text-sm text-slate-900">Reset Password</h3>
+                <h3 className="font-bold text-sm text-slate-900 tracking-[-0.025em]">Reset Credentials</h3>
                 <p className="text-xs text-slate-500">Need help signing in?</p>
               </div>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed mb-5">
-              StockFlow accounts are managed by your organization. If you need a password reset or access assistance, please contact your system administrator.
+              StockFlow accounts are managed by your enterprise system administrator. Please contact your internal IT administrator to provision or reset your security credentials.
             </p>
 
             <button
               type="button"
               onClick={() => setHelpOpen(false)}
-              className="w-full py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition-colors cursor-pointer"
+              className="w-full py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors cursor-pointer shadow-xs"
             >
               Close
             </button>

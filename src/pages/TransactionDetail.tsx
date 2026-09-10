@@ -63,25 +63,25 @@ export default function TransactionDetail() {
         <button
           type="button"
           onClick={() => navigate('transactions')}
-          className="p-2 rounded-xl glass-card text-slate-400 hover:text-slate-700 transition-colors"
+          className="p-2.5 rounded-xl glass-card border border-white/60 text-slate-500 hover:text-slate-900 transition-colors shadow-2xs cursor-pointer"
         >
           <ArrowLeft size={16} />
         </button>
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-black text-slate-900 tracking-[-0.025em] flex items-center gap-2">
             <span>Transaction Audit Log</span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200/80 text-slate-600 flex items-center gap-1">
-              <Lock size={10} /> Immutable
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/80 border border-white/90 text-slate-700 flex items-center gap-1 shadow-2xs">
+              <Lock size={10} className="text-indigo-600" /> Immutable
             </span>
           </h1>
           <p className="text-xs text-slate-500 font-medium">Read-only cryptographic audit record.</p>
         </div>
       </div>
 
-      <div className="glass-card rounded-2xl overflow-hidden divide-y divide-slate-100">
+      <div className="glass-card rounded-[24px] border border-white/60 overflow-hidden divide-y divide-white/50 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
         {rows.map(({ label, value }) => (
-          <div key={label} className="flex items-start px-6 py-3.5 hover:bg-slate-50/50 transition-colors text-xs">
-            <dt className="w-48 shrink-0 font-bold text-slate-500">{label}</dt>
+          <div key={label} className="flex items-start px-6 py-4 hover:bg-white/50 transition-colors text-xs">
+            <dt className="w-52 shrink-0 font-bold text-slate-500">{label}</dt>
             <dd className="text-slate-800 font-medium">{value}</dd>
           </div>
         ))}

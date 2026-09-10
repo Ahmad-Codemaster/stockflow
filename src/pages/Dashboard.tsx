@@ -43,9 +43,9 @@ function InventoryStatusChart({
   return (
     <div className="space-y-4">
       {/* Visual Multi-Segment Bar */}
-      <div className="flex h-3.5 rounded-full overflow-hidden gap-1 p-0.5 bg-slate-100/80 border border-slate-200/80 shadow-2xs">
+      <div className="flex h-3.5 rounded-full overflow-hidden gap-1 p-0.5 bg-white/50 border border-white/60 shadow-2xs backdrop-blur-md">
         {total === 0 ? (
-          <div className="w-full h-full bg-slate-200/50 rounded-full flex items-center justify-center text-[9px] text-slate-400 font-medium" title="No inventory items yet">
+          <div className="w-full h-full bg-white/40 rounded-full flex items-center justify-center text-[9px] text-slate-400 font-medium" title="No inventory items yet">
             No Catalog Items Added
           </div>
         ) : (
@@ -87,7 +87,7 @@ function InventoryStatusChart({
           {
             label: 'In Stock',
             count: healthy,
-            bg: 'bg-emerald-50/70 border-emerald-200/60 hover:bg-emerald-100/70',
+            bg: 'bg-emerald-500/10 border-emerald-200/60 hover:bg-emerald-500/15',
             dot: 'bg-emerald-500',
             text: 'text-emerald-700',
             filter: 'In Stock',
@@ -95,7 +95,7 @@ function InventoryStatusChart({
           {
             label: 'Low Stock',
             count: low,
-            bg: 'bg-amber-50/70 border-amber-200/60 hover:bg-amber-100/70',
+            bg: 'bg-amber-500/10 border-amber-200/60 hover:bg-amber-500/15',
             dot: 'bg-amber-500',
             text: 'text-amber-700',
             filter: 'Low Stock',
@@ -103,7 +103,7 @@ function InventoryStatusChart({
           {
             label: 'Out of Stock',
             count: outOfStock,
-            bg: 'bg-rose-50/70 border-rose-200/60 hover:bg-rose-100/70',
+            bg: 'bg-rose-500/10 border-rose-200/60 hover:bg-rose-500/15',
             dot: 'bg-rose-500',
             text: 'text-rose-700',
             filter: 'Out of Stock',
@@ -113,9 +113,9 @@ function InventoryStatusChart({
             key={item.label}
             type="button"
             onClick={() => onFilterClick(item.filter)}
-            className={`rounded-xl p-3 border ${item.bg} flex flex-col justify-between shadow-2xs backdrop-blur-xs text-left transition-colors cursor-pointer group`}
+            className={`rounded-2xl p-3 border ${item.bg} flex flex-col justify-between shadow-2xs backdrop-blur-md text-left transition-all cursor-pointer group`}
           >
-            <div className={`text-xl font-extrabold ${item.text}`}>{item.count}</div>
+            <div className={`text-xl font-black tracking-[-0.025em] ${item.text}`}>{item.count}</div>
             <div className="flex items-center gap-1.5 mt-1.5">
               <div className={`w-2 h-2 rounded-full ${item.dot}`} />
               <span className="text-[11px] font-semibold text-slate-600 group-hover:text-slate-900">{item.label}</span>
@@ -195,9 +195,9 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => setShowManual(true)}
-              className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+              className="px-3.5 py-2 bg-white/70 hover:bg-white text-slate-700 border border-white/80 text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-2xs transition-all backdrop-blur-md cursor-pointer"
             >
-              <BookOpen size={14} className="text-blue-600" />
+              <BookOpen size={14} className="text-indigo-600" />
               <span>User Manual</span>
             </button>
             <button
@@ -220,22 +220,22 @@ export default function Dashboard() {
         }
       />
 
-      {/* Operational Quick-Start Banner */}
+      {/* Operational Quick-Start Banner (Apple Accent Card) */}
       {showGuideBanner && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-slate-900 text-white shadow-md shadow-blue-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative overflow-hidden animate-fade-slide">
-          <div className="flex items-center gap-3 z-10">
-            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-xs border border-white/20 flex items-center justify-center shrink-0">
-              <Sparkles size={18} className="text-blue-200" />
+        <div className="p-5 rounded-[24px] apple-accent-card text-white shadow-[0_12px_32px_rgba(99,102,241,0.25)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative overflow-hidden animate-fade-slide border border-white/30">
+          <div className="flex items-center gap-3.5 z-10">
+            <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shrink-0 shadow-sm">
+              <Sparkles size={20} className="text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-xs sm:text-sm tracking-tight">StockFlow Operational Guide & System Manual</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white">
+                <span className="font-bold text-sm sm:text-base tracking-[-0.025em]">StockFlow Operational Guide & System Manual</span>
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/25 text-white backdrop-blur-xs">
                   Quick Guide
                 </span>
               </div>
-              <p className="text-[11px] text-blue-100 mt-0.5">
-                New to StockFlow? Learn the logical order of operations: categories, suppliers, products & SKUs, and stock movements.
+              <p className="text-xs text-indigo-100 mt-0.5">
+                Master inventory lifecycle flows: configure categories, suppliers, SKU definitions, and record tamper-proof stock movements.
               </p>
             </div>
           </div>
@@ -244,14 +244,14 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => setShowManual(true)}
-              className="px-3.5 py-1.5 bg-white text-slate-900 hover:bg-blue-50 text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-xs"
+              className="px-4 py-2 bg-white text-slate-900 hover:bg-slate-50 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
             >
               Open Manual
             </button>
             <button
               type="button"
               onClick={() => setShowGuideBanner(false)}
-              className="p-1.5 text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+              className="p-2 text-white/80 hover:text-white rounded-xl hover:bg-white/15 transition-colors cursor-pointer"
               aria-label="Dismiss banner"
             >
               <X size={15} />
@@ -268,7 +268,7 @@ export default function Dashboard() {
             value={totalProducts}
             sub={`${categories.length} active categories`}
             icon={<Boxes size={18} />}
-            sparkline={<KPISparkline data={[3, 5, 4, 7, 6, 8, totalProducts]} color="#3b82f6" />}
+            sparkline={<KPISparkline data={[3, 5, 4, 7, 6, 8, totalProducts]} color="#6366f1" />}
           />
         </div>
         <div onClick={() => navigate('inventory')} className="cursor-pointer">
@@ -308,21 +308,21 @@ export default function Dashboard() {
       {/* Modern Graphical Visualizations Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* 7-Day Inbound / Outbound Bar Activity Chart */}
-        <div className="glass-card rounded-2xl p-5 md:p-6 flex flex-col justify-between">
+        <div className="glass-card rounded-[24px] border border-white/60 p-5 md:p-6 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
+              <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 border border-indigo-200/50">
                 <Activity size={15} />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-slate-900">Stock Velocity & Movement Activity</h2>
+                <h2 className="text-sm font-bold text-slate-900 tracking-[-0.025em]">Stock Velocity & Movement Activity</h2>
                 <p className="text-[11px] text-slate-400">Inbound receipts vs outbound dispatch volumes</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => navigate('transactions')}
-              className="text-[11px] font-semibold text-blue-600 hover:underline"
+              className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 hover:underline cursor-pointer"
             >
               View All Movements
             </button>
@@ -331,21 +331,21 @@ export default function Dashboard() {
         </div>
 
         {/* Category Asset Valuation Donut Chart */}
-        <div className="glass-card rounded-2xl p-5 md:p-6 flex flex-col justify-between">
+        <div className="glass-card rounded-[24px] border border-white/60 p-5 md:p-6 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100">
+              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 border border-purple-200/50">
                 <PieChart size={15} />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-slate-900">Valuation by Category</h2>
+                <h2 className="text-sm font-bold text-slate-900 tracking-[-0.025em]">Valuation by Category</h2>
                 <p className="text-[11px] text-slate-400">Proportional asset value distribution across segments</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => navigate('reports')}
-              className="text-[11px] font-semibold text-blue-600 hover:underline"
+              className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 hover:underline cursor-pointer"
             >
               Detailed Report
             </button>
@@ -357,17 +357,17 @@ export default function Dashboard() {
       {/* Main Grid: Inventory Distribution & Recent Ledger */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         {/* Inventory Status Breakdown */}
-        <div className="glass-card rounded-2xl p-5 md:p-6 flex flex-col justify-between">
+        <div className="glass-card rounded-[24px] border border-white/60 p-5 md:p-6 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2 tracking-[-0.025em]">
                 <span>Inventory Distribution</span>
-                <Sparkles size={14} className="text-blue-500" />
+                <Sparkles size={14} className="text-indigo-500" />
               </h2>
               <button
                 type="button"
                 onClick={() => navigate('inventory')}
-                className="text-[11px] font-semibold text-blue-600 hover:underline cursor-pointer"
+                className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 hover:underline cursor-pointer"
               >
                 {totalProducts} SKUs
               </button>
@@ -380,25 +380,25 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <div className="mt-5 pt-4 border-t border-white/60 flex items-center justify-between text-xs text-slate-500">
             <span>Overall Stock Health</span>
-            <span className="font-bold text-emerald-600">
+            <span className="font-black tracking-[-0.025em] text-emerald-600">
               {totalProducts > 0 ? Math.round((healthy / totalProducts) * 100) : 0}% Optimum
             </span>
           </div>
         </div>
 
         {/* Recent Transactions Table Card */}
-        <div className="xl:col-span-2 glass-card rounded-2xl overflow-hidden flex flex-col justify-between">
-          <div className="px-5 py-4 bg-slate-50/70 border-b border-slate-200/70 flex items-center justify-between">
+        <div className="xl:col-span-2 glass-card rounded-[24px] border border-white/60 overflow-hidden flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+          <div className="px-5 py-4 bg-white/40 border-b border-white/60 flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-slate-900">Recent Movement Ledger</h2>
+              <h2 className="text-sm font-bold text-slate-900 tracking-[-0.025em]">Recent Movement Ledger</h2>
               <p className="text-[11px] text-slate-400">Latest immutable inventory transactions</p>
             </div>
             <button
               type="button"
               onClick={() => navigate('transactions')}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 hover:underline cursor-pointer"
+              className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 hover:underline cursor-pointer"
             >
               <span>Full Ledger</span>
               <ArrowRight size={13} />
@@ -408,15 +408,15 @@ export default function Dashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                  <th className="px-4 py-2.5 text-left">Product</th>
-                  <th className="px-4 py-2.5 text-left">Type</th>
-                  <th className="px-4 py-2.5 text-right">Quantity</th>
-                  <th className="px-4 py-2.5 text-left">Operator</th>
-                  <th className="px-4 py-2.5 text-left">Timestamp</th>
+                <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                  <th className="px-4 py-3 text-left">Product</th>
+                  <th className="px-4 py-3 text-left">Type</th>
+                  <th className="px-4 py-3 text-right">Quantity</th>
+                  <th className="px-4 py-3 text-left">Operator</th>
+                  <th className="px-4 py-3 text-left">Timestamp</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100/80">
+              <tbody className="divide-y divide-white/50">
                 {recentTxns.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
@@ -431,25 +431,25 @@ export default function Dashboard() {
                     <tr
                       key={t.id}
                       onClick={() => navigate('transaction-detail', t.id)}
-                      className="hover:bg-blue-50/40 transition-colors cursor-pointer group"
+                      className="hover:bg-white/50 transition-colors cursor-pointer group"
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate('product-detail', t.productId);
                           }}
-                          className="font-bold text-slate-900 hover:text-blue-600 text-left transition-colors cursor-pointer"
+                          className="font-bold text-slate-900 hover:text-indigo-600 text-left transition-colors cursor-pointer"
                         >
                           {getProductName(t.productId)}
                         </button>
                         <p className="text-[10px] text-slate-400 font-mono">{getProductSku(t.productId)}</p>
                       </td>
-                      <td className="px-4 py-3">{txnBadge[t.type]}</td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3.5">{txnBadge[t.type]}</td>
+                      <td className="px-4 py-3.5 text-right">
                         <span
-                          className={`inline-flex items-center justify-end gap-1 font-bold ${
+                          className={`inline-flex items-center justify-end gap-1 font-black tracking-[-0.025em] ${
                             t.type === 'Stock In'
                               ? 'text-emerald-600'
                               : t.type === 'Stock Out'
@@ -465,8 +465,8 @@ export default function Dashboard() {
                           {t.quantity}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-slate-600 font-medium">{t.performedBy.split(' ')[0]}</td>
-                      <td className="px-4 py-3 text-slate-400 font-mono text-[11px] group-hover:text-slate-700 transition-colors">
+                      <td className="px-4 py-3.5 text-slate-600 font-medium">{t.performedBy.split(' ')[0]}</td>
+                      <td className="px-4 py-3.5 text-slate-400 font-mono text-[11px] group-hover:text-slate-700 transition-colors">
                         {t.createdAt}
                       </td>
                     </tr>
@@ -479,14 +479,14 @@ export default function Dashboard() {
 
         {/* Low Stock Urgent Replenishment Priority Queue */}
         {lowStockProducts.length > 0 && (
-          <div className="xl:col-span-3 glass-card rounded-2xl overflow-hidden">
-            <div className="px-5 py-4 bg-amber-50/50 border-b border-amber-200/50 flex items-center justify-between">
+          <div className="xl:col-span-3 glass-card rounded-[24px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+            <div className="px-5 py-4 bg-amber-500/10 border-b border-amber-200/50 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-amber-100 text-amber-700">
+                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-700">
                   <AlertTriangle size={15} />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-slate-900">Restock Priority Queue</h2>
+                  <h2 className="text-sm font-bold text-slate-900 tracking-[-0.025em]">Restock Priority Queue</h2>
                   <p className="text-[11px] text-slate-500">Products operating at or below configured reorder levels</p>
                 </div>
               </div>
@@ -502,17 +502,17 @@ export default function Dashboard() {
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/40 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                    <th className="px-4 py-2.5 text-left">Product Name</th>
-                    <th className="px-4 py-2.5 text-left">SKU</th>
-                    <th className="px-4 py-2.5 text-left">Category</th>
-                    <th className="px-4 py-2.5 text-right">Current Stock</th>
-                    <th className="px-4 py-2.5 text-right">Reorder Threshold</th>
-                    <th className="px-4 py-2.5 text-left">Status</th>
-                    <th className="px-4 py-2.5 text-right">Action</th>
+                  <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                    <th className="px-4 py-3 text-left">Product Name</th>
+                    <th className="px-4 py-3 text-left">SKU</th>
+                    <th className="px-4 py-3 text-left">Category</th>
+                    <th className="px-4 py-3 text-right">Current Stock</th>
+                    <th className="px-4 py-3 text-right">Reorder Threshold</th>
+                    <th className="px-4 py-3 text-left">Status</th>
+                    <th className="px-4 py-3 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100/80">
+                <tbody className="divide-y divide-white/50">
                   {lowStockProducts.map((p) => {
                     const stock = inventory.find((i) => i.productId === p.id)?.currentStock ?? 0;
                     const status = getStockStatus(p.id);
@@ -520,24 +520,24 @@ export default function Dashboard() {
                       <tr
                         key={p.id}
                         onClick={() => navigate('product-detail', p.id)}
-                        className="hover:bg-slate-50/80 transition-colors cursor-pointer"
+                        className="hover:bg-white/50 transition-colors cursor-pointer"
                       >
-                        <td className="px-4 py-3 font-bold text-slate-900">{p.name}</td>
-                        <td className="px-4 py-3 text-slate-400 font-mono text-[11px]">{p.sku}</td>
-                        <td className="px-4 py-3 text-slate-600 font-medium">{getCategoryName(p.categoryId)}</td>
-                        <td className="px-4 py-3 font-extrabold text-slate-900 text-right">{stock}</td>
-                        <td className="px-4 py-3 text-slate-400 font-mono text-right">{p.reorderLevel}</td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3.5 font-bold text-slate-900">{p.name}</td>
+                        <td className="px-4 py-3.5 text-slate-400 font-mono text-[11px]">{p.sku}</td>
+                        <td className="px-4 py-3.5 text-slate-600 font-medium">{getCategoryName(p.categoryId)}</td>
+                        <td className="px-4 py-3.5 font-black tracking-[-0.025em] text-slate-900 text-right">{stock}</td>
+                        <td className="px-4 py-3.5 text-slate-400 font-mono text-right">{p.reorderLevel}</td>
+                        <td className="px-4 py-3.5">
                           <Badge variant={status} />
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3.5 text-right">
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate('product-detail', p.id);
                             }}
-                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-bold hover:underline cursor-pointer"
+                            className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700 font-bold hover:underline cursor-pointer"
                           >
                             <Eye size={13} />
                             <span>Details</span>

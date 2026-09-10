@@ -110,7 +110,7 @@ export default function Inventory() {
       </div>
 
       {/* Glassmorphic Search & Filter Pills Toolbar */}
-      <div className="glass-card rounded-2xl p-3 md:p-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="glass-card rounded-[24px] border border-white/60 p-3.5 md:p-4.5 flex flex-wrap items-center justify-between gap-3 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
         <div className="flex items-center gap-2.5 glass-input rounded-xl px-3 py-2 min-w-[240px] flex-1 sm:flex-initial">
           <Search size={14} className="text-slate-400 shrink-0" />
           <input
@@ -133,7 +133,7 @@ export default function Inventory() {
                 setFilterStatus('');
                 setPage(1);
               }}
-              className="text-[11px] font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200/80 px-2.5 py-1.5 rounded-xl border border-slate-200/80 transition-colors inline-flex items-center gap-1 cursor-pointer"
+              className="text-[11px] font-semibold text-slate-600 hover:text-slate-900 bg-white/70 hover:bg-white px-2.5 py-1.5 rounded-xl border border-white/80 transition-colors inline-flex items-center gap-1 cursor-pointer"
               title="Reset all filters and search"
             >
               <RotateCcw size={11} />
@@ -141,7 +141,7 @@ export default function Inventory() {
             </button>
           )}
 
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100/90 rounded-xl border border-slate-200/80">
+          <div className="flex items-center gap-1.5 p-1 bg-white/50 rounded-xl border border-white/60 backdrop-blur-xs">
             {['', 'In Stock', 'Low Stock', 'Out of Stock'].map((s) => (
               <button
                 key={s}
@@ -152,7 +152,7 @@ export default function Inventory() {
                 }}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                   filterStatus === s
-                    ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
+                    ? 'bg-white text-slate-900 shadow-xs border border-white/80'
                     : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
@@ -164,11 +164,11 @@ export default function Inventory() {
       </div>
 
       {/* Glass Data Table */}
-      <div className="glass-card rounded-2xl overflow-hidden">
+      <div className="glass-card rounded-[24px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+              <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                 {[
                   'Product Name',
                   'SKU',
@@ -193,7 +193,7 @@ export default function Inventory() {
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100/80">
+            <tbody className="divide-y divide-white/50">
               {paged.length === 0 ? (
                 <tr>
                   <td colSpan={9}>
@@ -209,22 +209,22 @@ export default function Inventory() {
                   const status = getStockStatus(p.id);
                   const itemValue = stock * p.price;
                   return (
-                    <tr key={p.id} className="hover:bg-blue-50/30 transition-colors">
+                    <tr key={p.id} className="hover:bg-white/50 transition-colors">
                       <td className="px-4 py-3.5">
                         <button
                           type="button"
                           onClick={() => navigate('product-detail', p.id)}
-                          className="font-bold text-slate-900 hover:text-blue-600 transition-colors text-left"
+                          className="font-bold text-slate-900 hover:text-indigo-600 transition-colors text-left cursor-pointer"
                         >
                           {p.name}
                         </button>
                       </td>
                       <td className="px-4 py-3.5 font-mono text-slate-500">{p.sku}</td>
                       <td className="px-4 py-3.5 text-slate-600 font-medium">{getCatName(p.categoryId)}</td>
-                      <td className="px-4 py-3.5 text-right font-extrabold text-slate-900">{stock}</td>
+                      <td className="px-4 py-3.5 text-right font-black tracking-[-0.025em] text-slate-900">{stock}</td>
                       <td className="px-4 py-3.5 text-right font-mono text-slate-400">{p.reorderLevel}</td>
                       <td className="px-4 py-3.5 text-right font-bold text-slate-900">${p.price.toFixed(2)}</td>
-                      <td className="px-4 py-3.5 text-right font-extrabold text-blue-700">
+                      <td className="px-4 py-3.5 text-right font-black tracking-[-0.025em] text-indigo-700">
                         ${itemValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="px-4 py-3.5">
@@ -236,7 +236,7 @@ export default function Inventory() {
                             type="button"
                             onClick={() => navigate('stock-in', p.id)}
                             title="Stock In (+)"
-                            className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/60 transition-colors"
+                            className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 border border-emerald-200/50 transition-colors cursor-pointer"
                           >
                             <ArrowUpRight size={13} />
                           </button>
@@ -245,7 +245,7 @@ export default function Inventory() {
                             onClick={() => navigate('stock-out', p.id)}
                             disabled={stock === 0}
                             title="Stock Out (-)"
-                            className="p-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/60 transition-colors disabled:opacity-40"
+                            className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-700 hover:bg-indigo-500/20 border border-indigo-200/50 transition-colors disabled:opacity-40 cursor-pointer"
                           >
                             <ArrowDownRight size={13} />
                           </button>
@@ -253,7 +253,7 @@ export default function Inventory() {
                             type="button"
                             onClick={() => navigate('product-detail', p.id)}
                             title="View Details"
-                            className="p-1.5 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/60 transition-colors"
+                            className="p-1.5 rounded-lg bg-white/70 text-slate-600 hover:bg-white border border-white/80 transition-colors cursor-pointer"
                           >
                             <Eye size={13} />
                           </button>

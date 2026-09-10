@@ -93,11 +93,11 @@ export default function Suppliers() {
         }
       />
 
-      <div className="glass-card rounded-2xl overflow-hidden">
+      <div className="glass-card rounded-[24px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+            <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
               <th className="px-5 py-3.5 text-left">Company Name</th>
               <th className="px-5 py-3.5 text-left">Contact Email</th>
               <th className="px-5 py-3.5 text-left">Phone Number</th>
@@ -106,7 +106,7 @@ export default function Suppliers() {
               {currentUser?.role === 'ADMIN' && <th className="px-5 py-3.5 text-right">Actions</th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100/80">
+          <tbody className="divide-y divide-white/50">
             {suppliers.length === 0 ? (
               <tr>
                 <td colSpan={6}>
@@ -121,16 +121,16 @@ export default function Suppliers() {
               suppliers.map((sup) => {
                 const count = getProductCount(sup.id);
                 return (
-                  <tr key={sup.id} className="hover:bg-blue-50/30 transition-colors">
+                  <tr key={sup.id} className="hover:bg-white/50 transition-colors">
                     <td className="px-5 py-4 font-bold text-slate-900 flex items-center gap-2">
-                      <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100/60">
+                      <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 border border-indigo-200/50">
                         <Building2 size={13} />
                       </div>
                       <span>{sup.name}</span>
                     </td>
                     <td className="px-5 py-4 text-slate-600 font-medium">
                       {sup.email ? (
-                        <span className="flex items-center gap-1.5 text-blue-600 font-mono">
+                        <span className="flex items-center gap-1.5 text-indigo-600 font-mono">
                           <Mail size={12} className="text-slate-400" />
                           {sup.email}
                         </span>
@@ -162,7 +162,7 @@ export default function Suppliers() {
                       <button
                         type="button"
                         onClick={() => navigate('products')}
-                        className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200/60 hover:bg-blue-100 transition-colors cursor-pointer"
+                        className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-700 text-xs font-bold border border-indigo-200/50 hover:bg-indigo-500/20 transition-colors cursor-pointer"
                         title="View products from this supplier"
                       >
                         {count} SKUs
@@ -174,7 +174,7 @@ export default function Suppliers() {
                           <button
                             type="button"
                             onClick={() => openEdit(sup.id)}
-                            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+                            className="p-1.5 rounded-lg hover:bg-white/80 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
                             aria-label="Edit supplier"
                           >
                             <Edit size={14} />
@@ -182,7 +182,7 @@ export default function Suppliers() {
                           <button
                             type="button"
                             onClick={() => setConfirmDelete(sup.id)}
-                            className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors"
+                            className="p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                             aria-label="Delete supplier"
                           >
                             <Trash2 size={14} />

@@ -78,18 +78,18 @@ export default function Categories() {
         }
       />
 
-      <div className="glass-card rounded-2xl overflow-hidden">
+      <div className="glass-card rounded-[24px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+            <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
               <th className="px-5 py-3.5 text-left">Category Name</th>
               <th className="px-5 py-3.5 text-right">Products Count</th>
               <th className="px-5 py-3.5 text-left">Created Date</th>
               {currentUser?.role === 'ADMIN' && <th className="px-5 py-3.5 text-right">Actions</th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100/80">
+          <tbody className="divide-y divide-white/50">
             {categories.length === 0 ? (
               <tr>
                 <td colSpan={4}>
@@ -104,9 +104,9 @@ export default function Categories() {
               categories.map((cat) => {
                 const count = getProductCount(cat.id);
                 return (
-                  <tr key={cat.id} className="hover:bg-blue-50/30 transition-colors">
+                  <tr key={cat.id} className="hover:bg-white/50 transition-colors">
                     <td className="px-5 py-4 font-bold text-slate-900 flex items-center gap-2">
-                      <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-100/60">
+                      <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 border border-indigo-200/50">
                         <Tag size={13} />
                       </div>
                       <span>{cat.name}</span>
@@ -115,7 +115,7 @@ export default function Categories() {
                       <button
                         type="button"
                         onClick={() => navigate('products')}
-                        className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200/60 hover:bg-blue-100 transition-colors cursor-pointer"
+                        className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-700 text-xs font-bold border border-indigo-200/50 hover:bg-indigo-500/20 transition-colors cursor-pointer"
                         title="View products in this category"
                       >
                         {count} {count === 1 ? 'item' : 'items'}
@@ -128,7 +128,7 @@ export default function Categories() {
                           <button
                             type="button"
                             onClick={() => openEdit(cat.id)}
-                            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+                            className="p-1.5 rounded-lg hover:bg-white/80 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
                             aria-label="Edit category"
                           >
                             <Edit size={14} />
@@ -136,7 +136,7 @@ export default function Categories() {
                           <button
                             type="button"
                             onClick={() => setConfirmDelete(cat.id)}
-                            className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors"
+                            className="p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                             aria-label="Delete category"
                           >
                             <Trash2 size={14} />
