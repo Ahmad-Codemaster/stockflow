@@ -1,18 +1,9 @@
 import type { Response } from 'express';
-import { z } from 'zod';
 import { SupplierService } from '../services/supplierService';
 import type { AuthenticatedRequest } from '../types/api';
+import { supplierSchema, supplierUpdateSchema } from '../schemas/supplierSchemas';
 
-export const supplierSchema = z.object({
-  name: z.string().min(1, 'Supplier name is required'),
-  contactPerson: z.string().optional(),
-  email: z.string().email().optional().or(z.literal('')),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  leadTime: z.number().nonnegative().optional(),
-});
-
-export const supplierUpdateSchema = supplierSchema.partial();
+export { supplierSchema, supplierUpdateSchema };
 
 export class SupplierController {
   static async list(_req: AuthenticatedRequest, res: Response) {

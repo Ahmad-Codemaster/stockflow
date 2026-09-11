@@ -21,6 +21,7 @@ import {
   transactionQuerySchema,
 } from '../controllers/inventoryController';
 import { requireAuth } from '../middleware/auth';
+import { mutationLimiter } from '../middleware/rateLimiter';
 import { validateBody, validateParams, validateQuery } from '../middleware/validate';
 import { idParamSchema } from '../schemas/common';
 
@@ -30,9 +31,9 @@ const router = Router();
 router.use(requireAuth);
 
 router.get('/', validateQuery(inventoryQuerySchema), InventoryController.list);
-router.post('/stock-in', validateBody(stockInSchema), InventoryController.stockIn);
-router.post('/stock-out', validateBody(stockOutSchema), InventoryController.stockOut);
-router.post('/adjust', validateBody(stockAdjustSchema), InventoryController.adjust);
+router.post('/stock-in', mutationLimiter, validateBody(stockInSchema), InventoryController.stockIn);
+router.post('/stock-out', mutationLimiter, validateBody(stockOutSchema), InventoryController.stockOut);
+router.post('/adjust', mutationLimiter, validateBody(stockAdjustSchema), InventoryController.adjust);
 router.get('/transactions', validateQuery(transactionQuerySchema), InventoryController.listTransactions);
 router.get('/transactions/:id', validateParams(idParamSchema), InventoryController.getTransactionById);
 

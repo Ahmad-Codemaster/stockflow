@@ -24,6 +24,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { idempotency } from './middleware/idempotency';
 import { requestLogger } from './middleware/logger';
 import { requestId } from './middleware/requestId';
+import logger from './logger';
 import prisma from './db';
 import authRoutes from './routes/authRoutes';
 import categoryRoutes from './routes/categoryRoutes';
@@ -66,7 +67,43 @@ export function createApp() {
   // 7. Structured Request Logger: Emits structured logs with correlation ID and duration
   app.use(requestLogger);
 
-  // 8. Deep Health Check: Validates live DB connectivity, latency, uptime, and memory
+  // 8. Liveness Probe: fast ping confirming the Node event loop is responsive (no DB hit)
+  // Used by container orchestrators (Kubernetes, Render) to restart crashed processes.
+  app.get('/api/health/live', (_req, res) => {
+    res.status(200).json({ status: 'alive', service: 'stockflow-api', timestamp: new Date().toISOString() });
+  });
+
+  // 9. Readiness Probe: deep health check validating PostgreSQL connectivity
+  // Used by load balancers to route traffic only to healthy instances.
+  app.get('/api/health/ready', async (_req, res) => {
+    const startTime = Date.now();
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      const dbLatencyMs = Date.now() - startTime;
+      res.status(200).json({
+        status: 'healthy',
+        service: 'stockflow-api',
+        timestamp: new Date().toISOString(),
+        uptimeSeconds: Math.floor(process.uptime()),
+        database: { status: 'connected', latencyMs: dbLatencyMs },
+        memory: {
+          rssMb: Math.round(process.memoryUsage().rss / 1024 / 1024),
+          heapUsedMb: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        },
+      });
+    } catch (err: any) {
+      logger.error('Health readiness check failed', { error: err?.message });
+      res.status(503).json({
+        status: 'degraded',
+        service: 'stockflow-api',
+        timestamp: new Date().toISOString(),
+        uptimeSeconds: Math.floor(process.uptime()),
+        database: { status: 'disconnected', error: err?.message || 'Database ping failed' },
+      });
+    }
+  });
+
+  // 10. Deep Health Check (legacy alias → same as /ready for backward compat)
   app.get('/api/health', async (_req, res) => {
     const startTime = Date.now();
     try {
@@ -87,6 +124,7 @@ export function createApp() {
         },
       });
     } catch (err: any) {
+      logger.error('Health check failed', { error: err?.message });
       res.status(503).json({
         status: 'degraded',
         service: 'stockflow-api',

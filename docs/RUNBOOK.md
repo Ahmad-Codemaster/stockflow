@@ -200,3 +200,212 @@ Content-Type: application/json
 * **Endpoint:** `POST /api/system/wipe`
 * **Authentication:** Requires `ADMIN` role with active session cookie.
 * Clears all products, categories, suppliers, stock transactions, and movement audit logs while preserving administrator accounts and active user sessions.
+* **Rate limited to 3 requests per 10 minutes per IP.** If you trigger the limit by accident, wait 10 minutes.
+
+---
+
+## 8. Backup & Restore
+
+### 8.1 Creating a Backup
+
+Use `pg_dump` to create a compressed PostgreSQL dump. The custom format (`-Fc`) is parallel-restore capable and supports selective table restoration.
+
+```bash
+# Render / self-hosted: get the DATABASE_URL from your environment dashboard
+pg_dump \
+  --dbname="$DATABASE_URL" \
+  --format=custom \
+  --compress=9 \
+  --no-acl \
+  --no-owner \
+  --file="stockflow_$(date +%Y%m%d_%H%M%S).dump"
+```
+
+**Recommended Backup Retention Policy:**
+| Frequency | Retention |
+|-----------|-----------|
+| Hourly | 24 hours |
+| Daily | 30 days |
+| Weekly | 12 weeks |
+| Monthly | 12 months |
+
+> [!IMPORTANT]
+> Render managed PostgreSQL includes automated daily backups on paid plans. Verify your backup window in the Render dashboard under **PostgreSQL → Backups**.
+
+### 8.2 Verifying a Backup
+
+Always verify that a backup is restorable in a staging environment before trusting it:
+
+```bash
+# Create a fresh test database
+createdb stockflow_restore_test
+
+# Restore the dump
+pg_restore \
+  --dbname="postgresql://postgres:password@localhost:5432/stockflow_restore_test" \
+  --no-acl \
+  --no-owner \
+  --verbose \
+  stockflow_20240101_000000.dump
+
+# Sanity check: count rows in core tables
+psql "postgresql://postgres:password@localhost:5432/stockflow_restore_test" \
+  -c "SELECT COUNT(*) FROM products; SELECT COUNT(*) FROM stock_transactions; SELECT COUNT(*) FROM users;"
+
+# Clean up after verification
+dropdb stockflow_restore_test
+```
+
+### 8.3 Restoring to Production
+
+> [!CAUTION]
+> Production restore is a destructive operation that overwrites all existing data. Perform during a maintenance window with all users logged out.
+
+```bash
+# 1. Notify users and drain traffic (disable load balancer routing)
+
+# 2. Restore with --clean to drop existing objects before recreating
+pg_restore \
+  --dbname="$PRODUCTION_DATABASE_URL" \
+  --clean \
+  --if-exists \
+  --no-acl \
+  --no-owner \
+  --single-transaction \
+  --verbose \
+  stockflow_20240101_000000.dump
+
+# 3. Verify restore succeeded
+psql "$PRODUCTION_DATABASE_URL" -c "SELECT COUNT(*) FROM products;"
+
+# 4. Re-enable load balancer routing
+```
+
+---
+
+## 9. Application Rollback
+
+### 9.1 Docker Image Rollback
+
+```bash
+# Tag the current running image before deploying a new version
+docker tag stockflow:latest stockflow:stable-$(date +%Y%m%d)
+
+# If the new deployment is faulty, roll back to the previous stable image
+docker stop stockflow-container
+docker run -d \
+  --name stockflow-container \
+  --env-file .env.production \
+  -p 3001:3001 \
+  stockflow:stable-20240101
+```
+
+### 9.2 Render Deployment Rollback
+
+Render keeps previous successful deployments and allows one-click rollback:
+
+1. Navigate to **Render Dashboard → StockFlow Service → Deployments**.
+2. Find the last successful green deployment.
+3. Click **Re-deploy** on that deployment to roll back instantly.
+
+### 9.3 Database Migration Rollback
+
+Prisma does not auto-generate rollback migrations. For each migration, a manual rollback SQL must be prepared.
+
+**Process:**
+```bash
+# 1. Identify the migration to roll back
+npx prisma migrate status
+
+# 2. Apply the manual rollback SQL (stored in prisma/migrations/<name>/rollback.sql if prepared)
+psql "$DATABASE_URL" -f prisma/migrations/20240101_add_feature/rollback.sql
+
+# 3. Mark the migration as rolled back in Prisma's tracking table
+psql "$DATABASE_URL" -c "DELETE FROM _prisma_migrations WHERE migration_name = '20240101_add_feature';"
+
+# 4. Verify the schema matches the previous state
+npx prisma db pull  # Re-introspects from live DB
+```
+
+> [!WARNING]
+> Always test rollback SQL in a staging database before applying to production. Never delete data that may be needed for audit trail continuity.
+
+---
+
+## 10. Extended Troubleshooting
+
+### Scenario D: Idempotency Key Conflict (HTTP 409 `IDEMPOTENCY_CONFLICT`)
+
+**Symptom:** Client sends the same `Idempotency-Key` header before the first request completes.
+
+**Cause:** Two parallel client requests with identical idempotency keys arrived simultaneously.
+
+**Resolution:**
+1. The retry must wait 1–3 seconds for the first request to complete.
+2. On completion, the second request will receive a replayed response from the in-memory idempotency store.
+3. If the first request failed with a 5xx server error, the key is automatically removed from the store, allowing a clean retry.
+
+**Check:** In the API response, look for `X-Idempotent-Replay: true` header — this confirms a cached replay was served.
+
+---
+
+### Scenario E: Connection Pool Exhaustion with PgBouncer
+
+**Symptom:** API returns `HTTP 503` with DB latency > 5000ms. Health check at `/api/health/ready` shows `disconnected`.
+
+**Diagnosis:**
+```bash
+# Check active connections vs max
+psql "$DATABASE_URL" -c "SELECT count(*), state FROM pg_stat_activity GROUP BY state;"
+
+# Check pool settings in DATABASE_URL connection string
+echo "$DATABASE_URL" | grep -o 'connection_limit=[0-9]*'
+```
+
+**Resolution:**
+```bash
+# Option 1: Increase pool size in DATABASE_URL
+export DATABASE_URL="postgresql://...?connection_limit=25&pool_timeout=10"
+
+# Option 2: Configure PgBouncer in front of PostgreSQL
+# pgbouncer.ini:
+# pool_mode = transaction
+# max_client_conn = 200
+# default_pool_size = 20
+```
+
+---
+
+### Scenario F: Container Out of Memory (OOM Kill)
+
+**Symptom:** Container crashes with exit code 137 (SIGKILL). `/api/health/live` stops responding.
+
+**Diagnosis:**
+```bash
+# Check memory usage from live health endpoint (if still responsive)
+curl -s "$API_URL/api/health/ready" | jq '.memory'
+
+# Docker: inspect OOM events
+docker inspect stockflow-container | jq '.[0].State'
+docker events --filter "event=oom" --filter "container=stockflow-container"
+```
+
+**Resolution:**
+1. Increase the container memory limit in Docker Compose or Render service settings.
+2. Look for memory leaks in the idempotency store (24h TTL, cleared every hour via `.unref()` interval).
+3. Check for `SET client_min_messages = DEBUG` queries left in development code that inflate response payloads.
+
+---
+
+### Scenario G: Rate Limit False Positives (HTTP 429)
+
+**Symptom:** Legitimate API clients receive `RATE_LIMIT_EXCEEDED` on inventory mutations.
+
+**Context:** `mutationLimiter` allows 60 requests/minute per IP. `strictLimiter` allows 3 requests/10 minutes on `/wipe`.
+
+**Workaround (development):**
+- Set `NODE_ENV=test` to skip all rate limiting.
+
+**Production fix:**
+- Increase `max` threshold in `mutationLimiter` if legitimate throughput exceeds 60/min.
+- Deploy multiple server instances behind a shared Redis rate-limit store to distribute per-IP counters across nodes.

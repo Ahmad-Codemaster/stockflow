@@ -126,9 +126,11 @@ export class UserService {
 
   /**
    * UPDATE USER: Modify profile, role, password, or status
-   * 
+   *
    * Critical Safeguards:
-   * 1. LAST-ADMIN GUARD: Prevents demoting or deactivating the last active administrator.
+   * 1. CONCURRENCY-SAFE LAST-ADMIN GUARD: Demotion/deactivation checks run inside an
+   *    ACID transaction with a `SELECT ... FOR UPDATE` lock on all active admin rows.
+   *    This prevents two concurrent demotions from simultaneously leaving zero admins.
    * 2. IMMEDIATE SESSION PURGE: If a user is deactivated ('Inactive'), all their active
    *    sessions are deleted from PostgreSQL immediately to revoke access on their next click.
    */
@@ -144,93 +146,107 @@ export class UserService {
     adminUserId: string,
     ipAddress?: string
   ) {
-    const user = await prisma.user.findUnique({ where: { id } });
-    if (!user) {
-      throw new AppError('User not found.', 404, 'NOT_FOUND');
-    }
-
-    // LAST-ADMIN GUARD: Prevent demoting the last active admin to staff
-    if (user.role === 'ADMIN' && data.role === 'STAFF') {
-      const activeAdminCount = await prisma.user.count({ where: { role: 'ADMIN', status: 'Active' } });
-      if (activeAdminCount <= 1) {
-        throw new AppError(
-          'Cannot demote the last administrator. At least one active admin account must exist at all times.',
-          400,
-          'LAST_ADMIN'
-        );
-      }
-    }
-
-    // LAST-ADMIN GUARD: Prevent deactivating the last active admin
-    if (user.role === 'ADMIN' && user.status === 'Active' && data.status === 'Inactive') {
-      const activeAdminCount = await prisma.user.count({ where: { role: 'ADMIN', status: 'Active' } });
-      if (activeAdminCount <= 1) {
-        throw new AppError(
-          'Cannot deactivate the last administrator. At least one active admin account must exist at all times.',
-          400,
-          'LAST_ADMIN'
-        );
-      }
-    }
-
-    const updateData: any = {};
-
-    if (data.name) updateData.name = data.name.trim();
-
-    if (data.email) {
-      const normalizedEmail = data.email.trim().toLowerCase();
-      if (normalizedEmail !== user.email) {
-        const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-        if (existing && existing.id !== id) {
-          throw new AppError('A user with this email already exists.', 409, 'DUPLICATE_EMAIL');
-        }
-        updateData.email = normalizedEmail;
-      }
-    }
-
-    if (data.role) updateData.role = data.role;
+    // Pre-compute immutable fields (password hash) outside the transaction
+    let newPasswordHash: string | undefined;
     if (data.password) {
       if (data.password.length < 8) {
         throw new AppError('Password must be at least 8 characters long.', 400, 'VALIDATION_ERROR');
       }
-      updateData.passwordHash = await bcrypt.hash(data.password, 10);
+      newPasswordHash = await bcrypt.hash(data.password, 10);
     }
 
-    if (data.status) {
-      updateData.status = data.status;
+    const updated = await prisma.$transaction(async (tx) => {
+      // 1. Fetch and lock all active administrators in deterministic order to prevent deadlocks
+      const activeAdmins = await tx.$queryRaw<
+        Array<{ id: string; role: string; status: string }>
+      >`
+        SELECT id, role, status
+        FROM users
+        WHERE role = 'ADMIN' AND status = 'Active'
+        ORDER BY id
+        FOR UPDATE
+      `;
 
-      // CRITICAL SECURITY INVARIANT: If user is deactivated, immediately purge all active sessions!
-      if (data.status === 'Inactive') {
-        await prisma.session.deleteMany({ where: { userId: id } });
+      // 2. Fetch the target user under the transaction context
+      const user = await tx.user.findUnique({ where: { id } });
+      if (!user) {
+        throw new AppError('User not found.', 404, 'NOT_FOUND');
       }
-    }
 
-    const updated = await prisma.user.update({
-      where: { id },
-      data: updateData,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        status: true,
-        avatar: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+      // 3. CONCURRENCY-SAFE LAST-ADMIN GUARD: demoting or deactivating the last active admin
+      const isTargetActiveAdmin = activeAdmins.some(u => u.id === id);
+      const isDemoting = user.role === 'ADMIN' && data.role === 'STAFF';
+      const isDeactivating = user.role === 'ADMIN' && user.status === 'Active' && data.status === 'Inactive';
 
-    await AuditService.log({
-      userId: adminUserId,
-      action: 'USER_UPDATE',
-      entity: 'USER',
-      entityId: id,
-      details: { changes: updateData },
-      ipAddress,
+      if ((isDemoting || isDeactivating) && isTargetActiveAdmin && activeAdmins.length <= 1) {
+        const action = isDemoting ? 'demote' : 'deactivate';
+        throw new AppError(
+          `Cannot ${action} the last administrator. At least one active admin account must exist at all times.`,
+          400,
+          'LAST_ADMIN'
+        );
+      }
+
+      // 4. Build update payload
+      const updateData: any = {};
+      if (data.name) updateData.name = data.name.trim();
+
+      if (data.email) {
+        const normalizedEmail = data.email.trim().toLowerCase();
+        if (normalizedEmail !== user.email) {
+          const existing = await tx.user.findUnique({ where: { email: normalizedEmail } });
+          if (existing && existing.id !== id) {
+            throw new AppError('A user with this email already exists.', 409, 'DUPLICATE_EMAIL');
+          }
+          updateData.email = normalizedEmail;
+        }
+      }
+
+      if (data.role) updateData.role = data.role;
+      if (newPasswordHash) updateData.passwordHash = newPasswordHash;
+
+      if (data.status) {
+        updateData.status = data.status;
+        // CRITICAL SECURITY INVARIANT: Immediately purge all active sessions on deactivation
+        if (data.status === 'Inactive') {
+          await tx.session.deleteMany({ where: { userId: id } });
+        }
+      }
+
+      const result = await tx.user.update({
+        where: { id },
+        data: updateData,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          status: true,
+          avatar: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      // 5. Record change in audit log atomically inside transaction
+      await AuditService.log(
+        {
+          userId: adminUserId,
+          action: 'USER_UPDATE',
+          entity: 'USER',
+          entityId: id,
+          details: { changes: Object.keys(updateData) },
+          ipAddress,
+        },
+        tx
+      );
+
+      return result;
     });
 
     return updated;
   }
+
 
   /**
    * DEACTIVATE USER: Shortcut to set status to Inactive and purge active sessions

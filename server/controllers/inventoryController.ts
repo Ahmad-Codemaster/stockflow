@@ -10,53 +10,23 @@
  */
 
 import type { Response } from 'express';
-import { z } from 'zod';
 import { InventoryService } from '../services/inventoryService';
 import type { AuthenticatedRequest } from '../types/api';
+import {
+  stockInSchema,
+  stockOutSchema,
+  stockAdjustSchema,
+  inventoryQuerySchema,
+  transactionQuerySchema,
+} from '../schemas/inventorySchemas';
 
-// Validation schema for Stock-In request payload
-export const stockInSchema = z.object({
-  productId: z.string().min(1, 'Product is required'),
-  quantity: z.number().int().positive('Quantity must be greater than 0'),
-  supplierId: z.string().nullable().optional(),
-  reference: z.string().optional(),
-  notes: z.string().optional(),
-});
-
-// Validation schema for Stock-Out request payload
-export const stockOutSchema = z.object({
-  productId: z.string().min(1, 'Product is required'),
-  quantity: z.number().int().positive('Quantity must be greater than 0'),
-  reference: z.string().optional(),
-  notes: z.string().optional(),
-});
-
-// Validation schema for Stock-Adjustment request payload
-export const stockAdjustSchema = z
-  .object({
-    productId: z.string().min(1, 'Product is required'),
-    targetQuantity: z.number().int().min(0, 'Target quantity cannot be negative').optional(),
-    quantity: z.number().int().optional(),
-    reference: z.string().optional(),
-    notes: z.string().optional(),
-  })
-  .refine(data => data.targetQuantity !== undefined || data.quantity !== undefined, {
-    message: 'Either targetQuantity or quantity delta must be provided',
-  });
-
-export const inventoryQuerySchema = z.object({
-  search: z.string().trim().max(100).optional(),
-  categoryId: z.string().trim().optional(),
-  status: z.enum(['All', 'all', 'In Stock', 'Low Stock', 'Out of Stock']).optional(),
-});
-
-export const transactionQuerySchema = z.object({
-  type: z.enum(['all', 'ALL', 'stock_in', 'STOCK_IN', 'stock_out', 'STOCK_OUT', 'adjustment', 'ADJUSTMENT', 'Stock In', 'Stock Out', 'Adjustment']).optional(),
-  productId: z.string().trim().optional(),
-  limit: z
-    .preprocess((val) => (val !== undefined && val !== '' ? Number(val) : 100), z.number().int().positive().max(500))
-    .optional(),
-});
+export {
+  stockInSchema,
+  stockOutSchema,
+  stockAdjustSchema,
+  inventoryQuerySchema,
+  transactionQuerySchema,
+};
 
 export class InventoryController {
   /**

@@ -44,6 +44,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
+      - name: Security Vulnerability Audit
+        # Fail on any high or critical severity vulnerabilities in production dependencies
+        run: npm audit --audit-level=high --omit=dev
+        continue-on-error: true  # Non-blocking until baseline is clean
+
       - name: Generate Prisma Client & Deploy Migrations
         run: |
           npx prisma generate

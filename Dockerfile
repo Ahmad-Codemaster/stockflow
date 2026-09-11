@@ -30,6 +30,11 @@ COPY tsconfig.json ./
 
 RUN npm install tsx
 
+# Security hardening: switch to non-root node user before exposing ports.
+# The node:20-alpine image ships with a built-in 'node' user (uid=1000).
+# Running as non-root limits the blast radius if the process is exploited.
+USER node
+
 EXPOSE 3001
 
 CMD ["sh", "-c", "if [ -n \"$DATABASE_URL\" ]; then npx prisma migrate deploy || true; npx tsx server/seed.ts || true; fi && npx tsx server/index.ts"]

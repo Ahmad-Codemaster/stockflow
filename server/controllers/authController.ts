@@ -9,19 +9,11 @@
  */
 
 import type { Request, Response } from 'express';
-import { z } from 'zod';
 import { AuthService } from '../services/authService';
 import type { AuthenticatedRequest } from '../types/api';
+import { loginSchema, changePasswordSchema } from '../schemas/authSchemas';
 
-export const loginSchema = z.object({
-  email: z.string().email('Valid email is required'),
-  password: z.string().min(1, 'Password is required'),
-});
-
-export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: z.string().min(8, 'New password must be at least 8 characters'),
-});
+export { loginSchema, changePasswordSchema };
 
 export class AuthController {
   /**

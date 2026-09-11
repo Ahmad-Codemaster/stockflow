@@ -1,5 +1,6 @@
 import prisma from '../db';
 import type { Prisma } from '@prisma/client';
+import logger from '../logger';
 
 export class AuditService {
   static async log(
@@ -28,8 +29,8 @@ export class AuditService {
           ipAddress: params.ipAddress ?? null,
         },
       });
-    } catch (err) {
-      console.error('[AuditService.log Error]', err);
+    } catch (err: any) {
+      logger.error('AuditService.log failed', { action: params.action, entity: params.entity, entityId: params.entityId, error: err?.message });
       if (tx) throw err;
     }
   }

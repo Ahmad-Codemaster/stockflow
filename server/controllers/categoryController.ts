@@ -1,14 +1,9 @@
 import type { Response } from 'express';
-import { z } from 'zod';
 import { CategoryService } from '../services/categoryService';
 import type { AuthenticatedRequest } from '../types/api';
+import { categorySchema, categoryUpdateSchema } from '../schemas/categorySchemas';
 
-export const categorySchema = z.object({
-  name: z.string().min(1, 'Category name is required'),
-  description: z.string().optional(),
-});
-
-export const categoryUpdateSchema = categorySchema.partial();
+export { categorySchema, categoryUpdateSchema };
 
 export class CategoryController {
   static async list(_req: AuthenticatedRequest, res: Response) {

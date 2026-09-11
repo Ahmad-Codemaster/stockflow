@@ -1,6 +1,7 @@
 import express from 'express';
 import { requireAuth } from '../middleware/auth';
 import { requireRole } from '../middleware/rbac';
+import { strictLimiter } from '../middleware/rateLimiter';
 import { wipeStoreData } from '../seed';
 
 const router = express.Router();
@@ -12,8 +13,9 @@ router.use(requireAuth, requireRole('ADMIN'));
  * POST /api/system/wipe
  * Completely wipes all products, inventory, categories, suppliers, and movement logs.
  * Preserves user accounts and active login sessions so the operator can start with a clean empty store.
+ * Rate limited to 3 requests per 10 minutes per IP to prevent accidental or malicious destruction.
  */
-router.post('/wipe', async (_req, res, next) => {
+router.post('/wipe', strictLimiter, async (_req, res, next) => {
   try {
     await wipeStoreData();
     res.status(200).json({
@@ -28,4 +30,3 @@ router.post('/wipe', async (_req, res, next) => {
 });
 
 export default router;
-

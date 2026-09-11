@@ -72,3 +72,24 @@ export function rateLimiter({
     next();
   };
 }
+
+/**
+ * Mutation Rate Limiter: 60 requests per minute per IP.
+ * Applied to high-impact inventory mutation routes (stock-in, stock-out, adjust).
+ * Protects against scripted bulk manipulation attacks.
+ */
+export const mutationLimiter = rateLimiter({
+  windowMs: 60 * 1000,       // 1-minute window
+  max: 60,
+  message: 'Too many inventory requests from this IP. Please slow down and retry in 1 minute.',
+});
+
+/**
+ * Strict Rate Limiter: 3 requests per 10 minutes per IP.
+ * Applied to the system wipe endpoint to prevent accidental or malicious mass destruction.
+ */
+export const strictLimiter = rateLimiter({
+  windowMs: 10 * 60 * 1000,  // 10-minute window
+  max: 3,
+  message: 'Too many system operation requests. Please wait 10 minutes before retrying.',
+});

@@ -1,30 +1,14 @@
 import type { Response } from 'express';
-import { z } from 'zod';
 import { AuditService } from '../services/auditService';
 import { UserService } from '../services/userService';
 import type { AuthenticatedRequest } from '../types/api';
+import {
+  createUserSchema,
+  updateUserSchema,
+  auditLogQuerySchema,
+} from '../schemas/userSchemas';
 
-export const createUserSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Please enter a valid corporate email address'),
-  role: z.enum(['ADMIN', 'STAFF']),
-  status: z.enum(['Active', 'Inactive']).optional(),
-  password: z
-    .preprocess((val) => (typeof val === 'string' && val.trim() === '' ? undefined : val), z.string().min(6, 'Password must be at least 6 characters').optional()),
-});
-
-export const updateUserSchema = z.object({
-  name: z.string().min(1).optional(),
-  email: z.string().email('Please enter a valid corporate email address').optional(),
-  role: z.enum(['ADMIN', 'STAFF']).optional(),
-  status: z.enum(['Active', 'Inactive']).optional(),
-  password: z
-    .preprocess((val) => (typeof val === 'string' && val.trim() === '' ? undefined : val), z.string().min(6, 'Password must be at least 6 characters').optional()),
-});
-
-import { limitQuerySchema } from '../schemas/common';
-
-export const auditLogQuerySchema = limitQuerySchema;
+export { createUserSchema, updateUserSchema, auditLogQuerySchema };
 
 export class UserController {
   static async list(_req: AuthenticatedRequest, res: Response) {
