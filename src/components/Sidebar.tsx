@@ -74,22 +74,22 @@ export default function Sidebar() {
         } ${
           isSidebarCollapsed
             ? 'lg:w-0 lg:-translate-x-full lg:opacity-0 lg:overflow-hidden lg:pointer-events-none lg:border-r-0'
-            : 'lg:w-64 lg:opacity-100'
+            : 'lg:w-56 lg:opacity-100'
         }`}
       >
-        <div className="w-64 sm:w-72 lg:w-64 flex flex-col h-full">
+        <div className="w-56 sm:w-56 lg:w-56 flex flex-col h-full">
           {/* Brand Header */}
-          <div className="px-5 py-4.5 border-b border-white/60 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 rounded-2xl flex items-center justify-center shadow-md shadow-indigo-500/20 border border-white/40">
-                <Warehouse size={18} className="text-white" />
+          <div className="px-3 py-2.5 border-b border-white/55 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7.5 h-7.5 bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 rounded-xl flex items-center justify-center shadow-sm shadow-indigo-500/20 border border-white/40 shrink-0">
+                <Warehouse size={15} className="text-white" />
               </div>
               <div>
-                <span className="text-slate-900 font-extrabold text-[15px] tracking-tight flex items-center gap-1.5">
+                <span className="text-slate-900 font-extrabold text-[13px] tracking-tight flex items-center gap-1">
                   StockFlow
-                  <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-indigo-500/10 text-indigo-700 border border-indigo-500/20">PRO</span>
+                  <span className="text-[8px] font-extrabold px-1.5 py-0.2 rounded-full bg-orange-500/15 text-orange-700 border border-orange-500/25">PRO</span>
                 </span>
-                <p className="text-[11px] text-slate-500 font-medium leading-tight">Operations System</p>
+                <p className="text-[9.5px] text-slate-400 font-medium leading-tight">Operations System</p>
               </div>
             </div>
 
@@ -97,30 +97,30 @@ export default function Sidebar() {
             <button
               type="button"
               onClick={() => closeMobileSidebar?.()}
-              className="lg:hidden p-1.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-white/50 transition-colors cursor-pointer"
+              className="lg:hidden p-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white/50 transition-colors cursor-pointer"
               aria-label="Close sidebar"
             >
-              <X size={18} />
+              <X size={15} />
             </button>
 
             {/* Desktop Collapse Button */}
             <button
               type="button"
               onClick={() => toggleDesktopSidebar?.()}
-              className="hidden lg:flex p-1.5 rounded-xl text-slate-400 hover:text-slate-800 hover:bg-white/50 transition-colors cursor-pointer"
+              className="hidden lg:flex p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-white/50 transition-colors cursor-pointer"
               title="Collapse sidebar"
               aria-label="Collapse sidebar"
             >
-              <PanelLeftClose size={16} />
+              <PanelLeftClose size={14} />
             </button>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-1">
-            <p className="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          <nav className="flex-1 px-2 py-2 overflow-y-auto space-y-0.5">
+            <p className="px-2 mb-1 text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">
               Core Operations
             </p>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {navItems.map((item) => {
                 const active = isActive(item.page, currentPage);
                 const Icon = item.icon;
@@ -128,17 +128,17 @@ export default function Sidebar() {
                   <button
                     key={item.page}
                     onClick={() => handleNavigate(item.page)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
                       active
-                        ? 'bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-transparent text-indigo-700 font-bold border border-indigo-200/60 shadow-xs'
+                        ? 'bg-gradient-to-r from-orange-500/15 via-purple-500/10 to-transparent text-slate-900 font-bold border border-orange-300/40 shadow-2xs'
                         : 'text-slate-600 hover:bg-white/45 hover:text-slate-900'
                     }`}
                   >
                     <Icon
-                      size={16}
-                      className={`transition-colors ${active ? 'text-indigo-600' : 'text-slate-400'}`}
+                      size={14.5}
+                      className={`transition-colors shrink-0 ${active ? 'text-orange-600' : 'text-slate-400'}`}
                     />
-                    <span>{item.label}</span>
+                    <span className="truncate">{item.label}</span>
                   </button>
                 );
               })}
@@ -146,24 +146,24 @@ export default function Sidebar() {
 
             {/* Admin Section */}
             {currentUser?.role === 'ADMIN' && (
-              <div className="pt-4 mt-4 border-t border-white/60">
-                <div className="flex items-center justify-between px-3 mb-2">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <div className="pt-2.5 mt-2.5 border-t border-white/55">
+                <div className="flex items-center justify-between px-2 mb-1.5">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                     Administration
                   </span>
-                  <Shield size={12} className="text-indigo-500" />
+                  <Shield size={11} className="text-purple-500" />
                 </div>
                 <button
                   onClick={() => handleNavigate('users')}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
                     currentPage === 'users'
-                      ? 'bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-transparent text-indigo-700 font-bold border border-indigo-200/60 shadow-xs'
+                      ? 'bg-gradient-to-r from-purple-500/15 via-orange-500/10 to-transparent text-slate-900 font-bold border border-purple-300/40 shadow-2xs'
                       : 'text-slate-600 hover:bg-white/45 hover:text-slate-900'
                   }`}
                 >
                   <Users
-                    size={16}
-                    className={`transition-colors ${currentPage === 'users' ? 'text-indigo-600' : 'text-slate-400'}`}
+                    size={15}
+                    className={`transition-colors shrink-0 ${currentPage === 'users' ? 'text-purple-600' : 'text-slate-400'}`}
                   />
                   <span>User Management</span>
                 </button>
@@ -172,34 +172,34 @@ export default function Sidebar() {
           </nav>
 
           {/* User Profile Card & Footer */}
-          <div className="p-3 border-t border-white/60 space-y-2">
-            <div className="flex items-center gap-2.5 p-2 rounded-2xl bg-white/40 border border-white/60 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-extrabold flex items-center justify-center text-xs shadow-xs shrink-0">
+          <div className="p-2.5 border-t border-white/55 space-y-1.5">
+            <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white/35 border border-white/55 shadow-2xs">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 via-rose-500 to-purple-600 text-white font-extrabold flex items-center justify-center text-[11px] shadow-xs shrink-0">
                 {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold text-slate-900 truncate leading-tight">
                   {currentUser?.name || 'User'}
                 </p>
-                <p className="text-[10px] text-slate-500 font-medium truncate capitalize">
+                <p className="text-[9px] text-slate-400 font-medium truncate capitalize">
                   {currentUser?.role?.toLowerCase() || 'Staff'}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => handleNavigate('settings')}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-white/60 transition-colors cursor-pointer"
+                className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-white/60 transition-colors cursor-pointer"
                 title="Settings"
               >
-                <Settings size={14} />
+                <Settings size={13} />
               </button>
             </div>
 
             <button
               onClick={() => setShowLogoutConfirm(true)}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 transition-all duration-200 cursor-pointer"
+              className="w-full flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 transition-all duration-200 cursor-pointer"
             >
-              <LogOut size={14} />
+              <LogOut size={13} />
               <span>Sign Out</span>
             </button>
           </div>

@@ -83,26 +83,36 @@ export function StockMovementActivityChart({
   }
 
   const maxVal = Math.max(...days.map((d) => Math.max(d.stockIn, d.stockOut)), 10);
-  const chartHeight = 120;
+  const chartHeight = 115;
+
+  const totalInbound = days.reduce((sum, d) => sum + d.stockIn, 0);
+  const totalOutbound = days.reduce((sum, d) => sum + d.stockOut, 0);
+  const netVelocity = totalInbound - totalOutbound;
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-xs">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-sm bg-gradient-to-tr from-emerald-500 to-teal-400" />
-            <span className="text-slate-600 font-medium text-[11px]">Inbound Stock In</span>
+      {/* 7-Day Velocity Metric Badges */}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs pb-1 border-b border-white/40">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-200/50">
+            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="text-[11px] font-bold text-emerald-800">+{totalInbound} In</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-sm bg-gradient-to-tr from-rose-500 to-pink-500" />
-            <span className="text-slate-600 font-medium text-[11px]">Outbound Dispatch</span>
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-rose-500/10 border border-rose-200/50">
+            <div className="w-2 h-2 rounded-full bg-rose-500" />
+            <span className="text-[11px] font-bold text-rose-800">-{totalOutbound} Out</span>
           </div>
         </div>
-        <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">7-Day Activity</span>
+        <div className="flex items-center gap-1 text-[11px] font-mono font-bold text-slate-500">
+          <span>Net:</span>
+          <span className={netVelocity >= 0 ? 'text-emerald-700' : 'text-rose-700'}>
+            {netVelocity >= 0 ? `+${netVelocity}` : netVelocity} units
+          </span>
+        </div>
       </div>
 
       {/* Modern Dual Column Bar Chart */}
-      <div className="h-[140px] flex items-end justify-between gap-2 pt-4 px-1 pb-1 relative border-b border-slate-100">
+      <div className="h-[135px] flex items-end justify-between gap-1.5 sm:gap-2 pt-2 px-1 pb-0.5 relative border-b border-white/50">
         {days.map((d, idx) => {
           const inHeight = d.stockIn > 0 ? Math.max((d.stockIn / maxVal) * chartHeight, 6) : 0;
           const outHeight = d.stockOut > 0 ? Math.max((d.stockOut / maxVal) * chartHeight, 6) : 0;
@@ -113,11 +123,11 @@ export function StockMovementActivityChart({
               key={d.label + idx}
               onMouseEnter={() => setHoveredIdx(idx)}
               onMouseLeave={() => setHoveredIdx(null)}
-              className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group cursor-pointer relative"
+              className="flex-1 flex flex-col items-center gap-1 h-full justify-end group cursor-pointer relative"
             >
               {/* Tooltip */}
               {isHovered && (
-                <div className="absolute -top-10 z-20 bg-slate-900 text-white text-[10px] rounded-lg py-1 px-2 shadow-lg whitespace-nowrap pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute -top-9 z-30 bg-slate-900 text-white text-[9.5px] rounded-lg py-1 px-2 shadow-lg whitespace-nowrap pointer-events-none animate-fade-slide">
                   <span className="font-bold">{d.label}</span>: +{d.stockIn} in / -{d.stockOut} out
                 </div>
               )}
@@ -129,8 +139,8 @@ export function StockMovementActivityChart({
                   style={{ height: `${inHeight}px` }}
                   className={`w-2.5 sm:w-3.5 rounded-t-md transition-all duration-300 ${
                     isHovered
-                      ? 'bg-emerald-500 shadow-sm shadow-emerald-500/40 scale-y-105'
-                      : 'bg-emerald-400/80 group-hover:bg-emerald-500'
+                      ? 'bg-emerald-500 shadow-xs scale-y-105'
+                      : 'bg-emerald-400/85 group-hover:bg-emerald-500'
                   }`}
                 />
                 {/* Stock Out Bar */}
@@ -138,14 +148,14 @@ export function StockMovementActivityChart({
                   style={{ height: `${outHeight}px` }}
                   className={`w-2.5 sm:w-3.5 rounded-t-md transition-all duration-300 ${
                     isHovered
-                      ? 'bg-rose-500 shadow-sm shadow-rose-500/40 scale-y-105'
-                      : 'bg-rose-400/80 group-hover:bg-rose-500'
+                      ? 'bg-rose-500 shadow-xs scale-y-105'
+                      : 'bg-rose-400/85 group-hover:bg-rose-500'
                   }`}
                 />
               </div>
 
               {/* X Axis Label */}
-              <span className={`text-[10px] font-semibold transition-colors ${isHovered ? 'text-blue-600 font-bold' : 'text-slate-400'}`}>
+              <span className={`text-[9.5px] font-semibold transition-colors ${isHovered ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}>
                 {d.label}
               </span>
             </div>
@@ -233,13 +243,13 @@ export function CategoryValuationDonutChart({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
+    <div className="space-y-3">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3.5 sm:gap-4">
         {/* SVG Donut Circle */}
-        <div className="relative w-36 h-36 shrink-0 flex items-center justify-center">
+        <div className="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0 flex items-center justify-center">
           <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
             {/* Background ring */}
-            <circle cx="50" cy="50" r={radius} fill="transparent" stroke="#f1f5f9" strokeWidth="12" />
+            <circle cx="50" cy="50" r={radius} fill="transparent" stroke="rgba(226, 232, 240, 0.6)" strokeWidth="11" />
             {/* Slices */}
             {slices.map((slice) => (
               <circle
@@ -249,7 +259,7 @@ export function CategoryValuationDonutChart({
                 r={radius}
                 fill="transparent"
                 stroke={slice.color}
-                strokeWidth={activeCategory === slice.id ? '15' : '12'}
+                strokeWidth={activeCategory === slice.id ? '14' : '11'}
                 strokeDasharray={slice.strokeDasharray}
                 strokeDashoffset={slice.strokeDashoffset}
                 strokeLinecap="round"
@@ -262,10 +272,10 @@ export function CategoryValuationDonutChart({
 
           {/* Central Donut Value */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-            <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-              {highlighted ? highlighted.name.split(' ')[0] : 'Total'}
+            <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider truncate max-w-[70px]">
+              {highlighted ? highlighted.name.split(' ')[0] : 'Valuation'}
             </span>
-            <span className="text-xs font-extrabold text-slate-900">
+            <span className="text-[11.5px] font-extrabold text-slate-900 tracking-tight">
               ${(highlighted ? highlighted.totalValue : grandTotalValue).toLocaleString('en-US', {
                 maximumFractionDigits: 0,
               })}
@@ -274,25 +284,34 @@ export function CategoryValuationDonutChart({
         </div>
 
         {/* Category Legend & Proportions */}
-        <div className="flex-1 w-full space-y-2 text-xs">
+        <div className="flex-1 w-full space-y-1.5 text-xs">
           {slices.slice(0, 4).map((cat) => (
             <div
               key={cat.id}
               onMouseEnter={() => setActiveCategory(cat.id)}
               onMouseLeave={() => setActiveCategory(null)}
-              className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+              className={`p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer flex flex-col gap-1 ${
                 activeCategory === cat.id
-                  ? 'bg-blue-50/70 border-blue-200/80 shadow-xs translate-x-1'
-                  : 'bg-slate-50/50 border-slate-200/50 hover:bg-slate-100/60'
+                  ? 'bg-purple-500/10 border-purple-300/60 shadow-2xs translate-x-0.5'
+                  : 'bg-white/40 border-white/60 hover:bg-white/60'
               }`}
             >
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                <span className="font-bold text-slate-800 truncate text-[11px]">{cat.name}</span>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                  <span className="font-bold text-slate-800 truncate text-[10.5px]">{cat.name}</span>
+                </div>
+                <div className="text-right shrink-0 font-mono text-[10.5px]">
+                  <span className="font-bold text-slate-900">${cat.totalValue.toLocaleString()}</span>
+                  <span className="text-slate-400 ml-1 font-sans">({cat.percent}%)</span>
+                </div>
               </div>
-              <div className="text-right shrink-0 font-mono text-[11px]">
-                <span className="font-extrabold text-slate-900">${cat.totalValue.toLocaleString()}</span>
-                <span className="text-slate-400 ml-1.5 font-sans">({cat.percent}%)</span>
+              {/* Mini proportion bar */}
+              <div className="w-full h-1 bg-slate-200/50 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{ width: `${cat.percent}%`, backgroundColor: cat.color }}
+                />
               </div>
             </div>
           ))}

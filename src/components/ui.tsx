@@ -56,14 +56,14 @@ const kpiIconTints = {
 
 export function KPICard({ label, value, sub, variant = 'default', icon, sparkline }: KPICardProps) {
   return (
-    <div className="glass-card glass-card-hover rounded-[17px] p-5.5 relative overflow-hidden flex flex-col justify-between border border-white/55">
+    <div className="glass-card glass-card-hover rounded-[17px] p-4 sm:p-4.5 relative overflow-hidden flex flex-col justify-between border border-white/55">
       {/* Subtle Top Gradient Accent Strip */}
       <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r ${kpiTopStripe[variant]}`} />
 
-      <div className="flex items-start justify-between mb-3.5">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
+      <div className="flex items-start justify-between mb-2.5">
+        <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
         {icon && (
-          <div className={`p-2.5 rounded-2xl border flex items-center justify-center shadow-2xs backdrop-blur-md ${kpiIconTints[variant]}`}>
+          <div className={`p-2 rounded-xl border flex items-center justify-center shadow-2xs backdrop-blur-md ${kpiIconTints[variant]}`}>
             {icon}
           </div>
         )}
@@ -71,10 +71,10 @@ export function KPICard({ label, value, sub, variant = 'default', icon, sparklin
 
       <div className="flex items-end justify-between gap-2">
         <div>
-          <div className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">{value}</div>
-          {sub && <p className="text-xs text-slate-500 font-medium mt-1">{sub}</p>}
+          <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">{value}</div>
+          {sub && <p className="text-[11px] text-slate-500 font-medium mt-0.5">{sub}</p>}
         </div>
-        {sparkline && <div className="shrink-0 mb-1">{sparkline}</div>}
+        {sparkline && <div className="shrink-0 mb-0.5">{sparkline}</div>}
       </div>
     </div>
   );
