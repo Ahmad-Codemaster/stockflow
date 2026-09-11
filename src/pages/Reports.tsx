@@ -11,16 +11,8 @@ import {
   Download,
   FileSpreadsheet,
   FileText,
-  Filter,
   Layers,
   PieChart,
-  Plus,
-  RefreshCw,
-  Search,
-  Send,
-  Share2,
-  Sparkles,
-  Star,
   TrendingUp,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
@@ -32,7 +24,7 @@ type ReportTab = 'overview' | 'summary' | 'movement' | 'lowstock' | 'value';
 function SimpleBarChart({ data }: { data: { label: string; inQty: number; outQty: number }[] }) {
   if (data.length === 0) {
     return (
-      <div className="py-8 text-center text-slate-400 text-xs font-medium border border-dashed border-white/60 rounded-2xl bg-white/40">
+      <div className="py-8 text-center text-slate-400 text-xs font-medium border border-dashed border-white/50 rounded-2xl bg-white/25">
         No catalog products or movement activity to chart.
       </div>
     );
@@ -49,7 +41,7 @@ function SimpleBarChart({ data }: { data: { label: string; inQty: number; outQty
               <span className="text-rose-600 font-bold">{d.outQty}</span>
             </span>
           </div>
-          <div className="flex gap-1.5 h-3.5 p-0.5 bg-white/50 rounded-full border border-white/60 backdrop-blur-xs">
+          <div className="flex gap-1.5 h-3.5 p-0.5 bg-white/35 rounded-full border border-white/50 backdrop-blur-xs">
             <div
               className="bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-500"
               style={{ width: `${(d.inQty / maxVal) * 100}%`, minWidth: d.inQty > 0 ? '6px' : '0' }}
@@ -61,7 +53,7 @@ function SimpleBarChart({ data }: { data: { label: string; inQty: number; outQty
           </div>
         </div>
       ))}
-      <div className="flex gap-5 mt-4 pt-3 border-t border-white/60 text-xs font-semibold text-slate-600">
+      <div className="flex gap-5 mt-4 pt-3 border-t border-white/50 text-xs font-semibold text-slate-600">
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block shadow-xs" />
           Stock-In Replenishment
@@ -78,22 +70,6 @@ function SimpleBarChart({ data }: { data: { label: string; inQty: number; outQty
 export default function Reports() {
   const { products, categories, suppliers, inventory, transactions, navigate, getStockStatus, showToast } = useApp();
   const [tab, setTab] = useState<ReportTab>('overview');
-  const [libraryCategory, setLibraryCategory] = useState<string>('All');
-  const [promptQuery, setPromptQuery] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedResult, setGeneratedResult] = useState<string | null>(null);
-  const [favorites, setFavorites] = useState<Record<string, boolean>>({
-    'rep-1': true,
-    'rep-3': true,
-  });
-
-  const [scheduledState, setScheduledState] = useState<Record<string, boolean>>({
-    s1: true,
-    s2: true,
-    s3: false,
-    s4: true,
-  });
-
   const [movementType, setMovementType] = useState('');
   const [movementProduct, setMovementProduct] = useState('');
 
@@ -149,6 +125,22 @@ export default function Reports() {
   const txOutPct = Math.round((txOutCount / totalTx) * 100);
   const txAdjPct = Math.max(0, 100 - txInPct - txOutPct);
 
+  // Real data-driven mini bars for movement (last 8 movements)
+  const movementSparklines = useMemo(() => {
+    if (transactions.length === 0) return [15, 15, 15, 15, 15, 15, 15, 15];
+    const recent = transactions.slice(0, 8).reverse();
+    const max = Math.max(...recent.map((t) => t.quantity), 1);
+    return recent.map((t) => Math.max(15, Math.round((t.quantity / max) * 100)));
+  }, [transactions]);
+
+  // Real data-driven mini bars for valuation (top 8 products by value)
+  const valuationSparklines = useMemo(() => {
+    if (products.length === 0) return [15, 15, 15, 15, 15, 15, 15, 15];
+    const sorted = [...products].sort((a, b) => (getStock(b.id) * b.price) - (getStock(a.id) * a.price)).slice(0, 8);
+    const max = Math.max(...sorted.map((p) => getStock(p.id) * p.price), 1);
+    return sorted.map((p) => Math.max(15, Math.round(((getStock(p.id) * p.price) / max) * 100)));
+  }, [products, inventory]);
+
   const chartData = products.slice(0, 6).map((p) => ({
     label: p.name.split(' ').slice(0, 2).join(' '),
     inQty: transactions.filter((t) => t.productId === p.id && t.type === 'Stock In').reduce((s, t) => s + t.quantity, 0),
@@ -160,127 +152,79 @@ export default function Reports() {
   );
 
   const tabs: { id: ReportTab; label: string }[] = [
-    { id: 'overview', label: 'Inventory Intelligence' },
+    { id: 'overview', label: 'Executive Overview' },
     { id: 'summary', label: 'Catalog Summary' },
     { id: 'movement', label: 'Stock Movement' },
     { id: 'lowstock', label: 'Low Stock Risk' },
     { id: 'value', label: 'Asset Valuation' },
   ];
 
-  const reportLibraryItems = [
-    {
-      id: 'rep-1',
-      title: 'Valuation & Asset Audit',
-      description: 'Capitalization analysis, unit pricing distribution, and total inventory value.',
-      category: 'Valuation',
-      tabTarget: 'value' as ReportTab,
-      lastRun: 'Updated live',
-      color: 'bg-indigo-600 text-white',
-    },
-    {
-      id: 'rep-2',
-      title: 'Stock Velocity & Turn Rate',
-      description: 'Analyze inbound replenishment pace vs customer fulfillment throughput.',
-      category: 'Stock Movement',
-      tabTarget: 'movement' as ReportTab,
-      lastRun: 'Updated live',
-      color: 'bg-blue-600 text-white',
-    },
-    {
-      id: 'rep-3',
-      title: 'Threshold Risk & Reorder Priority',
-      description: 'Threshold warnings for SKUs operating at or below critical buffer levels.',
-      category: 'Procurement',
-      tabTarget: 'lowstock' as ReportTab,
-      lastRun: 'Updated live',
-      color: 'bg-amber-600 text-white',
-    },
-    {
-      id: 'rep-4',
-      title: 'Master Catalog Audit Summary',
-      description: 'Cross-category status, SKU counts, and unit health breakdowns.',
-      category: 'Valuation',
-      tabTarget: 'summary' as ReportTab,
-      lastRun: 'Updated live',
-      color: 'bg-emerald-600 text-white',
-    },
-    {
-      id: 'rep-5',
-      title: 'Supplier Network & Fulfillment',
-      description: 'Fulfillment lead-times and active vendor distribution channels.',
-      category: 'Procurement',
-      tabTarget: 'movement' as ReportTab,
-      lastRun: 'Updated live',
-      color: 'bg-purple-600 text-white',
-    },
-    {
-      id: 'rep-6',
-      title: 'Discrepancy & Shrinkage Audit',
-      description: 'Manual stock adjustment ledger, count reconciliations, and shrinkage logs.',
-      category: 'Stock Movement',
-      tabTarget: 'movement' as ReportTab,
-      lastRun: 'Updated live',
-      color: 'bg-rose-600 text-white',
-    },
-  ];
+  const handleExportCSV = () => {
+    let csvContent = '';
+    const dateStr = new Date().toISOString().split('T')[0];
+    const filename = `stockflow-${tab}-report-${dateStr}.csv`;
 
-  const filteredLibrary = reportLibraryItems.filter((r) => {
-    if (libraryCategory === 'All') return true;
-    if (libraryCategory === 'Favorites') return favorites[r.id];
-    return r.category === libraryCategory;
-  });
+    if (tab === 'summary' || tab === 'overview') {
+      csvContent = 'Product Name,SKU,Category,Units In Stock,Unit Price,Total Valuation,Status\n';
+      products.forEach((p) => {
+        const stock = getStock(p.id);
+        const val = stock * p.price;
+        csvContent += `"${p.name}","${p.sku}","${getCatName(p.categoryId)}",${stock},${p.price.toFixed(2)},${val.toFixed(2)},"${getStockStatus(p.id)}"\n`;
+      });
+    } else if (tab === 'movement') {
+      csvContent = 'Timestamp,Reference,Product,Type,Quantity,Operator\n';
+      filteredMovement.forEach((t) => {
+        const prod = products.find((p) => p.id === t.productId);
+        csvContent += `"${t.createdAt}","${t.reference}","${prod?.name ?? 'Unknown'}","${t.type}",${t.quantity},"${t.performedBy}"\n`;
+      });
+    } else if (tab === 'lowstock') {
+      csvContent = 'Product Name,SKU,Category,Current Stock,Reorder Level,Status\n';
+      lowStockProducts.forEach((p) => {
+        csvContent += `"${p.name}","${p.sku}","${getCatName(p.categoryId)}",${getStock(p.id)},${p.reorderLevel},"${getStockStatus(p.id)}"\n`;
+      });
+    } else if (tab === 'value') {
+      csvContent = 'Product Name,Category,Units In Stock,Unit Price,Total Valuation,Portfolio Share %\n';
+      products.forEach((p) => {
+        const stock = getStock(p.id);
+        const val = stock * p.price;
+        const pct = totalValue > 0 ? ((val / totalValue) * 100).toFixed(1) : '0.0';
+        csvContent += `"${p.name}","${getCatName(p.categoryId)}",${stock},${p.price.toFixed(2)},${val.toFixed(2)},${pct}%\n`;
+      });
+    }
 
-  const handleGenerateAIReport = (overrideQuery?: string) => {
-    const q = overrideQuery ?? promptQuery;
-    if (!q.trim()) return;
-    setIsGenerating(true);
-    setGeneratedResult(null);
-
-    setTimeout(() => {
-      setIsGenerating(false);
-      setGeneratedResult(
-        `AI Inventory Analysis: "${q}". The catalog tracks ${products.length} active SKUs across ${categories.length} categories with a total valuation of $${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}. Total physical stock is ${totalStock.toLocaleString()} units with ${lowCount} SKU(s) flagged under safety buffers and ${outCount} depleted item(s).`
-      );
-      showToast('success', 'Operational report synthesized');
-    }, 850);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('success', `Exported ${tab.toUpperCase()} report to CSV`);
   };
 
   return (
     <div className="max-w-7xl space-y-6">
-      {/* Top Header matching reference layout */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-[-0.025em]">
-            Reports & Intelligence
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Synthesize real-time catalog movements, asset valuations, and replenishment schedules.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            className="px-3.5 py-2 glass-input rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 flex items-center gap-2 shadow-2xs cursor-pointer border border-white/70"
-          >
-            <Calendar size={14} className="text-slate-400" />
-            <span>Today, Last 30 Days</span>
-            <ChevronDown size={13} className="text-slate-400" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => showToast('info', 'Report builder dialog opened')}
-            className="px-4 py-2 gradient-btn-primary text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all"
-          >
-            <Plus size={14} />
-            <span>New Report</span>
-          </button>
-        </div>
-      </div>
+      {/* Top Header */}
+      <PageHeader
+        title="Operational Reports"
+        subtitle="Synthesize real-time catalog movements, asset valuations, and replenishment schedules."
+        action={
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={handleExportCSV}
+              className="px-3.5 py-2 glass-input rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 flex items-center gap-2 cursor-pointer border border-white/70 hover:bg-white/60 transition-all shadow-xs"
+            >
+              <Download size={14} className="text-slate-500" />
+              <span>Export {tab.toUpperCase()} CSV</span>
+            </button>
+          </div>
+        }
+      />
 
       {/* Apple Glass Tab Navigator */}
-      <div className="flex gap-1.5 bg-white/45 p-1.5 rounded-[17px] border border-white/60 w-full sm:w-fit overflow-x-auto backdrop-blur-[48px] shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+      <div className="flex gap-1.5 bg-white/35 p-1.5 rounded-[17px] border border-white/55 w-full sm:w-fit overflow-x-auto backdrop-blur-xl shadow-xs">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -288,7 +232,7 @@ export default function Reports() {
             onClick={() => setTab(t.id)}
             className={`px-4 py-2 text-xs font-bold rounded-xl transition-all shrink-0 cursor-pointer ${
               tab === t.id
-                ? 'bg-white text-slate-900 shadow-sm border border-white/80'
+                ? 'bg-white/80 text-slate-900 shadow-xs border border-white/70'
                 : 'text-slate-500 hover:text-slate-900'
             }`}
           >
@@ -299,25 +243,25 @@ export default function Reports() {
 
       {/* 1. EXECUTIVE OVERVIEW */}
       {tab === 'overview' && (
-        <div className="space-y-6 animate-fade-slide">
+        <div className="space-y-6">
           {/* Top KPI & Distribution Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Card 1: Catalog Stock Distribution */}
-            <div className="glass-card rounded-[17px] border border-white/60 p-5 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+            <div className="glass-card rounded-[17px] border border-white/55 p-5 flex flex-col justify-between">
               <div>
-                <h3 className="text-xs font-bold text-slate-900 tracking-[-0.025em] mb-3">Stock Level Health</h3>
+                <h3 className="text-xs font-bold text-slate-900 tracking-tight mb-3">Stock Level Health</h3>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="col-span-2 p-3 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-sm flex flex-col justify-between">
+                  <div className="col-span-2 p-3 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-xs flex flex-col justify-between">
                     <span className="text-[10px] font-semibold text-indigo-200">In Stock Buffer</span>
-                    <span className="text-xl font-black tracking-[-0.025em] mt-1">{inStockPct}%</span>
+                    <span className="text-xl font-black tracking-tight mt-1">{inStockPct}%</span>
                   </div>
                   <div className="p-2.5 rounded-xl bg-amber-500 text-white shadow-2xs flex flex-col justify-between">
                     <span className="text-[9px] font-semibold text-amber-100">Low Stock</span>
-                    <span className="text-sm font-black tracking-[-0.025em] mt-0.5">{lowStockPct}%</span>
+                    <span className="text-sm font-black tracking-tight mt-0.5">{lowStockPct}%</span>
                   </div>
                   <div className="p-2.5 rounded-xl bg-rose-500 text-white shadow-2xs flex flex-col justify-between">
                     <span className="text-[9px] font-semibold text-rose-100">Depleted</span>
-                    <span className="text-sm font-black tracking-[-0.025em] mt-0.5">{outOfStockPct}%</span>
+                    <span className="text-sm font-black tracking-tight mt-0.5">{outOfStockPct}%</span>
                   </div>
                 </div>
               </div>
@@ -328,20 +272,20 @@ export default function Reports() {
             </div>
 
             {/* Card 2: 30D Movement Volume */}
-            <div className="glass-card rounded-[17px] border border-white/60 p-5 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+            <div className="glass-card rounded-[17px] border border-white/55 p-5 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-slate-900 tracking-[-0.025em]">Stock Movement Volume</h3>
+                  <h3 className="text-xs font-bold text-slate-900 tracking-tight">Stock Movement Volume</h3>
                   <span className="text-[10px] font-extrabold text-indigo-600 bg-indigo-500/10 px-2 py-0.5 rounded-full">
                     30-Day Activity
                   </span>
                 </div>
-                <div className="text-3xl font-black tracking-[-0.025em] text-slate-900 mt-2">
+                <div className="text-3xl font-black tracking-tight text-slate-900 mt-2">
                   {totalUnitsMoved.toLocaleString()}
                 </div>
                 <p className="text-[10px] text-slate-400 font-medium mt-0.5">Total units transacted</p>
                 <div className="flex items-end gap-1 h-8 mt-2">
-                  {[35, 60, 45, 80, 70, 90, 85, 100].map((h, i) => (
+                  {movementSparklines.map((h, i) => (
                     <div
                       key={i}
                       className="flex-1 bg-indigo-500 rounded-t-sm opacity-80"
@@ -350,7 +294,7 @@ export default function Reports() {
                   ))}
                 </div>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/60 text-[11px] text-slate-500 space-y-1">
+              <div className="mt-4 pt-3 border-t border-white/50 text-[11px] text-slate-500 space-y-1">
                 <div className="flex justify-between">
                   <span>Stock-In Intake</span>
                   <span className="font-bold text-emerald-600">+{totalInAll.toLocaleString()}</span>
@@ -363,20 +307,20 @@ export default function Reports() {
             </div>
 
             {/* Card 3: Asset Capitalization */}
-            <div className="glass-card rounded-[17px] border border-white/60 p-5 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+            <div className="glass-card rounded-[17px] border border-white/55 p-5 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-slate-900 tracking-[-0.025em]">Total Capitalization</h3>
+                  <h3 className="text-xs font-bold text-slate-900 tracking-tight">Total Capitalization</h3>
                   <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                     Asset Value
                   </span>
                 </div>
-                <div className="text-3xl font-black tracking-[-0.025em] text-slate-900 mt-2">
+                <div className="text-3xl font-black tracking-tight text-slate-900 mt-2">
                   ${totalValue >= 10000 ? `${(totalValue / 1000).toFixed(1)}k` : totalValue.toFixed(2)}
                 </div>
                 <p className="text-[10px] text-slate-400 font-medium mt-0.5">${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} valuation</p>
                 <div className="flex items-end gap-1 h-8 mt-2">
-                  {[25, 45, 55, 65, 80, 85, 95, 100].map((h, i) => (
+                  {valuationSparklines.map((h, i) => (
                     <div
                       key={i}
                       className="flex-1 bg-emerald-500 rounded-t-sm opacity-80"
@@ -385,7 +329,7 @@ export default function Reports() {
                   ))}
                 </div>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/60 text-[11px] text-slate-500 space-y-1">
+              <div className="mt-4 pt-3 border-t border-white/50 text-[11px] text-slate-500 space-y-1">
                 <div className="flex justify-between">
                   <span>Physical Inventory</span>
                   <span className="font-bold text-slate-800">{totalStock.toLocaleString()} Units</span>
@@ -400,15 +344,15 @@ export default function Reports() {
             </div>
 
             {/* Card 4: Supplier Network Status */}
-            <div className="glass-card rounded-[17px] border border-white/60 p-5 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+            <div className="glass-card rounded-[17px] border border-white/55 p-5 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-slate-900 tracking-[-0.025em]">Supplier Network</h3>
+                  <h3 className="text-xs font-bold text-slate-900 tracking-tight">Supplier Network</h3>
                   <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                    Connected
+                    Active
                   </span>
                 </div>
-                <div className="text-3xl font-black tracking-[-0.025em] text-slate-900 mt-2">
+                <div className="text-3xl font-black tracking-tight text-slate-900 mt-2">
                   {suppliers.length}
                 </div>
                 <p className="text-[11px] text-slate-400 mt-0.5">Procurement partners active</p>
@@ -423,7 +367,7 @@ export default function Reports() {
                   <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center border border-purple-200/50 shadow-2xs">
                     <BarChart2 size={15} />
                   </div>
-                  <div className="w-8 h-8 rounded-xl bg-white/70 text-slate-500 flex items-center justify-center text-[10px] font-bold border border-white/80">
+                  <div className="w-8 h-8 rounded-xl bg-white/50 text-slate-500 flex items-center justify-center text-[10px] font-bold border border-white/60">
                     {categories.length}
                   </div>
                 </div>
@@ -437,260 +381,123 @@ export default function Reports() {
             </div>
           </div>
 
-          {/* Middle Row: Report Library + Scheduled Reports + AI Report Builder */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            {/* Left 5 Cols: Report Library */}
-            <div className="lg:col-span-5 glass-card rounded-[17px] border border-white/60 p-5 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-slate-900 tracking-[-0.025em]">Operational Reports</h3>
-                  <button
-                    type="button"
-                    onClick={() => setLibraryCategory('All')}
-                    className="text-[11px] font-semibold text-indigo-600 hover:underline cursor-pointer"
-                  >
-                    View all
-                  </button>
-                </div>
-
-                {/* Categories Pill Nav */}
-                <div className="flex gap-1 overflow-x-auto pb-2 mb-3">
-                  {['All', 'Favorites', 'Stock Movement', 'Valuation', 'Procurement'].map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setLibraryCategory(cat)}
-                      className={`px-3 py-1 rounded-full text-[11px] font-bold cursor-pointer transition-all ${
-                        libraryCategory === cat
-                          ? 'bg-indigo-600 text-white shadow-2xs'
-                          : 'bg-white/60 text-slate-500 hover:bg-white/90'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Cards Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {filteredLibrary.map((rep) => (
-                    <div
-                      key={rep.id}
-                      onClick={() => setTab(rep.tabTarget)}
-                      className="p-3.5 rounded-2xl bg-white/70 border border-white/80 hover:bg-white transition-all shadow-2xs flex flex-col justify-between group cursor-pointer"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <div
-                            className={`w-7 h-7 rounded-lg ${rep.color} flex items-center justify-center font-bold text-xs shadow-2xs`}
-                          >
-                            <FileText size={14} />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFavorites((prev) => ({ ...prev, [rep.id]: !prev[rep.id] }));
-                            }}
-                            className="text-slate-400 hover:text-amber-500 transition-colors cursor-pointer"
-                          >
-                            <Star
-                              size={14}
-                              className={
-                                favorites[rep.id]
-                                  ? 'fill-amber-400 text-amber-400'
-                                  : 'text-slate-300'
-                              }
-                            />
-                          </button>
-                        </div>
-                        <h4 className="text-xs font-bold text-slate-900 leading-snug group-hover:text-indigo-600 transition-colors">
-                          {rep.title}
-                        </h4>
-                        <p className="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
-                          {rep.description}
-                        </p>
-                      </div>
-
-                      <div className="mt-3 pt-2 border-t border-white/80 flex items-center justify-between text-[10px] text-slate-400">
-                        <span>{rep.lastRun}</span>
-                        <div className="flex gap-1">
-                          <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-700 font-mono font-bold">
-                            VIEW
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Middle 3 Cols: Scheduled Reports */}
-            <div className="lg:col-span-3 glass-card rounded-[17px] border border-white/60 p-5 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-slate-900 tracking-[-0.025em]">Automated Digests</h3>
-                  <button
-                    type="button"
-                    onClick={() => showToast('info', 'Schedule manager opened')}
-                    className="text-[11px] font-semibold text-indigo-600 hover:underline cursor-pointer"
-                  >
-                    Manage
-                  </button>
-                </div>
-
-                <div className="space-y-2.5">
-                  {[
-                    {
-                      id: 's1',
-                      name: 'Daily Stock Movement Digest',
-                      schedule: 'Every day at 08:00 AM',
-                      format: 'PDF',
-                    },
-                    {
-                      id: 's2',
-                      name: 'Weekly Low-Stock Replenishment',
-                      schedule: 'Every Monday at 09:00 AM',
-                      format: 'XLSX',
-                    },
-                    {
-                      id: 's3',
-                      name: 'Monthly Asset Capitalization',
-                      schedule: '1st of every month',
-                      format: 'PDF',
-                    },
-                    {
-                      id: 's4',
-                      name: 'Quarterly Physical Count Audit',
-                      schedule: 'Quarterly review',
-                      format: 'XLSX',
-                    },
-                  ].map((s) => (
-                    <div
-                      key={s.id}
-                      className="p-3 rounded-2xl bg-white/60 border border-white/80 hover:bg-white/90 transition-all flex items-center justify-between gap-2"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-900 truncate">{s.name}</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">{s.schedule}</p>
-                        <span className="inline-block mt-1 text-[9px] font-bold px-1.5 py-0.2 rounded bg-indigo-500/10 text-indigo-700">
-                          {s.format}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setScheduledState((prev) => ({ ...prev, [s.id]: !prev[s.id] }))
-                        }
-                        className={`w-9 h-5 rounded-full transition-colors relative cursor-pointer ${
-                          scheduledState[s.id] ? 'bg-indigo-600' : 'bg-slate-300'
-                        }`}
-                      >
-                        <span
-                          className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-                            scheduledState[s.id] ? 'left-4.5' : 'left-0.5'
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Right 4 Cols: AI Report Builder - Vivid Apple Accent Card */}
-            <div className="lg:col-span-4 apple-accent-card rounded-[17px] p-5.5 text-white shadow-[0_12px_32px_rgba(99,102,241,0.25)] flex flex-col justify-between border border-white/30">
+          {/* Middle Row: Operational Workspaces (Replacing AI card & Mock items with Real Workspaces) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* Workspace 1: Valuation Breakdown */}
+            <div className="glass-card rounded-[17px] border border-white/55 p-5 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
-                      <Sparkles size={16} className="text-white" />
-                    </div>
-                    <h3 className="text-sm font-bold tracking-[-0.025em]">Operational Synthesis</h3>
+                  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center border border-indigo-200/50">
+                    <TrendingUp size={16} />
                   </div>
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-white/25 backdrop-blur-xs uppercase tracking-wider">
-                    AI Assistant
+                  <span className="text-[10px] font-bold text-indigo-600 bg-indigo-500/10 px-2 py-0.5 rounded-full">
+                    Asset Audit
                   </span>
                 </div>
-
-                <p className="text-xs text-indigo-100 mt-1 leading-relaxed">
-                  Describe what you need and AI will synthesize an operational report across live catalog movements.
+                <h4 className="text-sm font-bold text-slate-900">Asset Valuation & Portfolio</h4>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  Analyze inventory capitalization, weighted average SKU values, and portfolio concentration.
                 </p>
-
-                {/* Natural Language Prompt Input */}
-                <div className="mt-4">
-                  <textarea
-                    rows={3}
-                    value={promptQuery}
-                    onChange={(e) => setPromptQuery(e.target.value)}
-                    placeholder="e.g. Show stockout risk analysis and asset valuation for the top categories..."
-                    className="w-full bg-white/20 placeholder-indigo-200/80 text-white text-xs rounded-2xl p-3 outline-none border border-white/30 focus:border-white focus:bg-white/25 transition-all resize-none font-medium"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleGenerateAIReport()}
-                    disabled={isGenerating || !promptQuery.trim()}
-                    className="w-full mt-2 py-2.5 bg-white text-indigo-950 hover:bg-slate-50 font-bold text-xs rounded-xl shadow-md cursor-pointer transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <RefreshCw size={14} className="animate-spin" />
-                        <span>Synthesizing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles size={14} className="text-indigo-600" />
-                        <span>Generate Report</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {generatedResult && (
-                  <div className="mt-3 p-3 rounded-xl bg-white/20 border border-white/30 text-[11px] text-white leading-relaxed animate-fade-slide">
-                    {generatedResult}
+                <div className="mt-4 p-3 rounded-xl bg-white/35 border border-white/50 space-y-1.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Total Valuation:</span>
+                    <span className="font-bold text-slate-900">${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                   </div>
-                )}
-
-                {/* Suggested Reports */}
-                <div className="mt-4 pt-3 border-t border-white/20">
-                  <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-wider">
-                    Suggested Reports
-                  </span>
-                  <ul className="mt-2 space-y-1 text-xs">
-                    {[
-                      'Valuation breakdown by supplier partner',
-                      'Restock priorities for low buffer items',
-                      'High velocity SKUs vs dead stock turn',
-                    ].map((sugg, i) => (
-                      <li key={i}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPromptQuery(sugg);
-                            handleGenerateAIReport(sugg);
-                          }}
-                          className="text-left text-white/90 hover:text-white hover:underline flex items-center gap-1.5 py-0.5 text-[11px] transition-colors cursor-pointer"
-                        >
-                          <span className="text-indigo-300">↗</span>
-                          <span>{sugg}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Active SKUs:</span>
+                    <span className="font-bold text-slate-900">{products.length} Items</span>
+                  </div>
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setTab('value')}
+                className="mt-4 w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs"
+              >
+                View Asset Valuation →
+              </button>
+            </div>
+
+            {/* Workspace 2: Velocity & Movements */}
+            <div className="glass-card rounded-[17px] border border-white/55 p-5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-200/50">
+                    <Activity size={16} />
+                  </div>
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                    Flow Analysis
+                  </span>
+                </div>
+                <h4 className="text-sm font-bold text-slate-900">Stock Movement & Velocity</h4>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  Track inbound replenish flow against customer dispatch throughput to identify inventory turn rates.
+                </p>
+                <div className="mt-4 p-3 rounded-xl bg-white/35 border border-white/50 space-y-1.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Net Delta:</span>
+                    <span className={`font-bold ${netMovement >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {netMovement >= 0 ? `+${netMovement}` : netMovement} Units
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Transactions:</span>
+                    <span className="font-bold text-slate-900">{transactions.length} Records</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTab('movement')}
+                className="mt-4 w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs"
+              >
+                Analyze Movement Flow →
+              </button>
+            </div>
+
+            {/* Workspace 3: Threshold & Reorder Risk */}
+            <div className="glass-card rounded-[17px] border border-white/55 p-5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-200/50">
+                    <AlertTriangle size={16} />
+                  </div>
+                  <span className="text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                    Restock Alerts
+                  </span>
+                </div>
+                <h4 className="text-sm font-bold text-slate-900">Threshold & Reorder Buffer</h4>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  Monitor SKUs approaching zero safety buffers to prevent fulfillment halts and backorders.
+                </p>
+                <div className="mt-4 p-3 rounded-xl bg-white/35 border border-white/50 space-y-1.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Low Stock SKUs:</span>
+                    <span className="font-bold text-amber-600">{lowCount} Items</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Depleted SKUs:</span>
+                    <span className="font-bold text-rose-600">{outCount} Items</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTab('lowstock')}
+                className="mt-4 w-full py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs"
+              >
+                Review Reorder Risk →
+              </button>
             </div>
           </div>
 
           {/* Bottom Row: Recent Transaction Ledger Activity + Movement Distribution */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
             {/* Recent Transaction Activity (8 Cols) */}
-            <div className="lg:col-span-8 glass-card rounded-[17px] border border-white/60 p-5 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+            <div className="lg:col-span-8 glass-card rounded-[17px] border border-white/55 p-5">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 tracking-[-0.025em]">Recent Movement Activity</h3>
+                  <h3 className="text-sm font-bold text-slate-900 tracking-tight">Recent Movement Activity</h3>
                   <p className="text-[11px] text-slate-400">Live transaction movements recorded across the store</p>
                 </div>
                 <button
@@ -705,7 +512,7 @@ export default function Reports() {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                    <tr className="border-b border-white/50 bg-white/20 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                       <th className="px-4 py-2.5 text-left">Reference / Item</th>
                       <th className="px-4 py-2.5 text-left">Type</th>
                       <th className="px-4 py-2.5 text-right">Units</th>
@@ -713,7 +520,7 @@ export default function Reports() {
                       <th className="px-4 py-2.5 text-right">Timestamp</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/50">
+                  <tbody className="divide-y divide-white/40">
                     {transactions.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
@@ -724,7 +531,7 @@ export default function Reports() {
                       transactions.slice(0, 5).map((t) => {
                         const prod = products.find((p) => p.id === t.productId);
                         return (
-                          <tr key={t.id} className="hover:bg-white/50 transition-colors">
+                          <tr key={t.id} className="hover:bg-white/40 transition-colors">
                             <td className="px-4 py-3 font-bold text-slate-900">
                               <div className="flex items-center gap-2">
                                 <span className="font-mono text-[11px] text-indigo-600 bg-indigo-50/80 px-1.5 py-0.5 rounded border border-indigo-200/50">
@@ -736,7 +543,7 @@ export default function Reports() {
                             <td className="px-4 py-3">
                               <Badge variant={t.type} />
                             </td>
-                            <td className="px-4 py-3 text-right font-black tracking-[-0.025em] text-slate-900">
+                            <td className="px-4 py-3 text-right font-black tracking-tight text-slate-900">
                               {t.type === 'Stock Out' ? `-${t.quantity}` : `+${t.quantity}`}
                             </td>
                             <td className="px-4 py-3 text-slate-600 font-medium">{t.performedBy}</td>
@@ -751,9 +558,9 @@ export default function Reports() {
             </div>
 
             {/* Movement by Transaction Type (4 Cols) */}
-            <div className="lg:col-span-4 glass-card rounded-[17px] border border-white/60 p-5 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+            <div className="lg:col-span-4 glass-card rounded-[17px] border border-white/55 p-5 flex flex-col justify-between">
               <div>
-                <h3 className="text-sm font-bold text-slate-900 tracking-[-0.025em] mb-1">
+                <h3 className="text-sm font-bold text-slate-900 tracking-tight mb-1">
                   Movement Distribution
                 </h3>
                 <p className="text-[11px] text-slate-400 mb-4">Volume breakdown across transaction types</p>
@@ -761,7 +568,7 @@ export default function Reports() {
                 <div className="flex items-center justify-center py-2">
                   <div className="relative w-28 h-28 rounded-full border-8 border-indigo-500/20 border-t-emerald-500 border-r-indigo-600 flex items-center justify-center shadow-inner">
                     <div className="text-center">
-                      <span className="text-xl font-black tracking-[-0.025em] text-slate-900">{transactions.length}</span>
+                      <span className="text-xl font-black tracking-tight text-slate-900">{transactions.length}</span>
                       <p className="text-[9px] font-semibold text-slate-400 uppercase">Movements</p>
                     </div>
                   </div>
@@ -798,7 +605,7 @@ export default function Reports() {
 
       {/* 2. INVENTORY SUMMARY VIEW */}
       {tab === 'summary' && (
-        <div className="space-y-5 animate-fade-slide">
+        <div className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
             <KPICard label="Total Catalog SKUs" value={products.length} />
             <KPICard label="Total Physical Units" value={totalStock.toLocaleString()} />
@@ -810,15 +617,15 @@ export default function Reports() {
             <KPICard label="Depleted Items" value={outCount} variant={outCount > 0 ? 'danger' : 'default'} />
           </div>
 
-          <div className="glass-card rounded-[17px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
-            <div className="px-5 py-4 bg-white/40 border-b border-white/60 flex items-center justify-between">
+          <div className="glass-card rounded-[17px] border border-white/55 overflow-hidden">
+            <div className="px-5 py-4 bg-white/25 border-b border-white/50 flex items-center justify-between">
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">Master Catalog Overview</h2>
               <span className="text-[11px] text-slate-400">{products.length} Products</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                  <tr className="border-b border-white/50 bg-white/20 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                     {['Product Name', 'Category', 'Current Units', 'Unit Price', 'Total Valuation', 'Status'].map(
                       (h) => (
                         <th
@@ -833,12 +640,12 @@ export default function Reports() {
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/50">
+                <tbody className="divide-y divide-white/40">
                   {products.map((p) => {
                     const stock = getStock(p.id);
                     const val = stock * p.price;
                     return (
-                      <tr key={p.id} className="hover:bg-white/50 transition-colors">
+                      <tr key={p.id} className="hover:bg-white/40 transition-colors">
                         <td className="px-5 py-3.5 font-bold text-slate-900">
                           <button
                             type="button"
@@ -849,9 +656,9 @@ export default function Reports() {
                           </button>
                         </td>
                         <td className="px-5 py-3.5 text-slate-600 font-medium">{getCatName(p.categoryId)}</td>
-                        <td className="px-5 py-3.5 text-right font-black tracking-[-0.025em] text-slate-900">{stock}</td>
+                        <td className="px-5 py-3.5 text-right font-black tracking-tight text-slate-900">{stock}</td>
                         <td className="px-5 py-3.5 text-right text-slate-500 font-mono">${p.price.toFixed(2)}</td>
-                        <td className="px-5 py-3.5 text-right font-black tracking-[-0.025em] text-indigo-700">
+                        <td className="px-5 py-3.5 text-right font-black tracking-tight text-indigo-700">
                           ${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                         <td className="px-5 py-3.5">
@@ -869,8 +676,8 @@ export default function Reports() {
 
       {/* 3. MOVEMENT FLOW VIEW */}
       {tab === 'movement' && (
-        <div className="space-y-5 animate-fade-slide">
-          <div className="glass-card rounded-[17px] border border-white/60 p-3 md:p-4 flex gap-3 flex-wrap items-center shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+        <div className="space-y-5">
+          <div className="glass-card rounded-[17px] border border-white/55 p-3 md:p-4 flex gap-3 flex-wrap items-center">
             <select
               value={movementType}
               onChange={(e) => setMovementType(e.target.value)}
@@ -906,21 +713,21 @@ export default function Reports() {
           </div>
 
           <div className="grid xl:grid-cols-2 gap-5">
-            <div className="glass-card rounded-[17px] border border-white/60 p-5 md:p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+            <div className="glass-card rounded-[17px] border border-white/55 p-5 md:p-6">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-4">
                 Velocity Comparison by SKU
               </h3>
               <SimpleBarChart data={chartData} />
             </div>
 
-            <div className="glass-card rounded-[17px] border border-white/60 overflow-hidden flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
-              <div className="px-5 py-4 bg-white/40 border-b border-white/60">
+            <div className="glass-card rounded-[17px] border border-white/55 overflow-hidden flex flex-col justify-between">
+              <div className="px-5 py-4 bg-white/25 border-b border-white/50">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Movement Activity</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                    <tr className="border-b border-white/50 bg-white/20 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                       {['Timestamp', 'Product Name', 'Type', 'Qty', 'Operator'].map((h) => (
                         <th key={h} className={`px-4 py-2.5 ${h === 'Qty' ? 'text-right' : 'text-left'}`}>
                           {h}
@@ -928,15 +735,15 @@ export default function Reports() {
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/50">
+                  <tbody className="divide-y divide-white/40">
                     {filteredMovement.slice(0, 10).map((t) => (
-                      <tr key={t.id} className="hover:bg-white/50 transition-colors">
+                      <tr key={t.id} className="hover:bg-white/40 transition-colors">
                         <td className="px-4 py-3 text-[11px] font-mono text-slate-400">{t.createdAt}</td>
                         <td className="px-4 py-3 font-bold text-slate-900">{products.find((p) => p.id === t.productId)?.name ?? 'Unknown'}</td>
                         <td className="px-4 py-3">
                           <Badge variant={t.type} />
                         </td>
-                        <td className="px-4 py-3 text-right font-black tracking-[-0.025em] text-slate-900">{t.quantity}</td>
+                        <td className="px-4 py-3 text-right font-black tracking-tight text-slate-900">{t.quantity}</td>
                         <td className="px-4 py-3 text-slate-600 font-medium">{t.performedBy}</td>
                       </tr>
                     ))}
@@ -950,7 +757,7 @@ export default function Reports() {
 
       {/* 4. LOW STOCK VIEW */}
       {tab === 'lowstock' && (
-        <div className="space-y-5 animate-fade-slide">
+        <div className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <KPICard
               label="Low Stock Risk Count"
@@ -966,7 +773,7 @@ export default function Reports() {
             />
           </div>
 
-          <div className="glass-card rounded-[17px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+          <div className="glass-card rounded-[17px] border border-white/55 overflow-hidden">
             <div className="px-5 py-4 bg-amber-500/10 border-b border-amber-200/50">
               <h3 className="text-xs font-bold uppercase tracking-wider text-amber-900">
                 Products Requiring Restock Orders
@@ -980,7 +787,7 @@ export default function Reports() {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                    <tr className="border-b border-white/50 bg-white/20 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                       {['Product Name', 'SKU', 'Category', 'Current Units', 'Reorder Level', 'Status'].map((h) => (
                         <th
                           key={h}
@@ -993,11 +800,11 @@ export default function Reports() {
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/50">
+                  <tbody className="divide-y divide-white/40">
                     {lowStockProducts.map((p) => {
                       const stock = getStock(p.id);
                       return (
-                        <tr key={p.id} className="hover:bg-white/50 transition-colors">
+                        <tr key={p.id} className="hover:bg-white/40 transition-colors">
                           <td className="px-5 py-3.5 font-bold text-slate-900">
                             <button
                               type="button"
@@ -1009,7 +816,7 @@ export default function Reports() {
                           </td>
                           <td className="px-5 py-3.5 font-mono text-slate-400">{p.sku}</td>
                           <td className="px-5 py-3.5 text-slate-600 font-medium">{getCatName(p.categoryId)}</td>
-                          <td className="px-5 py-3.5 text-right font-black tracking-[-0.025em] text-slate-900">{stock}</td>
+                          <td className="px-5 py-3.5 text-right font-black tracking-tight text-slate-900">{stock}</td>
                           <td className="px-5 py-3.5 text-right font-mono text-slate-400">{p.reorderLevel}</td>
                           <td className="px-5 py-3.5">
                             <Badge variant={getStockStatus(p.id)} />
@@ -1027,7 +834,7 @@ export default function Reports() {
 
       {/* 5. VALUATION BREAKDOWN VIEW */}
       {tab === 'value' && (
-        <div className="space-y-5 animate-fade-slide">
+        <div className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
             <KPICard
               label="Total Capital Valuation"
@@ -1057,14 +864,14 @@ export default function Reports() {
             />
           </div>
 
-          <div className="glass-card rounded-[17px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
-            <div className="px-5 py-4 bg-white/40 border-b border-white/60">
+          <div className="glass-card rounded-[17px] border border-white/55 overflow-hidden">
+            <div className="px-5 py-4 bg-white/25 border-b border-white/50">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Valuation Distribution by SKU</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                  <tr className="border-b border-white/50 bg-white/20 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                     {['Product Name', 'Category', 'Stock Units', 'Unit Price', 'Total Valuation', 'Portfolio Share'].map(
                       (h) => (
                         <th
@@ -1081,7 +888,7 @@ export default function Reports() {
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/50">
+                <tbody className="divide-y divide-white/40">
                   {[...products]
                     .sort((a, b) => getStock(b.id) * b.price - getStock(a.id) * a.price)
                     .map((p) => {
@@ -1089,7 +896,7 @@ export default function Reports() {
                       const val = stock * p.price;
                       const pct = totalValue > 0 ? ((val / totalValue) * 100).toFixed(1) : '0.0';
                       return (
-                        <tr key={p.id} className="hover:bg-white/50 transition-colors">
+                        <tr key={p.id} className="hover:bg-white/40 transition-colors">
                           <td className="px-5 py-3.5 font-bold text-slate-900">
                             <button
                               type="button"
@@ -1100,14 +907,14 @@ export default function Reports() {
                             </button>
                           </td>
                           <td className="px-5 py-3.5 text-slate-600 font-medium">{getCatName(p.categoryId)}</td>
-                          <td className="px-5 py-3.5 text-right font-black tracking-[-0.025em] text-slate-900">{stock}</td>
+                          <td className="px-5 py-3.5 text-right font-black tracking-tight text-slate-900">{stock}</td>
                           <td className="px-5 py-3.5 text-right text-slate-500 font-mono">${p.price.toFixed(2)}</td>
-                          <td className="px-5 py-3.5 text-right font-black tracking-[-0.025em] text-indigo-700">
+                          <td className="px-5 py-3.5 text-right font-black tracking-tight text-indigo-700">
                             ${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                           <td className="px-5 py-3.5 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <div className="w-20 h-2 bg-white/60 rounded-full overflow-hidden border border-white/80">
+                              <div className="w-20 h-2 bg-white/40 rounded-full overflow-hidden border border-white/60">
                                 <div
                                   className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full"
                                   style={{ width: `${pct}%` }}

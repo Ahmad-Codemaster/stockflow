@@ -308,14 +308,14 @@ export default function Dashboard() {
       {/* Modern Graphical Visualizations Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* 7-Day Inbound / Outbound Bar Activity Chart */}
-        <div className="glass-card rounded-[17px] border border-white/60 p-5 md:p-6 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+        <div className="glass-card rounded-[17px] border border-white/55 p-5 md:p-6 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 border border-indigo-200/50">
                 <Activity size={15} />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-slate-900 tracking-[-0.025em]">Stock Velocity & Movement Activity</h2>
+                <h2 className="text-sm font-bold text-slate-900 tracking-tight">Stock Velocity & Movement Activity</h2>
                 <p className="text-[11px] text-slate-400">Inbound receipts vs outbound dispatch volumes</p>
               </div>
             </div>
@@ -331,7 +331,7 @@ export default function Dashboard() {
         </div>
 
         {/* Category Asset Valuation Donut Chart */}
-        <div className="glass-card rounded-[17px] border border-white/60 p-5 md:p-6 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+        <div className="glass-card rounded-[17px] border border-white/55 p-5 md:p-6 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 border border-purple-200/50">
@@ -357,10 +357,10 @@ export default function Dashboard() {
       {/* Main Grid: Inventory Distribution & Recent Ledger */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         {/* Inventory Status Breakdown */}
-        <div className="glass-card rounded-[17px] border border-white/60 p-5 md:p-6 flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+        <div className="glass-card rounded-[17px] border border-white/55 p-5 md:p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2 tracking-[-0.025em]">
+              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2 tracking-tight">
                 <span>Inventory Distribution</span>
                 <Sparkles size={14} className="text-indigo-500" />
               </h2>
@@ -380,17 +380,17 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="mt-5 pt-4 border-t border-white/60 flex items-center justify-between text-xs text-slate-500">
+          <div className="mt-5 pt-4 border-t border-white/55 flex items-center justify-between text-xs text-slate-500">
             <span>Overall Stock Health</span>
-            <span className="font-black tracking-[-0.025em] text-emerald-600">
+            <span className="font-black tracking-tight text-emerald-600">
               {totalProducts > 0 ? Math.round((healthy / totalProducts) * 100) : 0}% Optimum
             </span>
           </div>
         </div>
 
         {/* Recent Transactions Table Card */}
-        <div className="xl:col-span-2 glass-card rounded-[17px] border border-white/60 overflow-hidden flex flex-col justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
-          <div className="px-5 py-4 bg-white/40 border-b border-white/60 flex items-center justify-between">
+        <div className="xl:col-span-2 glass-card rounded-[17px] border border-white/55 overflow-hidden flex flex-col justify-between">
+          <div className="px-5 py-4 bg-white/25 border-b border-white/50 flex items-center justify-between">
             <div>
               <h2 className="text-sm font-bold text-slate-900 tracking-[-0.025em]">Recent Movement Ledger</h2>
               <p className="text-[11px] text-slate-400">Latest immutable inventory transactions</p>
@@ -479,7 +479,7 @@ export default function Dashboard() {
 
         {/* Low Stock Urgent Replenishment Priority Queue */}
         {lowStockProducts.length > 0 && (
-          <div className="xl:col-span-3 glass-card rounded-[17px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+          <div className="xl:col-span-3 glass-card rounded-[17px] border border-white/55 overflow-hidden">
             <div className="px-5 py-4 bg-amber-500/10 border-b border-amber-200/50 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-amber-500/20 text-amber-700">

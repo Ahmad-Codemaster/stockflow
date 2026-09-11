@@ -148,7 +148,7 @@ export default function Users() {
     setConfirmDeactivate(null);
   }  if (currentUser?.role !== 'ADMIN') {
     return (
-      <div className="glass-card rounded-[17px] border border-white/60 p-12 flex flex-col items-center justify-center text-center max-w-md mx-auto mt-12 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+      <div className="glass-card rounded-[17px] border border-white/55 p-12 flex flex-col items-center justify-center text-center max-w-md mx-auto mt-12">
         <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-200/50 flex items-center justify-center mb-4 text-rose-600">
           <UserX size={26} />
         </div>
@@ -177,7 +177,7 @@ export default function Users() {
         }
       />
 
-      <div className="glass-card rounded-[17px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+      <div className="glass-card rounded-[17px] border border-white/55 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
           <thead>

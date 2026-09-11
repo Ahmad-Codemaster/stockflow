@@ -110,7 +110,7 @@ export default function Inventory() {
       </div>
 
       {/* Glassmorphic Search & Filter Pills Toolbar */}
-      <div className="glass-card rounded-[17px] border border-white/60 p-3.5 md:p-4.5 flex flex-wrap items-center justify-between gap-3 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+      <div className="glass-card rounded-[17px] border border-white/55 p-3.5 md:p-4.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 glass-input rounded-xl px-3 py-2 min-w-[240px] flex-1 sm:flex-initial">
           <Search size={14} className="text-slate-400 shrink-0" />
           <input
@@ -164,7 +164,7 @@ export default function Inventory() {
       </div>
 
       {/* Glass Data Table */}
-      <div className="glass-card rounded-[17px] border border-white/60 overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+      <div className="glass-card rounded-[17px] border border-white/55 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>

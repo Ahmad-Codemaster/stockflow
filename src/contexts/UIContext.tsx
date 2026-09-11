@@ -121,57 +121,67 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
 
   const navigate = useCallback(
     (page: Page, id?: string) => {
-      switch (page) {
-        case 'login':
-          routerNavigate('/login');
-          break;
-        case 'dashboard':
-          routerNavigate('/dashboard');
-          break;
-        case 'products':
-          routerNavigate('/products');
-          break;
-        case 'product-detail':
-          routerNavigate(id ? `/products/${id}` : '/products');
-          break;
-        case 'product-add':
-          routerNavigate('/products/add');
-          break;
-        case 'product-edit':
-          routerNavigate(id ? `/products/edit/${id}` : '/products');
-          break;
-        case 'categories':
-          routerNavigate('/categories');
-          break;
-        case 'suppliers':
-          routerNavigate('/suppliers');
-          break;
-        case 'inventory':
-          routerNavigate('/inventory');
-          break;
-        case 'stock-in':
-          routerNavigate(id ? `/stock-in?product=${id}` : '/stock-in');
-          break;
-        case 'stock-out':
-          routerNavigate(id ? `/stock-out?product=${id}` : '/stock-out');
-          break;
-        case 'transactions':
-          routerNavigate('/transactions');
-          break;
-        case 'transaction-detail':
-          routerNavigate(id ? `/transactions/${id}` : '/transactions');
-          break;
-        case 'reports':
-          routerNavigate('/reports');
-          break;
-        case 'users':
-          routerNavigate('/users');
-          break;
-        case 'settings':
-          routerNavigate('/settings');
-          break;
-        default:
-          routerNavigate('/dashboard');
+      const performNavigation = () => {
+        switch (page) {
+          case 'login':
+            routerNavigate('/login');
+            break;
+          case 'dashboard':
+            routerNavigate('/dashboard');
+            break;
+          case 'products':
+            routerNavigate('/products');
+            break;
+          case 'product-detail':
+            routerNavigate(id ? `/products/${id}` : '/products');
+            break;
+          case 'product-add':
+            routerNavigate('/products/add');
+            break;
+          case 'product-edit':
+            routerNavigate(id ? `/products/edit/${id}` : '/products');
+            break;
+          case 'categories':
+            routerNavigate('/categories');
+            break;
+          case 'suppliers':
+            routerNavigate('/suppliers');
+            break;
+          case 'inventory':
+            routerNavigate('/inventory');
+            break;
+          case 'stock-in':
+            routerNavigate(id ? `/stock-in?product=${id}` : '/stock-in');
+            break;
+          case 'stock-out':
+            routerNavigate(id ? `/stock-out?product=${id}` : '/stock-out');
+            break;
+          case 'transactions':
+            routerNavigate('/transactions');
+            break;
+          case 'transaction-detail':
+            routerNavigate(id ? `/transactions/${id}` : '/transactions');
+            break;
+          case 'reports':
+            routerNavigate('/reports');
+            break;
+          case 'users':
+            routerNavigate('/users');
+            break;
+          case 'settings':
+            routerNavigate('/settings');
+            break;
+          default:
+            routerNavigate('/dashboard');
+        }
+      };
+
+      if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+        (document as any).startViewTransition(() => {
+          performNavigation();
+        });
+      } else {
+        performNavigation();
       }
     },
     [routerNavigate]

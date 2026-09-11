@@ -1,8 +1,11 @@
 import type React from 'react';
+import { useLocation } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+
   return (
     <div className="flex h-screen w-screen overflow-hidden ambient-mesh-bg font-sans relative p-2.5 sm:p-3.5 lg:p-4.5 gap-2.5 sm:gap-3.5 lg:gap-4.5">
       {/* 4 Large Ambient Background Lighting Orbs with Extreme Blur and 15%-20% Opacity */}
@@ -47,7 +50,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden relative z-10 gap-2.5 sm:gap-3.5">
         <Header />
         <main className="flex-1 min-h-0 overflow-y-auto pr-0.5 sm:pr-1">
-          {children}
+          <div key={location.pathname} className="animate-page-enter min-h-full">
+            {children}
+          </div>
         </main>
       </div>
     </div>

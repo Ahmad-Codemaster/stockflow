@@ -70,7 +70,7 @@ export default function Header() {
   const isAdmin = currentUser?.role === 'ADMIN';
 
   return (
-    <header className="h-16 shrink-0 glass-header rounded-[17px] border border-white/50 flex items-center justify-between px-3 sm:px-6 md:px-7 z-30 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+    <header className="h-16 shrink-0 glass-header rounded-[17px] border border-white/50 flex items-center justify-between px-3 sm:px-6 md:px-7 z-30">
       {/* Left Area: Mobile Drawer / Desktop Toggle + Breadcrumb Navigation */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <button

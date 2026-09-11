@@ -56,7 +56,7 @@ const kpiIconTints = {
 
 export function KPICard({ label, value, sub, variant = 'default', icon, sparkline }: KPICardProps) {
   return (
-    <div className="glass-card glass-card-hover rounded-[17px] p-5.5 relative overflow-hidden flex flex-col justify-between border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+    <div className="glass-card glass-card-hover rounded-[17px] p-5.5 relative overflow-hidden flex flex-col justify-between border border-white/55">
       {/* Subtle Top Gradient Accent Strip */}
       <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r ${kpiTopStripe[variant]}`} />
 
@@ -71,7 +71,7 @@ export function KPICard({ label, value, sub, variant = 'default', icon, sparklin
 
       <div className="flex items-end justify-between gap-2">
         <div>
-          <div className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-[-0.025em]">{value}</div>
+          <div className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">{value}</div>
           {sub && <p className="text-xs text-slate-500 font-medium mt-1">{sub}</p>}
         </div>
         {sparkline && <div className="shrink-0 mb-1">{sparkline}</div>}
@@ -89,17 +89,17 @@ interface EmptyStateProps {
 
 export function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
-    <div className="glass-card rounded-[17px] flex flex-col items-center justify-center py-16 px-6 text-center border border-white/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+    <div className="glass-card rounded-[17px] flex flex-col items-center justify-center py-16 px-6 text-center border border-white/55">
       <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 flex items-center justify-center mb-4 shadow-sm text-indigo-600 backdrop-blur-md">
         <Package size={26} />
       </div>
-      <h3 className="text-sm font-bold text-slate-900 mb-1">{title}</h3>
+      <h3 className="text-sm font-bold text-slate-900 mb-1 tracking-tight">{title}</h3>
       {description && <p className="text-xs text-slate-500 mb-5 max-w-sm leading-relaxed font-medium">{description}</p>}
       {action && (
         <button
           type="button"
           onClick={action.onClick}
-          className="inline-flex items-center gap-1.5 px-4.5 py-2.5 gradient-btn-primary text-white text-xs font-semibold rounded-2xl cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-4.5 py-2.5 gradient-btn-primary text-white text-xs font-semibold rounded-2xl cursor-pointer shadow-xs"
         >
           <Plus size={14} />
           {action.label}
@@ -286,8 +286,8 @@ export function PageHeader({
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-[-0.025em]">{title}</h1>
-        {subtitle && <p className="text-xs md:text-sm text-slate-500 mt-1 font-medium leading-relaxed">{subtitle}</p>}
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{title}</h1>
+        {subtitle && <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium leading-relaxed">{subtitle}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </div>

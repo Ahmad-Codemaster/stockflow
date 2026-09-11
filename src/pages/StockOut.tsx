@@ -121,7 +121,7 @@ export default function StockOut() {
       )}
 
       <form onSubmit={handleSubmit} noValidate>
-        <div className="glass-card rounded-[17px] border border-white/60 p-6 md:p-8 space-y-5 shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]">
+        <div className="glass-card rounded-[17px] border border-white/55 p-6 md:p-8 space-y-5">
           <FormField label="Target SKU / Product" required error={errors.productId}>
             <select
               value={productId}
