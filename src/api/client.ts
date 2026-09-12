@@ -46,10 +46,10 @@ async function request<T>(
 export const api = {
   // Auth API
   auth: {
-    login: (email: string, password: string) =>
+    login: (email: string, password: string, role?: 'ADMIN' | 'STAFF') =>
       request<{ user: User }>('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, role }),
       }),
     logout: () =>
       request<{ message: string }>('/auth/logout', {

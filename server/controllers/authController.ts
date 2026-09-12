@@ -20,13 +20,14 @@ export class AuthController {
    * POST /api/auth/login: Verify credentials and issue HttpOnly session cookie
    */
   static async login(req: Request, res: Response) {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
     const ipAddress = req.ip || req.socket.remoteAddress;
 
     const { user, sessionToken, expiresAt } = await AuthService.login(
       email,
       password,
-      ipAddress
+      ipAddress,
+      role
     );
 
     /**

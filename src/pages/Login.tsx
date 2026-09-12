@@ -75,7 +75,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const result = await login(email.trim(), password);
+      const result = await login(email.trim(), password, activeRole);
       if (!result.ok) {
         triggerShake();
         setErrors({

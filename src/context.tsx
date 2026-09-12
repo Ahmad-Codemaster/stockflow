@@ -58,7 +58,7 @@ export interface AppContextValue {
   toggleDesktopSidebar: () => void;
   closeMobileSidebar: () => void;
   openMobileSidebar: () => void;
-  login: (email: string, password: string) => Promise<LoginResult>;
+  login: (email: string, password: string, role?: 'ADMIN' | 'STAFF') => Promise<LoginResult>;
   logout: () => void;
   navigate: (page: Page, id?: string) => void;
   setPageSilent: (page: Page, id?: string) => void;

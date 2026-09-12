@@ -13,7 +13,7 @@ export interface AuthContextValue {
   currentUser: User | null;
   users: User[];
   isAuthLoading: boolean;
-  login: (email: string, password: string) => Promise<LoginResult>;
+  login: (email: string, password: string, role?: 'ADMIN' | 'STAFF') => Promise<LoginResult>;
   logout: () => Promise<void>;
   addUser: (data: {
     name: string;
@@ -101,9 +101,9 @@ export function AuthProvider({
   }, [onLoginSuccess, refreshUsers]);
 
   const login = useCallback(
-    async (email: string, password: string): Promise<LoginResult> => {
+    async (email: string, password: string, role?: 'ADMIN' | 'STAFF'): Promise<LoginResult> => {
       try {
-        const res = await api.auth.login(email, password);
+        const res = await api.auth.login(email, password, role);
         setCurrentUser(res.user);
         if (onLoginSuccess) {
           await onLoginSuccess();

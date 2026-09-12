@@ -36,7 +36,7 @@ export class AuthService {
    * 7. Record login in `audit_logs` table.
    * 8. Return safe user object (excluding `passwordHash`) and session token.
    */
-  static async login(email: string, password: string, ipAddress?: string) {
+  static async login(email: string, password: string, ipAddress?: string, role?: 'ADMIN' | 'STAFF') {
     // 1. Normalize email to prevent duplicate accounts with different casings
     const normalizedEmail = email.trim().toLowerCase();
     const user = await prisma.user.findUnique({
@@ -57,6 +57,17 @@ export class AuthService {
     // 4. Block deactivated accounts immediately
     if (user.status === 'Inactive') {
       throw new AppError('Your account has been deactivated. Please contact an administrator.', 403, 'ACCOUNT_INACTIVE');
+    }
+
+    // 5. Enforce role booth separation (prevent staff from logging into admin console and vice-versa)
+    if (role && user.role !== role) {
+      throw new AppError(
+        role === 'ADMIN'
+          ? 'Access denied. This console is restricted to Administrators only.'
+          : 'Access denied. This terminal is restricted to Operations Staff only.',
+        403,
+        'ROLE_MISMATCH'
+      );
     }
 
     // 5. Generate secure 64-character random session token (32 bytes hex-encoded)

@@ -15,6 +15,7 @@ export const loginSchema = z.object({
     .trim()
     .toLowerCase(),
   password: z.string().min(1, 'Password is required'),
+  role: z.enum(['ADMIN', 'STAFF']).optional(),
 });
 
 export const changePasswordSchema = z.object({

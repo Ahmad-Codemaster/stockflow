@@ -85,11 +85,11 @@ export const mutationLimiter = rateLimiter({
 });
 
 /**
- * Strict Rate Limiter: 3 requests per 10 minutes per IP.
- * Applied to the system wipe endpoint to prevent accidental or malicious mass destruction.
+ * Strict Rate Limiter: 20 requests per 10 minutes per IP.
+ * Applied to the system wipe endpoint to prevent automated malicious abuse while allowing admins to manage data.
  */
 export const strictLimiter = rateLimiter({
   windowMs: 10 * 60 * 1000,  // 10-minute window
-  max: 3,
-  message: 'Too many system operation requests. Please wait 10 minutes before retrying.',
+  max: 20,
+  message: 'Too many system operation requests. Please wait a few minutes before retrying.',
 });
