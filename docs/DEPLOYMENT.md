@@ -48,14 +48,21 @@ Or **Option B (Decoupled):**
 | Variable Name | Required | Example Value | Description |
 | :--- | :---: | :--- | :--- |
 | `NODE_ENV` | Yes | `production` | Node execution environment |
-| `PORT` | Yes | `8080` | Backend listening port |
-| `DATABASE_URL` | Yes | `postgresql://user:pass@host:5432/stockflow?sslmode=require` | PostgreSQL connection string |
-| `JWT_SECRET` | Yes | `min_32_chars_random_cryptographic_secret` | Secret for signing session cookies |
-| `CORS_ORIGIN` | Yes | `https://stockflow.yourdomain.com` | Allowed frontend origin |
+| `PORT` | Yes | `3001` (or `8080`) | Backend listening port |
+| `DATABASE_URL` | Yes | `postgresql://postgres.[REF]:[PASS]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true` | Supabase Supavisor Transaction Pooler URL (runtime queries) |
+| `DIRECT_URL` | Yes | `postgresql://postgres.[REF]:[PASS]@aws-0-[REGION].pooler.supabase.com:5432/postgres` | Supabase Direct Session URL (Prisma schema migrations) |
+| `SESSION_SECRET` | Yes | `min_32_chars_random_cryptographic_secret` | Secret for signing session cookies |
+| `CORS_ORIGIN` | Yes | `https://stockflow.onrender.com` | Allowed frontend origin |
 | `ADMIN_DEFAULT_EMAIL` | Optional | `admin@stockflow.com` | Initial admin account email for first boot |
 | `ADMIN_DEFAULT_PASSWORD` | Optional | `InitialAdminSecretPass123!` | Initial admin account password for seed |
 
 ---
+
+### Supabase & Prisma Setup Details
+
+1. **Transaction Pooling (Port 6543):** Set as `DATABASE_URL`. Express and Prisma query the database via Supavisor, allowing thousands of simultaneous requests without exhausting database connections.
+2. **Direct Connection (Port 5432):** Set as `DIRECT_URL`. Prisma CLI uses this URL during `npx prisma migrate deploy` because migrations require advisory locks and session-level features not supported in transaction pooling mode.
+
 
 ## 4. Production Multi-Stage `Dockerfile`
 
