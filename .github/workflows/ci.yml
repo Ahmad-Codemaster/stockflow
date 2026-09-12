@@ -46,11 +46,12 @@ jobs:
 
       - name: Security Vulnerability Audit
         # Fail on any high or critical severity vulnerabilities in production dependencies
-        run: npm audit --audit-level=high --omit=dev
+        run: pnpm audit --audit-level=high --prod
         continue-on-error: true  # Non-blocking until baseline is clean
 
       - name: Generate Prisma Client & Deploy Migrations
         run: |
+          export DIRECT_URL="${DIRECT_URL:-$DATABASE_URL}"
           npx prisma generate
           npx prisma migrate deploy
           npx tsx server/seed.ts
