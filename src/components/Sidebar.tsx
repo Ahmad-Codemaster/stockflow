@@ -116,11 +116,11 @@ export default function Sidebar() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-2 py-2 overflow-y-auto space-y-0.5">
-            <p className="px-2 mb-1 text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">
+          <nav className="flex-1 px-2.5 py-3.5 overflow-y-auto space-y-1">
+            <p className="px-2 mb-2 pt-0.5 text-[8.5px] font-bold text-purple-600/80 uppercase tracking-wider">
               Core Operations
             </p>
-            <div className="space-y-0.5">
+            <div className="space-y-1.5">
               {navItems.map((item) => {
                 const active = isActive(item.page, currentPage);
                 const Icon = item.icon;
@@ -128,15 +128,19 @@ export default function Sidebar() {
                   <button
                     key={item.page}
                     onClick={() => handleNavigate(item.page)}
-                    className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                    className={`group w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
                       active
                         ? 'bg-gradient-to-r from-orange-500/15 via-purple-500/10 to-transparent text-slate-900 font-bold border border-orange-300/40 shadow-2xs'
-                        : 'text-slate-600 hover:bg-white/45 hover:text-slate-900'
+                        : 'text-purple-800/85 hover:bg-white/50 hover:text-purple-950'
                     }`}
                   >
                     <Icon
-                      size={14.5}
-                      className={`transition-colors shrink-0 ${active ? 'text-orange-600' : 'text-slate-400'}`}
+                      size={15}
+                      className={`transition-colors shrink-0 ${
+                        active
+                          ? 'text-orange-600'
+                          : 'text-purple-500 group-hover:text-purple-700'
+                      }`}
                     />
                     <span className="truncate">{item.label}</span>
                   </button>
@@ -146,24 +150,28 @@ export default function Sidebar() {
 
             {/* Admin Section */}
             {currentUser?.role === 'ADMIN' && (
-              <div className="pt-2.5 mt-2.5 border-t border-white/55">
-                <div className="flex items-center justify-between px-2 mb-1.5">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+              <div className="pt-3.5 mt-3.5 border-t border-white/55">
+                <div className="flex items-center justify-between px-2 mb-2">
+                  <span className="text-[9px] font-bold text-purple-600/80 uppercase tracking-wider">
                     Administration
                   </span>
-                  <Shield size={11} className="text-purple-500" />
+                  <Shield size={12} className="text-purple-500" />
                 </div>
                 <button
                   onClick={() => handleNavigate('users')}
-                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                  className={`group w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
                     currentPage === 'users'
                       ? 'bg-gradient-to-r from-purple-500/15 via-orange-500/10 to-transparent text-slate-900 font-bold border border-purple-300/40 shadow-2xs'
-                      : 'text-slate-600 hover:bg-white/45 hover:text-slate-900'
+                      : 'text-purple-800/85 hover:bg-white/50 hover:text-purple-950'
                   }`}
                 >
                   <Users
                     size={15}
-                    className={`transition-colors shrink-0 ${currentPage === 'users' ? 'text-purple-600' : 'text-slate-400'}`}
+                    className={`transition-colors shrink-0 ${
+                      currentPage === 'users'
+                        ? 'text-purple-600'
+                        : 'text-purple-500 group-hover:text-purple-700'
+                    }`}
                   />
                   <span>User Management</span>
                 </button>

@@ -12,7 +12,7 @@
 
 > **Stack:** React 19 + TypeScript + Vite + Tailwind CSS v4 | Node.js + Express 5 + Prisma ORM (PostgreSQL) | Docker + Render | Vitest + GitHub Actions CI
 
-**StockFlow** is a production-hardened inventory and operations management platform engineered for businesses requiring strict stock-in/stock-out workflows, multi-supplier tracking, real-time inventory valuation, session-based role authorization (Admin vs. Staff), database-level concurrency protection, and operational reporting.
+**StockFlow** is a security-hardened inventory and operations management platform engineered for businesses requiring strict stock-in/stock-out workflows, multi-supplier tracking, real-time inventory valuation, session-based role authorization (Admin vs. Staff), database-level concurrency protection, and operational reporting.
 
 ---
 
@@ -37,7 +37,7 @@
 
 ## 🌟 Core System Highlights & Recent Iterations
 
-### 1. Production Hardening (P1–P6 Milestones)
+### 1. Production Hardening (Phase 1-6)
 - **P1 — Database-Level Concurrency Control:**
   - Replaced in-memory mutexes with PostgreSQL row-level pessimistic locking (**`SELECT ... FOR UPDATE`**) within atomic ACID transactions (`prisma.$transaction`).
   - Serializes concurrent operations on the same product row across multi-instance clusters.
