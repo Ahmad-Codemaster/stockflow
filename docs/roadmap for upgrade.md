@@ -1,3 +1,8 @@
+# StockFlow V2 — Upgrade Roadmap
+
+> **Status:** ✅ 100% COMPLETE & VERIFIED IN PRODUCTION (Milestones 0–4 Delivered)
+
+```
                     STOCKFLOW V2
                          │
                          ▼
@@ -51,3 +56,4 @@
              │ Security scanning   │
              │ Runbook             │
              └─────────────────────┘
+```

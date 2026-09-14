@@ -19,7 +19,7 @@ This project was built following modern AI-assisted software engineering practic
 | **Google DeepMind Antigravity / Agentic Coding Engine** | Autonomous pair programming, end-to-end full-stack refactoring, and test-driven development orchestration. |
 | **TypeScript Compiler (`tsc` v5.7)** | Strict type enforcement and invariant verification across client and server layers. |
 | **Vitest (`v4.1.11`)** | Automated unit, integration, and high-concurrency race condition testing. |
-| **Prisma ORM & SQLite Engine** | Automated SQL query parameterization, schema migrations, and relational integrity enforcement. |
+| **Prisma ORM & PostgreSQL 16+** | Automated SQL query parameterization, schema migrations, and relational integrity enforcement. |
 
 ---
 
@@ -60,7 +60,7 @@ Before writing implementation code, structured specification files (`AGENTS.md` 
 AI agents were strictly constrained by layered boundaries:
 - **Presentation Layer (React 19 SPA):** Pure UI rendering and reactive state bindings via `AppContext`. Zero direct database queries.
 - **Controller Layer (Express 5):** Zod DTO validation and HTTP response shaping.
-- **Service Layer (Node.js):** ACID transactions (`prisma.$transaction`) and `AsyncLock` serialized mutexes.
+- **Service Layer (Node.js):** ACID transactions (`prisma.$transaction`) with native PostgreSQL row locks (`SELECT ... FOR UPDATE`).
 - **Data Access Layer (Prisma ORM):** Parameterized SQL queries preventing injection attacks.
 
 ### 3.3 Step 3: High-Concurrency Stress & Race Condition Testing
@@ -81,7 +81,7 @@ AI was utilized to design and implement bespoke, responsive SVG charts in [src/c
 
 All AI-generated code underwent mandatory verification checkpoints:
 1. **Compilation Check:** Full TypeScript typecheck via `npm run typecheck` (`tsc --noEmit`) with zero type assertions (`as any`) in core business logic.
-2. **Automated Test Run:** Live test suite execution via `npm test` (**14 test files, 54 automated tests passing**, spanning backend integration and React component testing).
+2. **Automated Test Run:** Live test suite execution via `npm test` (**14 test files, 55 automated tests passing**, spanning backend integration and React component testing).
 3. **Security Review:** Manual inspection of cookie flags (`HttpOnly`, `SameSite=Lax`, `Secure`), password salt rounds, and SQL query parameterization.
 4. **Clean Git Hygiene:** Verified `.env`, database binaries, and temporary logs are excluded via `.gitignore`.
 5. **Clean Slate Verification:** Verified that all demo fixtures and auto-fill buttons are purged, leaving a pristine development environment.
@@ -90,6 +90,6 @@ All AI-generated code underwent mandatory verification checkpoints:
 
 ## 5. Summary & Key Takeaways
 
-- **Productivity Gain:** The full transition from an in-memory prototype to an enterprise full-stack system with 54 tests, modular domain contexts, and 13 architecture specifications was achieved rapidly with zero architectural debt.
+- **Productivity Gain:** The full transition from an in-memory prototype to an enterprise full-stack system with 55 tests, modular domain contexts, and 13 architecture specifications was achieved rapidly with zero architectural debt.
 - **High Test Confidence:** Over 86% test coverage guarantees that future features or database migrations will not introduce regressions.
 - **Enterprise Standards:** The application adheres to production engineering standards: rate limiting, ACID transactions, server-enforced RBAC, and immutable audit trails.

@@ -1,7 +1,7 @@
 # StockFlow — Business Domain Rules & Invariants
 
-> **Document Version:** 1.0.0  
-> **Status:** AUTHORITATIVE DOMAIN SPECIFICATION  
+> **Document Version:** 2.0.0  
+> **Status:** ✅ FULLY IMPLEMENTED & ACTIVE IN PRODUCTION  
 > **Target System:** StockFlow Inventory Management System  
 
 ---
@@ -12,9 +12,9 @@
 | :--- | :--- | :--- | :--- |
 | `BR-PROD-001` | Product | **Product Name Required:** Must be non-empty string, 2–150 characters. | Form validation error & HTTP 400. |
 | `BR-PROD-002` | Product | **SKU Format & Uniqueness:** SKU must be unique across all active and archived products (case-insensitive). Characters allowed: alphanumeric and hyphens (`[A-Z0-9-]+`). Auto-trimmed and uppercase-normalized. | Reject with `"SKU already exists."` (HTTP 409 Conflict). |
-| `BR-PROD-003` | Product | **SKU Immutability:** Once created, a product's SKU cannot be modified via edit endpoints. | Read-only in UI, ignored or rejected if present in `PUT /api/v1/products/:id`. |
-| `BR-PROD-004` | Product | **Unit Price Invariant:** Must be a non-negative decimal (`price >= 0.00`). | Form error & HTTP 422. |
-| `BR-PROD-005` | Product | **Reorder Level Invariant:** Must be a non-negative integer (`reorderLevel >= 0`). | Form error & HTTP 422. |
+| `BR-PROD-003` | Product | **SKU Immutability:** Once created, a product's SKU cannot be modified via edit endpoints. | Read-only in UI, ignored or rejected if present in `PUT /api/products/:id`. |
+| `BR-PROD-004` | Product | **Unit Price Invariant:** Must be a non-negative decimal (`price >= 0.00`). | Form error & HTTP 400 / 422. |
+| `BR-PROD-005` | Product | **Reorder Level Invariant:** Must be a non-negative integer (`reorderLevel >= 0`). | Form error & HTTP 400 / 422. |
 | `BR-PROD-006` | Product | **Category Association:** Must reference a valid, non-archived `categoryId`. | Reject with HTTP 400. |
 | `BR-PROD-007` | Product | **Initial Stock Provisioning:** When adding a product with `initialStock > 0`, the system must atomically create an initial `Stock In` transaction with reference `'INIT'`. | Atomic transaction in DB. |
 

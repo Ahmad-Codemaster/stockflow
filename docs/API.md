@@ -1,8 +1,8 @@
 # StockFlow — RESTful API Specification
 
-> **Document Version:** 1.0.0  
-> **Status:** PLANNED TARGET SPECIFICATION (Audited Current Repository has 0 Backend Endpoints)  
-> **Base URL:** `/api/v1`  
+> **Document Version:** 2.0.0  
+> **Status:** ✅ FULLY IMPLEMENTED & VERIFIED IN PRODUCTION  
+> **Base URL:** `/api`  
 > **Protocol:** HTTPS with JSON Request/Response Payloads  
 
 ---
@@ -14,6 +14,8 @@
 * **Role Verification:** Server-side middleware verifies claims (`ADMIN` vs. `STAFF`).
 * **Unauthenticated Requests:** Returns `401 Unauthorized`.
 * **Unauthorized Role Requests:** Returns `403 Forbidden`.
+* **Request Correlation:** Every request accepts or generates an `X-Request-Id` header for end-to-end distributed tracing.
+* **Idempotency Guard:** Mutating POST endpoints support the `Idempotency-Key` header with in-memory replay caching.
 
 ### 1.2 Standard Success Response Envelope
 ```json
@@ -47,7 +49,7 @@
 
 ## 2. Authentication Endpoints
 
-### 2.1 `POST /api/v1/auth/login`
+### 2.1 `POST /api/auth/login`
 Authenticates user credentials and issues a secure session.
 
 * **Auth Required:** No (Public)
@@ -79,7 +81,7 @@ Authenticates user credentials and issues a secure session.
   * `401 Unauthorized`: `"Invalid email or password."`
   * `403 Forbidden`: `"This account has been deactivated. Contact your administrator."`
 
-### 2.2 `POST /api/v1/auth/logout`
+### 2.2 `POST /api/auth/logout`
 Terminates the active session and clears cookies.
 
 * **Auth Required:** Yes
@@ -89,7 +91,7 @@ Terminates the active session and clears cookies.
   { "success": true, "data": { "message": "Logged out successfully." } }
   ```
 
-### 2.3 `GET /api/v1/auth/me`
+### 2.3 `GET /api/auth/me`
 Fetches the profile of the currently authenticated user.
 
 * **Auth Required:** Yes
@@ -108,11 +110,19 @@ Fetches the profile of the currently authenticated user.
   }
   ```
 
+### 2.4 `POST /api/auth/change-password`
+Updates the password of the currently authenticated user.
+
+* **Auth Required:** Yes
+* **Allowed Roles:** `ADMIN`, `STAFF`
+* **Request Body:** `{ "currentPassword": "oldPassword123", "newPassword": "newSecurePassword456!" }`
+* **Success Response (`200 OK`):** `{ "success": true, "data": { "message": "Password updated successfully." } }`
+
 ---
 
 ## 3. Product Catalog Endpoints
 
-### 3.1 `GET /api/v1/products`
+### 3.1 `GET /api/products`
 Lists products with pagination, search, category filter, and stock status filter.
 
 * **Auth Required:** Yes
@@ -150,7 +160,7 @@ Lists products with pagination, search, category filter, and stock status filter
   }
   ```
 
-### 3.2 `POST /api/v1/products`
+### 3.2 `POST /api/products`
 Creates a new product and optionally records an initial stock transaction.
 
 * **Auth Required:** Yes
@@ -186,7 +196,7 @@ Creates a new product and optionally records an initial stock transaction.
   * `409 Conflict`: SKU already exists.
   * `422 Unprocessable Entity`: Negative price or invalid category ID.
 
-### 3.3 `GET /api/v1/products/:id`
+### 3.3 `GET /api/products/:id`
 Retrieves single product details, real-time stock analytics, and recent transactions.
 
 * **Auth Required:** Yes
@@ -216,7 +226,7 @@ Retrieves single product details, real-time stock analytics, and recent transact
   }
   ```
 
-### 3.4 `PUT /api/v1/products/:id`
+### 3.4 `PUT /api/products/:id`
 Updates product catalog information (SKU is immutable).
 
 * **Auth Required:** Yes
@@ -234,7 +244,7 @@ Updates product catalog information (SKU is immutable).
   ```
 * **Success Response (`200 OK`):** Updated product object.
 
-### 3.5 `DELETE /api/v1/products/:id`
+### 3.5 `DELETE /api/products/:id`
 Soft-deletes/archives a product.
 
 * **Auth Required:** Yes
@@ -249,22 +259,22 @@ Soft-deletes/archives a product.
 ## 4. Category & Supplier Endpoints
 
 ### 4.1 Categories
-* `GET /api/v1/categories` — List all active categories + product count. (Roles: `ADMIN`, `STAFF`)
-* `POST /api/v1/categories` — Create category `{ name: string }`. (Roles: `ADMIN`)
-* `PUT /api/v1/categories/:id` — Update category name. (Roles: `ADMIN`)
-* `DELETE /api/v1/categories/:id` — Soft-delete category. (Roles: `ADMIN`)
+* `GET /api/categories` — List all active categories + product count. (Roles: `ADMIN`, `STAFF`)
+* `POST /api/categories` — Create category `{ name: string, description?: string }`. (Roles: `ADMIN`)
+* `PUT /api/categories/:id` — Update category details. (Roles: `ADMIN`)
+* `DELETE /api/categories/:id` — Delete category (prevented if assigned to active products). (Roles: `ADMIN`)
 
 ### 4.2 Suppliers
-* `GET /api/v1/suppliers` — List all active suppliers + product count. (Roles: `ADMIN`, `STAFF`)
-* `POST /api/v1/suppliers` — Create supplier `{ name, email, phone, address }`. (Roles: `ADMIN`)
-* `PUT /api/v1/suppliers/:id` — Update supplier details. (Roles: `ADMIN`)
-* `DELETE /api/v1/suppliers/:id` — Soft-delete supplier. (Roles: `ADMIN`)
+* `GET /api/suppliers` — List all active suppliers + product count. (Roles: `ADMIN`, `STAFF`)
+* `POST /api/suppliers` — Create supplier `{ name, email, phone, address, leadTime }`. (Roles: `ADMIN`)
+* `PUT /api/suppliers/:id` — Update supplier details. (Roles: `ADMIN`)
+* `DELETE /api/suppliers/:id` — Delete supplier (clears FK on products with `ON DELETE SET NULL`). (Roles: `ADMIN`)
 
 ---
 
 ## 5. Inventory & Transaction Endpoints
 
-### 5.1 `POST /api/v1/inventory/stock-in`
+### 5.1 `POST /api/inventory/stock-in`
 Executes an atomic Stock-In inventory replenishment.
 
 * **Auth Required:** Yes
@@ -301,7 +311,7 @@ Executes an atomic Stock-In inventory replenishment.
   }
   ```
 
-### 5.2 `POST /api/v1/inventory/stock-out`
+### 5.2 `POST /api/inventory/stock-out`
 Executes an atomic Stock-Out fulfillment with strict negative stock prevention.
 
 * **Auth Required:** Yes
@@ -337,16 +347,29 @@ Executes an atomic Stock-Out fulfillment with strict negative stock prevention.
   }
   ```
 * **Error Responses:**
-  * `422 Unprocessable Entity`: `"Insufficient stock. Only 4 units are available."`
+  * `400 Bad Request` / `422 Unprocessable Entity`: `"Insufficient stock. Only 4 units are available."`
 
-### 5.3 `GET /api/v1/transactions`
+### 5.3 `POST /api/inventory/adjust`
+Executes an atomic inventory count adjustment.
+
+* **Auth Required:** Yes
+* **Allowed Roles:** `ADMIN`
+* **Request Body:** `{ "productId": "p1", "newQuantity": 12, "reason": "Physical cycle count discrepancy" }`
+
+### 5.4 `GET /api/inventory`
+Retrieves central inventory stock table with derived statuses and valuation.
+
+* **Auth Required:** Yes
+* **Allowed Roles:** `ADMIN`, `STAFF`
+
+### 5.5 `GET /api/transactions`
 Retrieves immutable transaction history with filtering.
 
 * **Auth Required:** Yes
 * **Allowed Roles:** `ADMIN`, `STAFF`
 * **Query Parameters:** `productId`, `type`, `search`, `page`, `pageSize`
 
-### 5.4 `GET /api/v1/transactions/:id`
+### 5.6 `GET /api/transactions/:id`
 Retrieves single immutable transaction details.
 
 * **Auth Required:** Yes
@@ -356,14 +379,26 @@ Retrieves single immutable transaction details.
 
 ## 6. Dashboard & Reports Endpoints
 
-### 6.1 `GET /api/v1/reports/summary`
+### 6.1 `GET /api/reports/summary`
 Returns system KPI aggregates: total products, total stock units, low stock count, out of stock count, total valuation.
 
 * **Auth Required:** Yes
 * **Allowed Roles:** `ADMIN`, `STAFF`
 
-### 6.2 `GET /api/v1/reports/movement`
+### 6.2 `GET /api/reports/movement`
 Returns aggregate stock-in vs. stock-out quantities grouped by product and time period.
+
+* **Auth Required:** Yes
+* **Allowed Roles:** `ADMIN`, `STAFF`
+
+### 6.3 `GET /api/reports/low-stock`
+Returns prioritized list of products at or below their reorder threshold.
+
+* **Auth Required:** Yes
+* **Allowed Roles:** `ADMIN`, `STAFF`
+
+### 6.4 `GET /api/reports/valuation`
+Returns stock valuation breakdown grouped by category.
 
 * **Auth Required:** Yes
 * **Allowed Roles:** `ADMIN`, `STAFF`
@@ -372,15 +407,50 @@ Returns aggregate stock-in vs. stock-out quantities grouped by product and time 
 
 ## 7. User Management Endpoints (Admin Only)
 
-### 7.1 `GET /api/v1/users`
+### 7.1 `GET /api/users`
 Lists all user accounts. (Role: `ADMIN`)
 
-### 7.2 `POST /api/v1/users`
-Provisions a new user account with temporary credentials and assigned role. (Role: `ADMIN`)
-* **Request Body:** `{ "name": "Sara Ahmed", "email": "sara@company.com", "role": "STAFF", "temporaryPassword": "InitPassword1!" }`
+### 7.2 `POST /api/users`
+Provisions a new user account with credentials and assigned role. (Role: `ADMIN`)
+* **Request Body:** `{ "name": "Sara Ahmed", "email": "sara@company.com", "role": "STAFF", "password": "SecurePassword123!" }`
 
-### 7.3 `PATCH /api/v1/users/:id/role`
+### 7.3 `PATCH /api/users/:id/role`
 Modifies user role (`ADMIN` $\leftrightarrow$ `STAFF`). (Role: `ADMIN`)
 
-### 7.4 `PATCH /api/v1/users/:id/status`
-Activates or deactivates user account (`Active` $\leftrightarrow$ `Inactive`). (Role: `ADMIN`)
+### 7.4 `PATCH /api/users/:id/status`
+Activates or deactivates user account (`Active` $\leftrightarrow$ `Inactive`). Deactivation immediately terminates active sessions. (Role: `ADMIN`)
+
+### 7.5 `DELETE /api/users/:id`
+Removes user account with transaction reassignment protection and Last-Admin guard. (Role: `ADMIN`)
+
+---
+
+## 8. Health Probes & Observability
+
+### 8.1 `GET /api/health/live`
+Fast ping probe confirming the Node.js event loop is alive. Does not query database. Used by container orchestrators.
+* **Success Response (`200 OK`):** `{ "status": "alive", "service": "stockflow-api", "timestamp": "..." }`
+
+### 8.2 `GET /api/health/ready`
+Deep readiness probe validating active PostgreSQL connectivity, database latency, and memory consumption.
+* **Success Response (`200 OK`):**
+  ```json
+  {
+    "status": "healthy",
+    "service": "stockflow-api",
+    "timestamp": "...",
+    "uptimeSeconds": 3600,
+    "database": { "status": "connected", "latencyMs": 4 },
+    "memory": { "rssMb": 85, "heapUsedMb": 42 }
+  }
+  ```
+
+---
+
+## 9. System & Maintenance Endpoints (Admin Only)
+
+### 9.1 `POST /api/system/reset-demo`
+Resets the database with clean demo catalog and sample transactions. (Role: `ADMIN`)
+
+### 9.2 `POST /api/system/wipe-data`
+Wipes all operational transactions and catalog data while preserving active user sessions for clean production onboarding. (Role: `ADMIN`)

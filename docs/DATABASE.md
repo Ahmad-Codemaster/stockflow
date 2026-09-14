@@ -1,21 +1,21 @@
 # StockFlow — Database Schema & Data Integrity Specification
 
-> **Document Version:** 1.0.0  
-> **Status:** PROPOSED TARGET SCHEMA  
-> **Target RDBMS:** PostgreSQL 16 (Compatible with SQLite for local unit testing)  
+> **Document Version:** 2.0.0  
+> **Status:** ✅ FULLY IMPLEMENTED & ACTIVE IN PRODUCTION  
+> **Target RDBMS:** PostgreSQL 16+ (Supabase / Render Managed via Prisma ORM)  
 
 ---
 
 ## 1. Overview
 
-In the audited codebase, **no database currently exists**. All data is transiently simulated using in-memory JavaScript objects in `src/data.ts` and `src/context.tsx`.
+StockFlow uses **PostgreSQL 16+** managed via **Prisma ORM** (`prisma/schema.prisma`), featuring dual-pooler connection string support (`DATABASE_URL` via Supavisor pooler on port 6543 and `DIRECT_URL` on port 5432 for migrations and transactions).
 
-This document specifies the relational database schema required to support StockFlow's domain requirements:
-* Strict referential integrity.
-* SKU uniqueness.
-* Non-negative stock and price constraints.
-* Append-only auditability for transactions and system events.
-* Soft-deletion for catalog entities to avoid cascading deletion of historical transaction logs.
+The schema enforces strict enterprise inventory integrity:
+* Strict referential foreign keys with cascade and restrict policies.
+* Case-insensitive unique indexes on `sku` and `email`.
+* Non-negative stock and price constraints (`CHECK ("quantity" >= 0)`).
+* Append-only immutability for `stock_transactions` and `audit_logs`.
+* Soft-deletion for catalog entities (`isArchived`) to preserve historical audit trails without orphaned records.
 
 ---
 

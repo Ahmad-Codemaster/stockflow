@@ -1,14 +1,14 @@
 # StockFlow — System Architecture Specification
 
-> **Document Version:** 2.0.0  
-> **Status:** ✅ FULLY IMPLEMENTED & PRODUCTION-READY  
+> **Document Version:** 2.1.0  
+> **Status:** ✅ FULLY IMPLEMENTED & PRODUCTION-HARDENED  
 > **Classification:** Engineering & Architecture Documentation  
 
 ---
 
-## 1. Overview & Architectural Goals
+## 1. Overview & Architectural Evolution
 
-StockFlow is an internal inventory and operations management system engineered for high data integrity, strict auditability, low operational latency, and role-based access control.
+StockFlow is an enterprise inventory and operations management system engineered for high data integrity, strict auditability, low operational latency, and role-based access control.
 
 The system's core responsibilities are:
 1. **Catalog & Directory Management:** Products, multi-level categories, and supplier records.
@@ -16,11 +16,14 @@ The system's core responsibilities are:
 3. **Auditability:** Immutable append-only transaction ledger and administrative audit logging.
 4. **Access Control:** Strict boundary separation between System Administrators (`ADMIN`) and Warehouse Staff (`STAFF`).
 
-This document contrasts the **Current Discovered Architecture** against the **Target Production Architecture**.
+> [!NOTE]
+> **Architectural Evolution:**  
+> StockFlow originated from a client-only Figma Make exported prototype (the historical "As-Audited" baseline documented in Section 2 below for engineering transparency).  
+> The system has been **completely re-architected and implemented** into the robust, 4-tier production architecture detailed in Section 3, featuring React 19 + React Router v7, Express 5 REST API, PostgreSQL 16+ via Prisma ORM, and database-level concurrency controls.
 
 ---
 
-## 2. Current Architecture (As-Is Forensic Audit)
+## 2. Historical Baseline (As-Audited Figma Prototype)
 
 ### 2.1 Component Topology
 

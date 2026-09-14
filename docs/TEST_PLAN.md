@@ -1,7 +1,7 @@
 # StockFlow — Quality Assurance & Test Plan Specification
 
-> **Document Version:** 2.0.0  
-> **Status:** ✅ VERIFIED & EXECUTED (54 TESTS PASSING, 100% SUITE PASS)  
+> **Document Version:** 2.1.0  
+> **Status:** ✅ VERIFIED & EXECUTED (55 TESTS PASSING, 100% SUITE PASS)  
 > **Target Coverage:** $\ge 85\%$ Branch & Business Logic Coverage (Achieved: $\ge 86\%$)  
 
 ---
@@ -40,7 +40,7 @@ The testing strategy is fully implemented and operational across 4 distinct laye
 * **Test Type:** Integration / API & UI
 * **Preconditions:** Authenticated as `ADMIN`.
 * **Execution:**
-  1. Submit `POST /api/v1/products` with valid payload (name, unique SKU, categoryId, price: 50.00, initialStock: 10, reorderLevel: 5).
+  1. Submit `POST /api/products` with valid payload (name, unique SKU, categoryId, price: 50.00, initialStock: 10, reorderLevel: 5).
 * **Expected Assertions:**
   * Response status `201 Created`.
   * Product row inserted into database with `quantity = 10`.
@@ -52,7 +52,7 @@ The testing strategy is fully implemented and operational across 4 distinct laye
 * **Preconditions:** Authenticated as `STAFF`.
 * **Execution:**
   1. Client: Attempt navigating to `/users`.
-  2. API: Submit `GET /api/v1/users` and `POST /api/v1/users`.
+  2. API: Submit `GET /api/users` and `POST /api/users`.
 * **Expected Assertions:**
   * Client UI displays `<AccessDenied />` error card; "Users" tab omitted from sidebar.
   * API endpoints return HTTP `403 Forbidden` with `{ "error": "Forbidden" }`.
@@ -62,7 +62,7 @@ The testing strategy is fully implemented and operational across 4 distinct laye
 * **Test Type:** Data Integrity & Validation Test
 * **Preconditions:** Product exists with SKU `'WM-001'`.
 * **Execution:**
-  1. Submit `POST /api/v1/products` with SKU `'wm-001'` (case-insensitive test) and different name.
+  1. Submit `POST /api/products` with SKU `'wm-001'` (case-insensitive test) and different name.
 * **Expected Assertions:**
   * Response status `409 Conflict`.
   * Error body contains `{ "field": "sku", "message": "SKU already exists." }`.
@@ -72,7 +72,7 @@ The testing strategy is fully implemented and operational across 4 distinct laye
 * **Test Type:** Inventory Transaction Test
 * **Preconditions:** Product exists with current stock = 10.
 * **Execution:**
-  1. Submit `POST /api/v1/inventory/stock-in` with `productId`, `quantity: 5`, `reference: "PO-100"`.
+  1. Submit `POST /api/inventory/stock-in` with `productId`, `quantity: 5`, `reference: "PO-100"`.
 * **Expected Assertions:**
   * Response status `201 Created`.
   * Product's new stock in database equals `15`.
@@ -82,7 +82,7 @@ The testing strategy is fully implemented and operational across 4 distinct laye
 * **Test Type:** Inventory Transaction Test
 * **Preconditions:** Product exists with current stock = 15.
 * **Execution:**
-  1. Submit `POST /api/v1/inventory/stock-out` with `productId`, `quantity: 5`, `reference: "SO-200"`.
+  1. Submit `POST /api/inventory/stock-out` with `productId`, `quantity: 5`, `reference: "SO-200"`.
 * **Expected Assertions:**
   * Response status `201 Created`.
   * Product's new stock in database equals `10`.
@@ -92,9 +92,9 @@ The testing strategy is fully implemented and operational across 4 distinct laye
 * **Test Type:** Negative Boundary & Domain Invariant Test
 * **Preconditions:** Product exists with current stock = 5.
 * **Execution:**
-  1. Submit `POST /api/v1/inventory/stock-out` with `quantity: 10`.
+  1. Submit `POST /api/inventory/stock-out` with `quantity: 10`.
 * **Expected Assertions:**
-  * Response status `422 Unprocessable Entity` (or `400 Bad Request`).
+  * Response status `400 Bad Request` / `422 Unprocessable Entity`.
   * Error message: `"Insufficient stock. Only 5 units are available."`
   * Product stock remains unchanged at `5`.
   * Zero transaction records inserted.
@@ -114,7 +114,7 @@ The testing strategy is fully implemented and operational across 4 distinct laye
 * **Test Type:** Authentication Security Test
 * **Preconditions:** Unauthenticated request (no cookie/token).
 * **Execution:**
-  1. Issue `POST /api/v1/inventory/stock-in` and `POST /api/v1/inventory/stock-out`.
+  1. Issue `POST /api/inventory/stock-in` and `POST /api/inventory/stock-out`.
 * **Expected Assertions:**
   * Response status `401 Unauthorized`.
   * Zero state changes in database.
@@ -123,7 +123,7 @@ The testing strategy is fully implemented and operational across 4 distinct laye
 * **Test Type:** Authentication Lifecycle Test
 * **Preconditions:** User exists with `status = 'Inactive'`.
 * **Execution:**
-  1. Submit `POST /api/v1/auth/login` with correct password for inactive user.
+  1. Submit `POST /api/auth/login` with correct password for inactive user.
 * **Expected Assertions:**
   * Response status `403 Forbidden`.
   * Error message: `"This account has been deactivated. Contact your administrator."`
@@ -150,13 +150,13 @@ it('prevents double-allocation during concurrent stock-outs', async () => {
 
   // Execute two simultaneous stock-out requests of 7 units each
   const [reqA, reqB] = await Promise.allSettled([
-    clientA.post('/api/v1/inventory/stock-out', { productId: product.id, quantity: 7 }),
-    clientB.post('/api/v1/inventory/stock-out', { productId: product.id, quantity: 7 })
+    clientA.post('/api/inventory/stock-out', { productId: product.id, quantity: 7 }),
+    clientB.post('/api/inventory/stock-out', { productId: product.id, quantity: 7 })
   ]);
 
   // Exactly one must succeed, and one must fail with Insufficient Stock
   const succeeded = [reqA, reqB].filter(r => r.status === 'fulfilled' && r.value.status === 201);
-  const failed = [reqA, reqB].filter(r => r.status === 'fulfilled' && r.value.status === 422);
+  const failed = [reqA, reqB].filter(r => r.status === 'fulfilled' && r.value.status === 400);
 
   expect(succeeded.length).toBe(1);
   expect(failed.length).toBe(1);
@@ -200,6 +200,6 @@ it('prevents double-allocation during concurrent stock-outs', async () => {
 | `tests/users-audit.test.ts` | Integration / Security | User lifecycle, self-deletion prevention, instant session purging | 5 | ✅ Passed |
 | `src/components/__tests__/ui.test.tsx` | Component (jsdom) | UI primitives: Badge, KPICard, EmptyState, Confirm, Pagination | 7 | ✅ Passed |
 | `src/components/__tests__/Toast.test.tsx` | Component (jsdom) | Toast notifications, timer auto-dismiss, manual dismiss | 2 | ✅ Passed |
-| `src/components/__tests__/Sidebar.test.tsx` | Component (jsdom) | Role-conditional rendering (Admin section gating) | 2 | ✅ Passed |
+| `src/components/__tests__/Sidebar.test.tsx` | Component (jsdom) | Role-conditional rendering (Admin section gating) | 3 | ✅ Passed |
 | `src/utils/__tests__/formatters.test.ts` | Unit | Currency, date, number formatting, stock badge mapping | 4 | ✅ Passed |
-| **Total** | **All Layers** | **Complete Full-Stack Coverage** | **54** | **100% Passed** |
+| **Total** | **All Layers** | **Complete Full-Stack Coverage** | **55** | **100% Passed** |

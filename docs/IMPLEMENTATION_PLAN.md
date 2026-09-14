@@ -35,8 +35,14 @@ Milestone 8: CI/CD, Docker & Production Deploy (2.5h)
     │
     ▼
 Milestone 9: Documentation & Build Log (2.0h)
+    │
+    ▼
+Milestone 10: Production Hardening P1–P6 (4.0h)
+    │
+    ▼
+Milestone 11: Apple Glass UI / UX Overhaul (3.0h)
 ────────────────────────────────────────────────────
-Total Estimated Effort: 29.0 Hours
+Total Delivered Effort: 36.0 Hours
 ```
 
 ---
@@ -141,8 +147,32 @@ Total Estimated Effort: 29.0 Hours
 
 ---
 
+### Milestone 10: Production Hardening P1–P6 (4.0h)
+* **Goal:** Implement database-level concurrency, strict Zod schemas, Pino logging, correlation IDs, and operational runbook.
+
+| Task ID | Priority | Task Description | Dependencies | Acceptance Criteria | Est. Time | Risk |
+| :--- | :---: | :--- | :--- | :--- | :---: | :--- |
+| `HRD-001` | **P0** | Native DB Row-Level Locking (`SELECT ... FOR UPDATE`) | `INV-002` | Replaces single-process mutex; enforces DB `CHECK ("quantity" >= 0)`. | 1.0h | High |
+| `HRD-002` | **P0** | Comprehensive Zod API Boundary Validation | `API-001` | Validates bodies, route parameters, and query strings with descriptive errors. | 1.0h | Med |
+| `HRD-003` | **P1** | Structured Logging & Observability Probes | `OPS-001` | Pino JSON logger, `X-Request-Id`, `/api/health/live`, `/api/health/ready`. | 1.0h | Low |
+| `HRD-004` | **P1** | Operational Runbook & Troubleshooting Specs | `DOC-001` | Full runbook (`docs/RUNBOOK.md`) covering backup, restore, and rollbacks. | 1.0h | Low |
+
+---
+
+### Milestone 11: Apple Glass UI / UX Overhaul (3.0h)
+* **Goal:** Modern frosted glass visual aesthetic, ambient mesh gradient background, custom purple sidebar tabs, and balanced analytics.
+
+| Task ID | Priority | Task Description | Dependencies | Acceptance Criteria | Est. Time | Risk |
+| :--- | :---: | :--- | :--- | :--- | :---: | :--- |
+| `UI-001` | **P1** | Apple Glass Frosted Cards & Subtle Drop-Shadows | UI Primitives | 40% increased transparency (`backdrop-blur-md bg-white/60`) and soft shadows. | 1.0h | Low |
+| `UI-002` | **P1** | Moving Orange-Purple Ambient Mesh Gradients | `index.css` | Dynamic animated ambient background with CSS keyframe animation. | 0.5h | Low |
+| `UI-003` | **P1** | Custom Purple Sidebar Tabs & Spacing | `Sidebar.tsx` | Vertical padding (`px-3 py-2.5`), gap (`space-y-1.5`), purple idle styling. | 0.5h | Low |
+| `UI-004` | **P1** | Height-Balanced Dashboard Analytics & Page Transitions | `Dashboard.tsx` | Velocity bar chart and category donut height parity; cross-page fading. | 1.0h | Low |
+
+---
+
 ## 3. Prioritization Matrix Summary
 
-* **P0 (Must Fix / Core Deliverable):** 18.0 Hours
-* **P1 (Required for Definition of Done):** 11.0 Hours
-* **P2 / P3 (Enhancements & Polish):** Deferred to post-MVP phase.
+* **P0 (Must Fix / Core Deliverable):** 20.0 Hours
+* **P1 (Required for Definition of Done):** 16.0 Hours
+* **Status:** 100% Implemented & Verified in Production.

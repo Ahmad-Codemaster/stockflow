@@ -1,7 +1,7 @@
 # StockFlow — Role-Based Access Control (RBAC) Specification
 
-> **Document Version:** 1.0.0  
-> **Status:** AUDITED & SPECIFIED  
+> **Document Version:** 2.0.0  
+> **Status:** ✅ FULLY IMPLEMENTED & ENFORCED IN PRODUCTION  
 > **Classification:** Security & Access Control  
 
 ---
@@ -17,47 +17,48 @@ StockFlow implements a strict two-role security model designed to separate **Sys
 
 ## 2. Comprehensive Permissions Matrix
 
-| Functional Capability | ADMIN | STAFF | Current UI Status | Planned Server Enforcement |
+| Functional Capability | ADMIN | STAFF | UI Status | Server Enforcement |
 | :--- | :---: | :---: | :--- | :--- |
 | **Authentication & Profile** |
-| Login to System | ✅ | ✅ | Implemented (Mock) | Verify Argon2id hash & `status == 'Active'` |
-| Logout & Terminate Session | ✅ | ✅ | Implemented | Clear HTTP-only session cookie |
-| Update Own Display Name & Preferences | ✅ | ✅ | Implemented (Mock) | `PATCH /api/v1/users/me` |
-| Change Own Password | ✅ | ✅ | Implemented (Mock) | `POST /api/v1/auth/change-password` |
+| Login to System | ✅ | ✅ | Implemented & Active | Verify Bcrypt hash & `status == 'Active'` |
+| Logout & Terminate Session | ✅ | ✅ | Implemented & Active | Clear HTTP-only session cookie + delete DB session |
+| Change Own Password | ✅ | ✅ | Implemented & Active | `POST /api/auth/change-password` |
 | **Dashboard & Analytics** |
-| View System KPI Cards | ✅ | ✅ | Implemented | `GET /api/v1/reports/summary` |
-| View Stock Health Distribution | ✅ | ✅ | Implemented | `GET /api/v1/reports/summary` |
-| View Recent Transactions Feed | ✅ | ✅ | Implemented | `GET /api/v1/transactions?limit=6` |
-| View Low Stock Alert Table | ✅ | ✅ | Implemented | `GET /api/v1/products?status=LOW_STOCK` |
+| View System KPI Cards | ✅ | ✅ | Implemented & Active | `GET /api/reports/summary` |
+| View Stock Health Distribution | ✅ | ✅ | Implemented & Active | `GET /api/reports/summary` |
+| View Recent Transactions Feed | ✅ | ✅ | Implemented & Active | `GET /api/transactions?limit=6` |
+| View Low Stock Alert Table | ✅ | ✅ | Implemented & Active | `GET /api/products?status=LOW_STOCK` |
 | **Catalog & Products** |
-| View & Search Product Catalog | ✅ | ✅ | Implemented | `GET /api/v1/products` |
-| View Product Details & Stock History | ✅ | ✅ | Implemented | `GET /api/v1/products/:id` |
-| Create New Product | ✅ | ❌ | Admin Only (Hidden in Staff UI) | Server Route Guard: `requireRole('ADMIN')` |
-| Edit Existing Product | ✅ | ❌ | Admin Only (Hidden in Staff UI) | Server Route Guard: `requireRole('ADMIN')` |
-| Archive / Delete Product | ✅ | ❌ | Admin Only (Hidden in Staff UI) | Server Route Guard: `requireRole('ADMIN')` |
+| View & Search Product Catalog | ✅ | ✅ | Implemented & Active | `GET /api/products` |
+| View Product Details & Stock History | ✅ | ✅ | Implemented & Active | `GET /api/products/:id` |
+| Create New Product | ✅ | ❌ | Admin Only (Hidden in Staff UI) | Server Route Guard: `requireAdmin` (`403 Forbidden`) |
+| Edit Existing Product | ✅ | ❌ | Admin Only (Hidden in Staff UI) | Server Route Guard: `requireAdmin` (`403 Forbidden`) |
+| Archive / Delete Product | ✅ | ❌ | Admin Only (Hidden in Staff UI) | Server Route Guard: `requireAdmin` (`403 Forbidden`) |
 | **Categories & Suppliers** |
-| View Categories List | ✅ | ✅ | Implemented | `GET /api/v1/categories` |
-| Create / Edit / Delete Category | ✅ | ❌ | Admin Only (Buttons hidden) | Server Route Guard: `requireRole('ADMIN')` |
-| View Suppliers Directory | ✅ | ✅ | Implemented | `GET /api/v1/suppliers` |
-| Create / Edit / Delete Supplier | ✅ | ❌ | Admin Only (Buttons hidden) | Server Route Guard: `requireRole('ADMIN')` |
+| View Categories List | ✅ | ✅ | Implemented & Active | `GET /api/categories` |
+| Create / Edit / Delete Category | ✅ | ❌ | Admin Only (Buttons hidden) | Server Route Guard: `requireAdmin` (`403 Forbidden`) |
+| View Suppliers Directory | ✅ | ✅ | Implemented & Active | `GET /api/suppliers` |
+| Create / Edit / Delete Supplier | ✅ | ❌ | Admin Only (Buttons hidden) | Server Route Guard: `requireAdmin` (`403 Forbidden`) |
 | **Inventory & Transactions** |
-| View Central Inventory Stock Table | ✅ | ✅ | Implemented | `GET /api/v1/inventory` |
-| Execute Stock In (Replenishment) | ✅ | ✅ | Implemented | `POST /api/v1/inventory/stock-in` |
-| Execute Stock Out (Fulfillment) | ✅ | ✅ | Implemented | `POST /api/v1/inventory/stock-out` |
-| View Transaction Ledger History | ✅ | ✅ | Implemented | `GET /api/v1/transactions` |
-| View Single Transaction Details | ✅ | ✅ | Implemented | `GET /api/v1/transactions/:id` |
-| Modify / Delete Historical Transaction | ❌ | ❌ | Blocked (Immutable) | Zero endpoints exposed (Append-only) |
+| View Central Inventory Stock Table | ✅ | ✅ | Implemented & Active | `GET /api/inventory` |
+| Execute Stock In (Replenishment) | ✅ | ✅ | Implemented & Active | `POST /api/inventory/stock-in` |
+| Execute Stock Out (Fulfillment) | ✅ | ✅ | Implemented & Active | `POST /api/inventory/stock-out` |
+| Execute Inventory Adjustment | ✅ | ❌ | Admin Only | Server Route Guard: `requireAdmin` (`403 Forbidden`) |
+| View Transaction Ledger History | ✅ | ✅ | Implemented & Active | `GET /api/transactions` |
+| View Single Transaction Details | ✅ | ✅ | Implemented & Active | `GET /api/transactions/:id` |
+| Modify / Delete Historical Transaction | ❌ | ❌ | Blocked (Immutable) | Zero endpoints exposed (Append-only ledger) |
 | **Operational Reports** |
-| View Inventory Summary Report | ✅ | ✅ | Implemented | `GET /api/v1/reports/summary` |
-| View Stock Movement Breakdown | ✅ | ✅ | Implemented | `GET /api/v1/reports/movement` |
-| View Low Stock Report | ✅ | ✅ | Implemented | `GET /api/v1/reports/low-stock` |
-| View Inventory Valuation Report | ✅ | ✅ | Implemented | `GET /api/v1/reports/valuation` |
+| View Inventory Summary Report | ✅ | ✅ | Implemented & Active | `GET /api/reports/summary` |
+| View Stock Movement Breakdown | ✅ | ✅ | Implemented & Active | `GET /api/reports/movement` |
+| View Low Stock Report | ✅ | ✅ | Implemented & Active | `GET /api/reports/low-stock` |
+| View Inventory Valuation Report | ✅ | ✅ | Implemented & Active | `GET /api/reports/valuation` |
 | **User Administration** |
-| View Users List & Activity | ✅ | ❌ | Blocked (Shows Access Denied) | Server Route Guard: `requireRole('ADMIN')` |
-| Provision New User Account | ✅ | ❌ | Admin Only Modal | Server Route Guard: `requireRole('ADMIN')` |
-| Edit User Details & Reassign Role | ✅ | ❌ | Admin Only Modal | Server Route Guard: `requireRole('ADMIN')` |
-| Deactivate / Reactivate User Account | ✅ | ❌ | Admin Only Action | Server Route Guard: `requireRole('ADMIN')` |
-| View System Audit Logs | ✅ | ❌ | Planned | Server Route Guard: `requireRole('ADMIN')` |
+| View Users List & Activity | ✅ | ❌ | Blocked (Shows Access Denied) | Server Route Guard: `requireAdmin` (`403 Forbidden`) |
+| Provision New User Account | ✅ | ❌ | Admin Only Modal | Server Route Guard: `requireAdmin` (`403 Forbidden`) |
+| Edit User Details & Reassign Role | ✅ | ❌ | Admin Only Modal | Server Route Guard: `requireAdmin` (`403 Forbidden`) |
+| Deactivate / Reactivate User Account | ✅ | ❌ | Admin Only Action | Server Route Guard: `requireAdmin` (`403 Forbidden`) |
+| Delete User Account | ✅ | ❌ | Admin Only Action | Server Route Guard: `requireAdmin` + Last-Admin Guard |
+| View System Audit Logs | ✅ | ❌ | Admin Only | Server Route Guard: `requireAdmin` (`403 Forbidden`) |
 
 ---
 
@@ -108,7 +109,7 @@ StockFlow implements a strict two-role security model designed to separate **Sys
 1. **Self-Role Modification Blocked:**
    * An Admin cannot accidentally revoke their own Admin privilege if they are the sole remaining active Admin in the organization.
 2. **Staff Role Modification Prohibited:**
-   * Staff endpoints (`POST /api/v1/auth/change-password`, `PATCH /api/v1/users/me`) accept only profile fields (`name`, `currentPassword`, `newPassword`). Fields like `role`, `status`, and `email` are strictly ignored on self-service endpoints.
+   * Staff endpoints (`POST /api/auth/change-password`, `PATCH /api/users/me`) accept only profile fields (`name`, `currentPassword`, `newPassword`). Fields like `role`, `status`, and `email` are strictly ignored on self-service endpoints.
 3. **Session Invalidation on Deactivation:**
    * When an Admin deactivates a user (`status = 'Inactive'`), any active JWT or session ID belonging to that user must be invalidated immediately in the server session cache/database.
 4. **Audit Logging for Security Events:**

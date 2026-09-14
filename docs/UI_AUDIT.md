@@ -1,19 +1,20 @@
 # StockFlow — UI/UX, Interaction & Accessibility Audit
 
-> **Document Version:** 1.0.0  
-> **Status:** FORENSIC AUDIT  
+> **Document Version:** 2.0.0  
+> **Status:** ✅ RESOLVED & MODERNISED (Apple Glass UI / UX Overhaul)  
 > **Scope:** 15 Screen Views, Shared Layouts & UI Primitives  
 
 ---
 
-## 1. Executive Summary & Design System Quality
+## 1. Executive Summary & Modernization
 
-The frontend was exported from a high-fidelity Figma Make design specification. Visually, the design is **modern, clean, highly professional, and operational**. It adheres to a cohesive B2B palette (`--color-navy: #1E293B`, `--color-primary: #2563EB`, custom semantic status colors for success, warning, danger, info) and employs consistent typography (Inter font family via Google Fonts).
-
-However, because the code was exported as a prototype:
-* Real asynchronous network loading states are missing (synchronous state renders immediately).
-* Forms use local simulated timeouts (`setTimeout`) instead of real API mutation state.
-* Some interactive elements lack keyboard accessibility attributes and ARIA linkages.
+The StockFlow user interface originated from a Figma Make design specification and has now been significantly upgraded with a **modern Apple Glass aesthetic**:
+* **Apple Glass Cards:** Semi-transparent frosted cards (`backdrop-blur-md bg-white/60 dark:bg-slate-900/50`) with subtle drop-shadows and 40% increased transparency.
+* **Dynamic Ambient Background:** Animated orange and purple mesh gradient blobs with slow floating keyframes for visual depth.
+* **Custom Sidebar Navigation:** Generous vertical tab padding (`px-3 py-2.5`), increased item gap (`space-y-1.5`), purple idle icons/text (`text-purple-800/85`), and distinct active highlight pills.
+* **Height-Balanced Analytics:** Redesigned dashboard layout where the 7-day movement velocity bar chart and category valuation donut maintain equal height alignment without awkward whitespace.
+* **Fluid Page Transitions:** Smooth cross-page entrance and exit transitions across all 15 screens.
+* **Production API State:** Replaced all simulated `setTimeout` delays with real asynchronous API mutations and TanStack/React context data fetching.
 
 ---
 
