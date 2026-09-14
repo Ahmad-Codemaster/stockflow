@@ -1,4 +1,4 @@
-import { Database, KeyRound, Lock, Palette, ShieldAlert, Trash2, User } from 'lucide-react';
+import { Database, KeyRound, Loader2, Lock, Palette, ShieldAlert, Trash2, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { Badge, Confirm, FormField, PageHeader } from '../components/ui';
@@ -20,6 +20,7 @@ export default function Settings() {
   const [notifLowStock, setNotifLowStock] = useState(true);
   const [confirmWipe, setConfirmWipe] = useState(false);
   const [wiping, setWiping] = useState(false);
+  const [pwSaving, setPwSaving] = useState(false);
 
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
@@ -43,6 +44,7 @@ export default function Settings() {
       return;
     }
     try {
+      setPwSaving(true);
       await api.auth.changePassword(pwForm.current, pwForm.next);
       setPwForm({ current: '', next: '', confirm: '' });
       setPwErrors({});
@@ -50,6 +52,8 @@ export default function Settings() {
     } catch (err: any) {
       setPwErrors({ current: err.message || 'Failed to update password. Verify current password.' });
       showToast('error', err.message || 'Failed to update password.');
+    } finally {
+      setPwSaving(false);
     }
   }
 
@@ -126,9 +130,10 @@ export default function Settings() {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 gradient-btn-primary text-white text-xs font-semibold rounded-xl shadow-md disabled:opacity-60 cursor-pointer"
+                className="px-4 py-2 gradient-btn-primary text-white text-xs font-semibold rounded-xl shadow-md disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-1.5"
               >
-                {saving ? 'Saving...' : 'Update Profile'}
+                {saving && <Loader2 size={13} className="animate-spin shrink-0" />}
+                <span>{saving ? 'Updating Profile...' : 'Update Profile'}</span>
               </button>
             </div>
           </form>
@@ -186,9 +191,11 @@ export default function Settings() {
             <div className="flex justify-end pt-2">
               <button
                 type="submit"
-                className="px-4 py-2 gradient-btn-primary text-white text-xs font-semibold rounded-xl shadow-md cursor-pointer"
+                disabled={pwSaving}
+                className="px-4 py-2 gradient-btn-primary text-white text-xs font-semibold rounded-xl shadow-md disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-1.5"
               >
-                Change Password
+                {pwSaving && <Loader2 size={13} className="animate-spin shrink-0" />}
+                <span>{pwSaving ? 'Updating Password...' : 'Change Password'}</span>
               </button>
             </div>
           </form>
@@ -264,9 +271,13 @@ export default function Settings() {
                   type="button"
                   disabled={wiping}
                   onClick={() => setConfirmWipe(true)}
-                  className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all disabled:opacity-60 cursor-pointer shrink-0 inline-flex items-center gap-1.5"
+                  className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer shrink-0 inline-flex items-center gap-1.5"
                 >
-                  <Trash2 size={13} className={wiping ? 'animate-spin' : ''} />
+                  {wiping ? (
+                    <Loader2 size={13} className="animate-spin shrink-0" />
+                  ) : (
+                    <Trash2 size={13} className="shrink-0" />
+                  )}
                   <span>{wiping ? 'Wiping Store...' : 'Wipe to Blank Store'}</span>
                 </button>
               </div>

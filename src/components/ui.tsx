@@ -1,6 +1,69 @@
-import { AlertTriangle, Package, Plus } from 'lucide-react';
-import React from 'react';
+import { AlertTriangle, Loader2, Package, Plus } from 'lucide-react';
+import React, { useState } from 'react';
 import type { StockStatus, ToastType, TransactionType, UserStatus } from '../types';
+
+// --- Generic Button with Loading Spinner ---
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'success' | 'danger' | 'warning' | 'secondary' | 'outline' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  loading?: boolean;
+  loadingText?: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}
+
+export function Button({
+  variant = 'primary',
+  size = 'md',
+  loading = false,
+  loadingText,
+  icon,
+  children,
+  disabled,
+  className = '',
+  ...props
+}: ButtonProps) {
+  const baseStyles =
+    'inline-flex items-center justify-center font-semibold rounded-xl transition-all select-none disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer';
+
+  const sizeStyles = {
+    sm: 'px-3 py-1.5 text-xs gap-1.5',
+    md: 'px-4 py-2 text-xs gap-2',
+    lg: 'px-5 py-2.5 text-sm gap-2',
+  };
+
+  const variantStyles = {
+    primary: 'gradient-btn-primary text-white shadow-md',
+    success: 'gradient-btn-success text-white shadow-md',
+    danger:
+      'bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 active:from-rose-800 active:to-red-800 text-white shadow-md shadow-rose-600/20',
+    warning:
+      'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white shadow-md shadow-amber-600/20',
+    secondary: 'glass-input text-slate-700 hover:bg-white border border-slate-200 shadow-2xs',
+    outline: 'border border-slate-200 text-slate-700 hover:bg-slate-50 bg-transparent',
+    ghost: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+  };
+
+  return (
+    <button
+      {...props}
+      disabled={disabled || loading}
+      className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
+    >
+      {loading ? (
+        <>
+          <Loader2 size={size === 'lg' ? 16 : 14} className="animate-spin shrink-0" />
+          <span>{loadingText || children}</span>
+        </>
+      ) : (
+        <>
+          {icon && <span className="shrink-0">{icon}</span>}
+          <span>{children}</span>
+        </>
+      )}
+    </button>
+  );
+}
 
 // --- Badge ---
 type BadgeVariant = StockStatus | TransactionType | UserStatus | 'Admin' | 'Staff';
@@ -138,8 +201,9 @@ interface ConfirmProps {
   message: string;
   confirmLabel?: string;
   variant?: 'danger' | 'warning';
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   onCancel: () => void;
+  loading?: boolean;
 }
 
 export function Confirm({
@@ -149,16 +213,29 @@ export function Confirm({
   variant = 'danger',
   onConfirm,
   onCancel,
+  loading: externalLoading,
 }: ConfirmProps) {
+  const [internalLoading, setInternalLoading] = useState(false);
+  const isLoading = externalLoading ?? internalLoading;
+
   const btnClass =
     variant === 'danger'
       ? 'bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white shadow-rose-600/20'
       : 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white shadow-amber-600/20';
 
+  const handleConfirm = async () => {
+    try {
+      setInternalLoading(true);
+      await Promise.resolve(onConfirm());
+    } finally {
+      setInternalLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Click-catcher without dark overlay or blur */}
-      <div className="absolute inset-0" onClick={onCancel} />
+      <div className="absolute inset-0" onClick={isLoading ? undefined : onCancel} />
       <div className="relative w-full max-w-sm bg-white rounded-[20px] p-6.5 animate-fade-slide border border-slate-200 shadow-[0_25px_70px_rgba(15,23,42,0.22)]">
         <div className="flex items-start gap-3.5 mb-4">
           <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0 text-rose-600">
@@ -173,16 +250,19 @@ export function Confirm({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-xs font-semibold text-slate-600 glass-input hover:bg-white transition-colors cursor-pointer rounded-xl"
+            disabled={isLoading}
+            className="px-4 py-2 text-xs font-semibold text-slate-600 glass-input hover:bg-white transition-colors cursor-pointer rounded-xl disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="button"
-            onClick={onConfirm}
-            className={`px-4.5 py-2 text-xs font-semibold rounded-xl shadow-md transition-all cursor-pointer ${btnClass}`}
+            onClick={handleConfirm}
+            disabled={isLoading}
+            className={`px-4.5 py-2 text-xs font-semibold rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed ${btnClass}`}
           >
-            {confirmLabel}
+            {isLoading && <Loader2 size={13} className="animate-spin shrink-0" />}
+            <span>{isLoading ? 'Processing...' : confirmLabel}</span>
           </button>
         </div>
       </div>

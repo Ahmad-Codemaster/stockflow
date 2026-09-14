@@ -51,16 +51,17 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   const { showToast, navigate } = useUI();
 
-  const refreshData = useCallback(async () => {
+  const refreshData = useCallback(async (options?: { skipStatic?: boolean }) => {
     try {
-      const [productsData, categoriesData, suppliersData, inventoryData, transactionsData] =
-        await Promise.all([
-          api.products.list().catch(() => null),
-          api.categories.list().catch(() => null),
-          api.suppliers.list().catch(() => null),
-          api.inventory.list().catch(() => null),
-          api.inventory.listTransactions().catch(() => null),
-        ]);
+      const promises: [Promise<any>, Promise<any>, Promise<any>, Promise<any>] = [
+        api.products.list().catch(() => null),
+        options?.skipStatic ? Promise.resolve(null) : api.categories.list().catch(() => null),
+        options?.skipStatic ? Promise.resolve(null) : api.suppliers.list().catch(() => null),
+        api.inventory.listTransactions().catch(() => null),
+      ];
+
+      const [productsData, categoriesData, suppliersData, transactionsData] =
+        await Promise.all(promises);
 
       if (productsData) {
         setProducts(
@@ -77,6 +78,13 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
               typeof p.createdAt === 'string'
                 ? p.createdAt.split('T')[0]
                 : new Date(p.createdAt).toISOString().split('T')[0],
+          }))
+        );
+        // Automatically derive inventory records directly from products with zero redundant query
+        setInventory(
+          productsData.map((p: any) => ({
+            productId: p.id,
+            currentStock: p.quantity ?? 0,
           }))
         );
       }
@@ -100,14 +108,6 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
             email: sup.email,
             phone: sup.phone,
             address: sup.address,
-          }))
-        );
-      }
-      if (inventoryData) {
-        setInventory(
-          inventoryData.map((inv: any) => ({
-            productId: inv.productId,
-            currentStock: inv.currentStock,
           }))
         );
       }
@@ -169,7 +169,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       data: Omit<Product, 'id' | 'createdAt'> & { initialStock?: number }
     ) => {
       try {
-        await api.products.create({
+        const created = await api.products.create({
           name: data.name,
           sku: data.sku,
           categoryId: data.categoryId,
@@ -179,9 +179,28 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
           description: data.description,
           initialStock: data.initialStock,
         });
-        await refreshData();
+
+        const initialStock = data.initialStock || 0;
+        const newProduct: Product = {
+          id: created.id,
+          name: created.name,
+          sku: created.sku,
+          categoryId: created.categoryId,
+          supplierId: created.supplierId,
+          price: created.price,
+          reorderLevel: created.reorderLevel,
+          description: created.description || '',
+          createdAt: new Date().toISOString().split('T')[0],
+        };
+
+        // Instant local state updates
+        setProducts((prev) => [newProduct, ...prev]);
+        setInventory((prev) => [...prev, { productId: created.id, currentStock: initialStock }]);
         showToast('success', `Product "${data.name}" added successfully.`);
         navigate('products');
+
+        // Silent background sync
+        refreshData({ skipStatic: true });
       } catch (err: any) {
         showToast('error', err.message || 'Failed to create product.');
       }
@@ -192,10 +211,13 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const updateProduct = useCallback(
     async (id: string, data: Partial<Product>) => {
       try {
-        await api.products.update(id, data);
-        await refreshData();
+        const updated = await api.products.update(id, data);
+        setProducts((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
+        );
         showToast('success', 'Product updated successfully.');
         navigate('product-detail', id);
+        refreshData({ skipStatic: true });
       } catch (err: any) {
         showToast('error', err.message || 'Failed to update product.');
       }
@@ -207,9 +229,11 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     async (id: string) => {
       try {
         await api.products.delete(id);
-        await refreshData();
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+        setInventory((prev) => prev.filter((i) => i.productId !== id));
         showToast('success', 'Product archived successfully.');
         navigate('products');
+        refreshData({ skipStatic: true });
       } catch (err: any) {
         showToast('error', err.message || 'Failed to delete product.');
       }
@@ -220,9 +244,17 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const addCategory = useCallback(
     async (name: string): Promise<boolean> => {
       try {
-        await api.categories.create({ name });
-        await refreshData();
+        const created = await api.categories.create({ name });
+        setCategories((prev) => [
+          ...prev,
+          {
+            id: created.id,
+            name: created.name,
+            createdAt: new Date().toISOString().split('T')[0],
+          },
+        ]);
         showToast('success', `Category "${name}" added.`);
+        refreshData();
         return true;
       } catch (err: any) {
         showToast('error', err.message || 'Failed to add category.');
@@ -236,8 +268,11 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     async (id: string, name: string): Promise<boolean> => {
       try {
         await api.categories.update(id, { name });
-        await refreshData();
+        setCategories((prev) =>
+          prev.map((c) => (c.id === id ? { ...c, name } : c))
+        );
         showToast('success', 'Category updated.');
+        refreshData();
         return true;
       } catch (err: any) {
         showToast('error', err.message || 'Failed to update category.');
@@ -251,8 +286,9 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     async (id: string) => {
       try {
         await api.categories.delete(id);
-        await refreshData();
+        setCategories((prev) => prev.filter((c) => c.id !== id));
         showToast('success', 'Category deleted.');
+        refreshData();
       } catch (err: any) {
         showToast('error', err.message || 'Failed to delete category.');
       }
@@ -263,9 +299,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const addSupplier = useCallback(
     async (data: Omit<Supplier, 'id'>) => {
       try {
-        await api.suppliers.create(data);
-        await refreshData();
+        const created = await api.suppliers.create(data);
+        setSuppliers((prev) => [...prev, created]);
         showToast('success', `Supplier "${data.name}" added.`);
+        refreshData();
       } catch (err: any) {
         showToast('error', err.message || 'Failed to add supplier.');
       }
@@ -276,9 +313,12 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const updateSupplier = useCallback(
     async (id: string, data: Partial<Supplier>) => {
       try {
-        await api.suppliers.update(id, data);
-        await refreshData();
+        const updated = await api.suppliers.update(id, data);
+        setSuppliers((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
+        );
         showToast('success', 'Supplier updated.');
+        refreshData();
       } catch (err: any) {
         showToast('error', err.message || 'Failed to update supplier.');
       }
@@ -290,8 +330,9 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     async (id: string) => {
       try {
         await api.suppliers.delete(id);
-        await refreshData();
+        setSuppliers((prev) => prev.filter((s) => s.id !== id));
         showToast('success', 'Supplier deleted.');
+        refreshData();
       } catch (err: any) {
         showToast('error', err.message || 'Failed to delete supplier.');
       }
@@ -315,12 +356,39 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
           reference,
           notes,
         });
-        await refreshData();
+
+        // 1. Immediately update inventory in React memory
+        setInventory((prev) =>
+          prev.map((i) =>
+            i.productId === productId ? { ...i, currentStock: result.newStock } : i
+          )
+        );
+
+        // 2. Immediately prepend new transaction to ledger in React memory
+        const newTxn: Transaction = {
+          id: result.transactionId || `txn-${Date.now()}`,
+          productId,
+          type: 'Stock In',
+          quantity,
+          previousStock: result.previousStock,
+          newStock: result.newStock,
+          performedBy: 'Current User',
+          reference: reference || '',
+          notes: notes || '',
+          createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
+          supplierId,
+        };
+        setTransactions((prev) => [newTxn, ...prev]);
+
+        // 3. Immediately show feedback and navigate with zero wait
         showToast(
           'success',
           `Stock In complete: +${quantity} units added (${result.productName}).`
         );
         navigate('transactions');
+
+        // 4. Background non-blocking sync (only dynamic data)
+        refreshData({ skipStatic: true });
       } catch (err: any) {
         showToast('error', err.message || 'Stock In operation failed.');
       }
@@ -342,12 +410,38 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
           reference,
           notes,
         });
-        await refreshData();
+
+        // 1. Immediately update inventory in React memory
+        setInventory((prev) =>
+          prev.map((i) =>
+            i.productId === productId ? { ...i, currentStock: result.newStock } : i
+          )
+        );
+
+        // 2. Immediately prepend new transaction to ledger in React memory
+        const newTxn: Transaction = {
+          id: result.transactionId || `txn-${Date.now()}`,
+          productId,
+          type: 'Stock Out',
+          quantity,
+          previousStock: result.previousStock,
+          newStock: result.newStock,
+          performedBy: 'Current User',
+          reference: reference || '',
+          notes: notes || '',
+          createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
+        };
+        setTransactions((prev) => [newTxn, ...prev]);
+
+        // 3. Immediately show feedback and navigate with zero wait
         showToast(
           'success',
           `Stock Out complete: -${quantity} units deducted (${result.productName}).`
         );
         navigate('transactions');
+
+        // 4. Background non-blocking sync
+        refreshData({ skipStatic: true });
         return true;
       } catch (err: any) {
         showToast('error', err.message || 'Stock Out operation failed.');

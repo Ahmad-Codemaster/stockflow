@@ -81,26 +81,26 @@ export class InventoryService {
       const previousStock = product.quantity;
       const newStock = previousStock + qty;
 
-      // Update product stock count
-      await tx.product.update({
-        where: { id: product.id },
-        data: { quantity: newStock },
-      });
-
-      // Create immutable ledger record
-      const txn = await tx.stockTransaction.create({
-        data: {
-          productId: product.id,
-          type: 'STOCK_IN',
-          quantity: qty,
-          previousStock,
-          newStock,
-          supplierId: params.supplierId || product.supplierId || null,
-          performedById: userId,
-          reference: params.reference?.trim() || null,
-          notes: params.notes?.trim() || null,
-        },
-      });
+      // Concurrently execute product stock update and ledger transaction creation
+      const [_, txn] = await Promise.all([
+        tx.product.update({
+          where: { id: product.id },
+          data: { quantity: newStock },
+        }),
+        tx.stockTransaction.create({
+          data: {
+            productId: product.id,
+            type: 'STOCK_IN',
+            quantity: qty,
+            previousStock,
+            newStock,
+            supplierId: params.supplierId || product.supplierId || null,
+            performedById: userId,
+            reference: params.reference?.trim() || null,
+            notes: params.notes?.trim() || null,
+          },
+        }),
+      ]);
 
       // Record audit log atomically INSIDE transaction
       await AuditService.log(
@@ -210,26 +210,26 @@ export class InventoryService {
       const previousStock = product.quantity;
       const newStock = previousStock - qty;
 
-      // Deduct inventory in database
-      await tx.product.update({
-        where: { id: product.id },
-        data: { quantity: newStock },
-      });
-
-      // Insert immutable stock transaction ledger row
-      const txn = await tx.stockTransaction.create({
-        data: {
-          productId: product.id,
-          type: 'STOCK_OUT',
-          quantity: qty,
-          previousStock,
-          newStock,
-          supplierId: null,
-          performedById: userId,
-          reference: params.reference?.trim() || null,
-          notes: params.notes?.trim() || null,
-        },
-      });
+      // Concurrently execute product stock deduction and ledger transaction creation
+      const [_, txn] = await Promise.all([
+        tx.product.update({
+          where: { id: product.id },
+          data: { quantity: newStock },
+        }),
+        tx.stockTransaction.create({
+          data: {
+            productId: product.id,
+            type: 'STOCK_OUT',
+            quantity: qty,
+            previousStock,
+            newStock,
+            supplierId: null,
+            performedById: userId,
+            reference: params.reference?.trim() || null,
+            notes: params.notes?.trim() || null,
+          },
+        }),
+      ]);
 
       // Record audit log atomically INSIDE transaction
       await AuditService.log(
@@ -345,26 +345,26 @@ export class InventoryService {
         );
       }
 
-      // Update product stock
-      await tx.product.update({
-        where: { id: product.id },
-        data: { quantity: newStock },
-      });
-
-      // Create ledger entry
-      const txn = await tx.stockTransaction.create({
-        data: {
-          productId: product.id,
-          type: 'ADJUSTMENT',
-          quantity: Math.abs(delta),
-          previousStock,
-          newStock,
-          supplierId: product.supplierId || null,
-          performedById: userId,
-          reference: params.reference?.trim() || null,
-          notes: params.notes?.trim() || null,
-        },
-      });
+      // Concurrently execute product stock update and ledger adjustment creation
+      const [_, txn] = await Promise.all([
+        tx.product.update({
+          where: { id: product.id },
+          data: { quantity: newStock },
+        }),
+        tx.stockTransaction.create({
+          data: {
+            productId: product.id,
+            type: 'ADJUSTMENT',
+            quantity: Math.abs(delta),
+            previousStock,
+            newStock,
+            supplierId: product.supplierId || null,
+            performedById: userId,
+            reference: params.reference?.trim() || null,
+            notes: params.notes?.trim() || null,
+          },
+        }),
+      ]);
 
       // Atomic audit logging
       await AuditService.log(

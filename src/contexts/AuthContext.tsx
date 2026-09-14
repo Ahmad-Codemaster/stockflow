@@ -154,9 +154,11 @@ export function AuthProvider({
       password?: string;
     }): Promise<boolean> => {
       try {
-        await api.users.create(data);
-        await refreshUsers();
+        const created = await api.users.create(data);
+        setUsers((prev) => [created, ...prev]);
         showToast('success', `User "${data.name}" added successfully.`);
+        // Background sync
+        refreshUsers();
         return true;
       } catch (err: any) {
         showToast('error', err.message || 'Failed to add user.');
@@ -172,9 +174,12 @@ export function AuthProvider({
       data: Partial<User> & { password?: string }
     ): Promise<boolean> => {
       try {
-        await api.users.update(id, data);
-        await refreshUsers();
+        const updated = await api.users.update(id, data);
+        setUsers((prev) =>
+          prev.map((u) => (u.id === id ? { ...u, ...updated } : u))
+        );
         showToast('success', 'User updated successfully.');
+        refreshUsers();
         return true;
       } catch (err: any) {
         showToast('error', err.message || 'Failed to update user.');
@@ -188,8 +193,9 @@ export function AuthProvider({
     async (id: string) => {
       try {
         await api.users.delete(id);
-        await refreshUsers();
+        setUsers((prev) => prev.filter((u) => u.id !== id));
         showToast('success', 'User removed from system.');
+        refreshUsers();
       } catch (err: any) {
         showToast('error', err.message || 'Failed to delete user.');
       }

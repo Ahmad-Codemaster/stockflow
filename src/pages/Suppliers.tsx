@@ -1,4 +1,4 @@
-import { Building2, Edit, Mail, MapPin, Phone, Plus, Trash2 } from 'lucide-react';
+import { Building2, Edit, Loader2, Mail, MapPin, Phone, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import Modal from '../components/Modal';
 import { Confirm, EmptyState, FormField, PageHeader } from '../components/ui';
@@ -251,9 +251,10 @@ export default function Suppliers() {
                 type="submit"
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 text-xs font-semibold gradient-btn-primary text-white rounded-xl shadow-md disabled:opacity-60"
+                className="px-4 py-2 text-xs font-semibold gradient-btn-primary text-white rounded-xl shadow-md disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-1.5"
               >
-                {saving ? 'Saving...' : editingId ? 'Update Supplier' : 'Add Supplier'}
+                {saving && <Loader2 size={13} className="animate-spin shrink-0" />}
+                <span>{saving ? 'Saving...' : editingId ? 'Update Supplier' : 'Add Supplier'}</span>
               </button>
             </div>
           </div>

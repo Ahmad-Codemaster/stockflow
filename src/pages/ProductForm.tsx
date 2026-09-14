@@ -1,4 +1,4 @@
-import { ArrowLeft, Plus, Save } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Save } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FormField } from '../components/ui';
@@ -259,9 +259,15 @@ export default function ProductForm({ mode }: Props) {
           <button
             type="submit"
             disabled={saving}
-            className="px-5 py-2.5 gradient-btn-primary text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 shadow-md disabled:opacity-60"
+            className="px-5 py-2.5 gradient-btn-primary text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 shadow-md disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
-            {mode === 'add' ? <Plus size={14} /> : <Save size={14} />}
+            {saving ? (
+              <Loader2 size={14} className="animate-spin shrink-0" />
+            ) : mode === 'add' ? (
+              <Plus size={14} className="shrink-0" />
+            ) : (
+              <Save size={14} className="shrink-0" />
+            )}
             <span>{saving ? 'Processing...' : mode === 'add' ? 'Create SKU' : 'Save Modifications'}</span>
           </button>
         </div>

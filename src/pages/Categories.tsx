@@ -1,4 +1,4 @@
-import { Edit, Plus, Tag, Trash2 } from 'lucide-react';
+import { Edit, Loader2, Plus, Tag, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import Modal from '../components/Modal';
 import { Confirm, EmptyState, FormField, PageHeader } from '../components/ui';
@@ -181,9 +181,10 @@ export default function Categories() {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 text-xs font-semibold gradient-btn-primary text-white rounded-xl shadow-md disabled:opacity-60"
+                className="px-4 py-2 text-xs font-semibold gradient-btn-primary text-white rounded-xl shadow-md disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-1.5"
               >
-                {saving ? 'Saving...' : editingId ? 'Update Category' : 'Create Category'}
+                {saving && <Loader2 size={13} className="animate-spin shrink-0" />}
+                <span>{saving ? 'Saving...' : editingId ? 'Update Category' : 'Create Category'}</span>
               </button>
             </div>
           </div>

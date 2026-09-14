@@ -10,7 +10,7 @@
  * - Interfaces with `/api/users/*` backend routes.
  */
 
-import { Eye, EyeOff, Plus, Trash2, UserCheck, UserX } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Plus, Trash2, UserCheck, UserX } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import Modal from '../components/Modal';
 import { Badge, Confirm, EmptyState, FormField, PageHeader } from '../components/ui';
@@ -363,9 +363,10 @@ export default function Users() {
                 type="button"
                 onClick={handleAddUser}
                 disabled={addSaving}
-                className="px-4 py-2 text-xs font-semibold gradient-btn-primary text-white rounded-xl shadow-md disabled:opacity-60 cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold gradient-btn-primary text-white rounded-xl shadow-md disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-1.5"
               >
-                {addSaving ? 'Provisioning...' : 'Create Account'}
+                {addSaving && <Loader2 size={13} className="animate-spin shrink-0" />}
+                <span>{addSaving ? 'Provisioning...' : 'Create Account'}</span>
               </button>
             </div>
           </div>
@@ -440,9 +441,10 @@ export default function Users() {
                 type="button"
                 onClick={handleEditSave}
                 disabled={editSaving}
-                className="px-4 py-2 text-xs font-semibold gradient-btn-primary text-white rounded-xl shadow-md disabled:opacity-60 cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold gradient-btn-primary text-white rounded-xl shadow-md disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-1.5"
               >
-                {editSaving ? 'Updating...' : 'Save Changes'}
+                {editSaving && <Loader2 size={13} className="animate-spin shrink-0" />}
+                <span>{editSaving ? 'Updating...' : 'Save Changes'}</span>
               </button>
             </div>
           </div>

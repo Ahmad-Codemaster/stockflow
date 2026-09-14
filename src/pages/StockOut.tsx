@@ -10,7 +10,7 @@
  *   where server-side transactions and race condition locks are executed.
  */
 
-import { AlertTriangle, ArrowDownRight, ArrowLeft, CheckCircle2, FileSpreadsheet } from 'lucide-react';
+import { AlertTriangle, ArrowDownRight, ArrowLeft, CheckCircle2, FileSpreadsheet, Loader2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import CsvImportModal from '../components/CsvImportModal';
@@ -274,9 +274,13 @@ export default function StockOut() {
           <button
             type="submit"
             disabled={submitting || (currentStock === 0 && !!productId)}
-            className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 shadow-md shadow-rose-600/20 disabled:opacity-60"
+            className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 shadow-md shadow-rose-600/20 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
-            <ArrowDownRight size={14} />
+            {submitting ? (
+              <Loader2 size={14} className="animate-spin shrink-0" />
+            ) : (
+              <ArrowDownRight size={14} className="shrink-0" />
+            )}
             <span>{submitting ? 'Deducting Stock...' : 'Confirm Dispatch'}</span>
           </button>
         </div>

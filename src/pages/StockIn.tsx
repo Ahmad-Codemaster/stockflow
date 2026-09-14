@@ -10,7 +10,7 @@
  *   which atomically increments stock and creates an immutable transaction receipt.
  */
 
-import { ArrowLeft, ArrowUpRight, CheckCircle2, FileSpreadsheet } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, CheckCircle2, FileSpreadsheet, Loader2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import CsvImportModal from '../components/CsvImportModal';
@@ -250,9 +250,13 @@ export default function StockIn() {
           <button
             type="submit"
             disabled={submitting}
-            className="px-5 py-2.5 gradient-btn-success text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 disabled:opacity-60"
+            className="px-5 py-2.5 gradient-btn-success text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer shadow-md"
           >
-            <ArrowUpRight size={14} />
+            {submitting ? (
+              <Loader2 size={14} className="animate-spin shrink-0" />
+            ) : (
+              <ArrowUpRight size={14} className="shrink-0" />
+            )}
             <span>{submitting ? 'Processing Inbound...' : 'Confirm Stock In'}</span>
           </button>
         </div>
