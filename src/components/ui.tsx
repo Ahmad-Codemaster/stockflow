@@ -1,4 +1,4 @@
-import { AlertTriangle, Loader2, Package, Plus } from 'lucide-react';
+import { AlertTriangle, Loader2, Package, Plus, TrendingDown, TrendingUp } from 'lucide-react';
 import React, { useState } from 'react';
 import type { StockStatus, ToastType, TransactionType, UserStatus } from '../types';
 
@@ -100,6 +100,7 @@ interface KPICardProps {
   sub?: string;
   variant?: 'default' | 'warning' | 'danger' | 'success';
   icon?: React.ReactNode;
+  iconBg?: string;
   sparkline?: React.ReactNode;
 }
 
@@ -111,23 +112,32 @@ const kpiTopStripe = {
 };
 
 const kpiIconTints = {
-  default: 'bg-indigo-50/80 text-indigo-600 border-indigo-200/60',
-  warning: 'bg-amber-50/80 text-amber-600 border-amber-200/60',
-  danger: 'bg-rose-50/80 text-rose-600 border-rose-200/60',
-  success: 'bg-emerald-50/80 text-emerald-600 border-emerald-200/60',
+  default: 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-500/25 border border-indigo-400/30',
+  warning: 'bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/25 border border-amber-400/30',
+  danger: 'bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-md shadow-rose-500/25 border border-rose-400/30',
+  success: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/25 border border-emerald-400/30',
 };
 
-export function KPICard({ label, value, sub, variant = 'default', icon, sparkline }: KPICardProps) {
+const defaultKpiIcons: Record<string, React.ReactNode> = {
+  default: <Package size={17} />,
+  warning: <AlertTriangle size={17} />,
+  danger: <TrendingDown size={17} />,
+  success: <TrendingUp size={17} />,
+};
+
+export function KPICard({ label, value, sub, variant = 'default', icon, iconBg, sparkline }: KPICardProps) {
+  const displayIcon = icon ?? defaultKpiIcons[variant];
+
   return (
     <div className="glass-card glass-card-hover rounded-[17px] p-4 sm:p-4.5 relative overflow-hidden flex flex-col justify-between border border-white/55">
       {/* Subtle Top Gradient Accent Strip */}
       <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r ${kpiTopStripe[variant]}`} />
 
       <div className="flex items-start justify-between mb-2.5">
-        <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
-        {icon && (
-          <div className={`p-2 rounded-xl border flex items-center justify-center shadow-2xs backdrop-blur-md ${kpiIconTints[variant]}`}>
-            {icon}
+        <span className="text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider">{label}</span>
+        {displayIcon && (
+          <div className={`p-2 rounded-xl border flex items-center justify-center shadow-md backdrop-blur-md transition-transform duration-200 ${iconBg ?? kpiIconTints[variant]}`}>
+            {displayIcon}
           </div>
         )}
       </div>
@@ -135,7 +145,7 @@ export function KPICard({ label, value, sub, variant = 'default', icon, sparklin
       <div className="flex items-end justify-between gap-2">
         <div>
           <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">{value}</div>
-          {sub && <p className="text-[11px] text-slate-500 font-medium mt-0.5">{sub}</p>}
+          {sub && <p className="text-[11.5px] sm:text-xs text-slate-600 font-semibold mt-0.5">{sub}</p>}
         </div>
         {sparkline && <div className="shrink-0 mb-0.5">{sparkline}</div>}
       </div>

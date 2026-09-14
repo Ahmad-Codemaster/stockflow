@@ -234,7 +234,7 @@ export default function ProductDetail() {
                   style={{ width: `${stockPct}%` }}
                 />
               </div>
-              <div className="flex justify-between text-[11px] text-slate-400 font-mono mt-1.5">
+              <div className="flex justify-between text-[11px] text-slate-600 font-mono font-medium mt-1.5">
                 <span>0 units</span>
                 <span>Threshold: {product.reorderLevel} units</span>
               </div>
@@ -242,11 +242,11 @@ export default function ProductDetail() {
 
             <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-white/60">
               <div className="p-3 rounded-xl bg-white/50 border border-white/60">
-                <p className="text-[10px] uppercase font-bold text-slate-400">Total Received</p>
+                <p className="text-[10.5px] uppercase font-bold text-slate-600">Total Received</p>
                 <p className="text-base font-black tracking-[-0.025em] text-emerald-600">+{totalIn}</p>
               </div>
               <div className="p-3 rounded-xl bg-white/50 border border-white/60">
-                <p className="text-[10px] uppercase font-bold text-slate-400">Total Dispatched</p>
+                <p className="text-[10.5px] uppercase font-bold text-slate-600">Total Dispatched</p>
                 <p className="text-base font-black tracking-[-0.025em] text-rose-600">-{totalOut}</p>
               </div>
             </div>
@@ -257,7 +257,7 @@ export default function ProductDetail() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">Financial Valuation</h3>
             <div className="space-y-3 text-xs">
               <div className="flex justify-between items-center py-1.5 border-b border-white/60">
-                <span className="text-slate-500 font-medium">Unit Retail Price</span>
+                <span className="text-slate-700 font-medium">Unit Retail Price</span>
                 <span className="font-black tracking-[-0.025em] text-slate-900 text-sm">${product.price.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center py-1.5 border-b border-white/60">

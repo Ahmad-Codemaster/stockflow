@@ -160,16 +160,16 @@ export default function StockIn() {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-xs font-bold text-slate-900">{selectedProduct.name}</p>
-                  <p className="text-[11px] text-slate-400 font-mono">{selectedProduct.sku}</p>
+                  <p className="text-[11px] text-slate-600 font-mono font-medium">{selectedProduct.sku}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Current Stock</p>
+                  <p className="text-[10.5px] uppercase font-bold text-slate-600">Current Stock</p>
                   <p className="text-base font-black tracking-[-0.025em] text-slate-900">{currentStock}</p>
                 </div>
               </div>
               {qtyNum > 0 && (
                 <div className="mt-3 pt-3 border-t border-white/60 flex items-center justify-between">
-                  <span className="text-xs text-slate-500 font-medium">Projected stock after receiving:</span>
+                  <span className="text-xs text-slate-700 font-medium">Projected stock after receiving:</span>
                   <span className="text-base font-black tracking-[-0.025em] text-emerald-600">{afterStock} units</span>
                 </div>
               )}

@@ -3,16 +3,21 @@ import {
   AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
+  Award,
   BarChart2,
+  Boxes,
   Calendar,
   CheckCircle2,
   ChevronDown,
   Database,
+  DollarSign,
   Download,
   FileSpreadsheet,
   FileText,
   Layers,
+  Package,
   PieChart,
+  TrendingDown,
   TrendingUp,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
@@ -24,7 +29,7 @@ type ReportTab = 'overview' | 'summary' | 'movement' | 'lowstock' | 'value';
 function SimpleBarChart({ data }: { data: { label: string; inQty: number; outQty: number }[] }) {
   if (data.length === 0) {
     return (
-      <div className="py-8 text-center text-slate-400 text-xs font-medium border border-dashed border-white/50 rounded-2xl bg-white/25">
+      <div className="py-8 text-center text-slate-500 text-xs font-semibold border border-dashed border-white/50 rounded-2xl bg-white/25">
         No catalog products or movement activity to chart.
       </div>
     );
@@ -33,27 +38,40 @@ function SimpleBarChart({ data }: { data: { label: string; inQty: number; outQty
   return (
     <div className="space-y-3.5">
       {data.map((d) => (
-        <div key={d.label}>
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-700 mb-1.5">
+        <div key={d.label} className="p-2.5 rounded-xl bg-white/40 border border-white/60 space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-900">
             <span>{d.label}</span>
-            <span className="font-mono text-slate-400 text-[11px]">
-              In: <span className="text-emerald-600 font-bold">{d.inQty}</span> / Out:{' '}
-              <span className="text-rose-600 font-bold">{d.outQty}</span>
-            </span>
+            <div className="flex items-center gap-3 font-mono text-[11px]">
+              <span className="text-emerald-700 font-bold">+{d.inQty} In</span>
+              <span className="text-rose-700 font-bold">-{d.outQty} Out</span>
+            </div>
           </div>
-          <div className="flex gap-1.5 h-3.5 p-0.5 bg-white/35 rounded-full border border-white/50 backdrop-blur-xs">
-            <div
-              className="bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-500"
-              style={{ width: `${(d.inQty / maxVal) * 100}%`, minWidth: d.inQty > 0 ? '6px' : '0' }}
-            />
-            <div
-              className="bg-gradient-to-r from-rose-400 to-rose-500 rounded-full transition-all duration-500"
-              style={{ width: `${(d.outQty / maxVal) * 100}%`, minWidth: d.outQty > 0 ? '6px' : '0' }}
-            />
+          {/* Dual Paired Bars */}
+          <div className="space-y-1.5">
+            {/* Inbound bar */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-emerald-700 w-6 shrink-0">In</span>
+              <div className="flex-1 h-2 bg-slate-200/70 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+                  style={{ width: `${(d.inQty / maxVal) * 100}%` }}
+                />
+              </div>
+            </div>
+            {/* Outbound bar */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-rose-700 w-6 shrink-0">Out</span>
+              <div className="flex-1 h-2 bg-slate-200/70 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-rose-500 to-red-500 rounded-full transition-all duration-500"
+                  style={{ width: `${(d.outQty / maxVal) * 100}%` }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       ))}
-      <div className="flex gap-5 mt-4 pt-3 border-t border-white/50 text-xs font-semibold text-slate-600">
+      <div className="flex gap-5 pt-2 border-t border-white/50 text-xs font-semibold text-slate-700">
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block shadow-xs" />
           Stock-In Replenishment
@@ -62,6 +80,244 @@ function SimpleBarChart({ data }: { data: { label: string; inQty: number; outQty
           <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block shadow-xs" />
           Stock-Out Dispatch
         </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Dynamic SVG Donut Chart for Movement Breakdown
+ * Replaces static CSS ring with accurate, data-driven SVG segments & live fill proportions.
+ */
+function MovementDistributionChart({
+  txInCount,
+  txOutCount,
+  txAdjCount,
+  totalTx,
+}: {
+  txInCount: number;
+  txOutCount: number;
+  txAdjCount: number;
+  totalTx: number;
+}) {
+  const [hoveredType, setHoveredType] = useState<'in' | 'out' | 'adj' | null>(null);
+
+  const radius = 38;
+  const circumference = 2 * Math.PI * radius; // ~238.76
+
+  const hasData = totalTx > 0;
+  const inRatio = hasData ? txInCount / totalTx : 0;
+  const outRatio = hasData ? txOutCount / totalTx : 0;
+  const adjRatio = hasData ? txAdjCount / totalTx : 0;
+
+  const inPct = Math.round(inRatio * 100);
+  const outPct = Math.round(outRatio * 100);
+  const adjPct = Math.max(0, 100 - inPct - outPct);
+
+  // Segment stroke dashes
+  const inDash = inRatio * circumference;
+  const outDash = outRatio * circumference;
+  const adjDash = adjRatio * circumference;
+
+  const inOffset = 0;
+  const outOffset = -inDash;
+  const adjOffset = -(inDash + outDash);
+
+  return (
+    <div className="flex flex-col items-center">
+      {/* Dynamic SVG Donut Ring */}
+      <div className="relative w-32 h-32 flex items-center justify-center my-1">
+        <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+          {/* Background Track */}
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            fill="transparent"
+            stroke="rgba(226, 232, 240, 0.7)"
+            strokeWidth="11"
+          />
+
+          {hasData ? (
+            <>
+              {/* Stock-In Segment (Emerald) */}
+              {txInCount > 0 && (
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  fill="transparent"
+                  stroke="#10b981"
+                  strokeWidth={hoveredType === 'in' ? '14' : '11'}
+                  strokeDasharray={`${inDash} ${circumference}`}
+                  strokeDashoffset={inOffset}
+                  strokeLinecap="round"
+                  className="transition-all duration-300 cursor-pointer hover:opacity-90"
+                  onMouseEnter={() => setHoveredType('in')}
+                  onMouseLeave={() => setHoveredType(null)}
+                />
+              )}
+
+              {/* Stock-Out Segment (Indigo) */}
+              {txOutCount > 0 && (
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  fill="transparent"
+                  stroke="#6366f1"
+                  strokeWidth={hoveredType === 'out' ? '14' : '11'}
+                  strokeDasharray={`${outDash} ${circumference}`}
+                  strokeDashoffset={outOffset}
+                  strokeLinecap="round"
+                  className="transition-all duration-300 cursor-pointer hover:opacity-90"
+                  onMouseEnter={() => setHoveredType('out')}
+                  onMouseLeave={() => setHoveredType(null)}
+                />
+              )}
+
+              {/* Adjustment Segment (Purple) */}
+              {txAdjCount > 0 && (
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  fill="transparent"
+                  stroke="#a855f7"
+                  strokeWidth={hoveredType === 'adj' ? '14' : '11'}
+                  strokeDasharray={`${adjDash} ${circumference}`}
+                  strokeDashoffset={adjOffset}
+                  strokeLinecap="round"
+                  className="transition-all duration-300 cursor-pointer hover:opacity-90"
+                  onMouseEnter={() => setHoveredType('adj')}
+                  onMouseLeave={() => setHoveredType(null)}
+                />
+              )}
+            </>
+          ) : (
+            <circle
+              cx="50"
+              cy="50"
+              r={radius}
+              fill="transparent"
+              stroke="rgba(203, 213, 225, 0.5)"
+              strokeWidth="11"
+              strokeDasharray="4 4"
+            />
+          )}
+        </svg>
+
+        {/* Center Dynamic Metric */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+          {hoveredType === 'in' ? (
+            <>
+              <span className="text-xl font-black text-emerald-600 tracking-tight">{txInCount}</span>
+              <p className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">{inPct}% Inbound</p>
+            </>
+          ) : hoveredType === 'out' ? (
+            <>
+              <span className="text-xl font-black text-indigo-600 tracking-tight">{txOutCount}</span>
+              <p className="text-[9px] font-bold text-indigo-700 uppercase tracking-wider">{outPct}% Outbound</p>
+            </>
+          ) : hoveredType === 'adj' ? (
+            <>
+              <span className="text-xl font-black text-purple-600 tracking-tight">{txAdjCount}</span>
+              <p className="text-[9px] font-bold text-purple-700 uppercase tracking-wider">{adjPct}% Adjusted</p>
+            </>
+          ) : (
+            <>
+              <span className="text-2xl font-black tracking-tight text-slate-900">{totalTx}</span>
+              <p className="text-[9.5px] font-bold text-slate-600 uppercase tracking-wider">Movements</p>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Proportional Breakdown Legend & Progress Bars */}
+      <div className="w-full space-y-2.5 mt-3 text-xs font-semibold">
+        {/* Stock In */}
+        <div
+          onMouseEnter={() => setHoveredType('in')}
+          onMouseLeave={() => setHoveredType(null)}
+          className={`p-2 rounded-xl border transition-all cursor-pointer ${
+            hoveredType === 'in'
+              ? 'bg-emerald-500/15 border-emerald-300 shadow-2xs'
+              : 'bg-white/40 border-white/60 hover:bg-white/60'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-slate-800">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-xs" />
+              Stock-In Replenishment
+            </span>
+            <span className="font-mono text-slate-900 text-[11px]">
+              <strong className="text-slate-900 font-bold">{txInCount}</strong>{' '}
+              <span className="text-slate-600 font-sans font-medium">({inPct}%)</span>
+            </span>
+          </div>
+          <div className="w-full h-1.5 bg-slate-200/60 rounded-full overflow-hidden mt-1.5">
+            <div
+              className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+              style={{ width: `${inPct}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Stock Out */}
+        <div
+          onMouseEnter={() => setHoveredType('out')}
+          onMouseLeave={() => setHoveredType(null)}
+          className={`p-2 rounded-xl border transition-all cursor-pointer ${
+            hoveredType === 'out'
+              ? 'bg-indigo-500/15 border-indigo-300 shadow-2xs'
+              : 'bg-white/40 border-white/60 hover:bg-white/60'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-slate-800">
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 shadow-xs" />
+              Stock-Out Fulfillment
+            </span>
+            <span className="font-mono text-slate-900 text-[11px]">
+              <strong className="text-slate-900 font-bold">{txOutCount}</strong>{' '}
+              <span className="text-slate-600 font-sans font-medium">({outPct}%)</span>
+            </span>
+          </div>
+          <div className="w-full h-1.5 bg-slate-200/60 rounded-full overflow-hidden mt-1.5">
+            <div
+              className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full transition-all duration-500"
+              style={{ width: `${outPct}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Adjustments */}
+        <div
+          onMouseEnter={() => setHoveredType('adj')}
+          onMouseLeave={() => setHoveredType(null)}
+          className={`p-2 rounded-xl border transition-all cursor-pointer ${
+            hoveredType === 'adj'
+              ? 'bg-purple-500/15 border-purple-300 shadow-2xs'
+              : 'bg-white/40 border-white/60 hover:bg-white/60'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-slate-800">
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-xs" />
+              Stock Adjustments
+            </span>
+            <span className="font-mono text-slate-900 text-[11px]">
+              <strong className="text-slate-900 font-bold">{txAdjCount}</strong>{' '}
+              <span className="text-slate-600 font-sans font-medium">({adjPct}%)</span>
+            </span>
+          </div>
+          <div className="w-full h-1.5 bg-slate-200/60 rounded-full overflow-hidden mt-1.5">
+            <div
+              className="h-full bg-gradient-to-r from-purple-500 to-violet-500 rounded-full transition-all duration-500"
+              style={{ width: `${adjPct}%` }}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -265,7 +521,7 @@ export default function Reports() {
                   </div>
                 </div>
               </div>
-              <div className="mt-3 text-[11px] font-semibold text-slate-400 flex items-center justify-between">
+              <div className="mt-3 text-[11px] font-bold text-slate-600 flex items-center justify-between">
                 <span>Active Scope</span>
                 <span className="text-indigo-600 font-bold">{products.length} SKUs in {categories.length} Categories</span>
               </div>
@@ -276,32 +532,32 @@ export default function Reports() {
               <div>
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold text-slate-900 tracking-tight">Stock Movement Volume</h3>
-                  <span className="text-[10px] font-extrabold text-indigo-600 bg-indigo-500/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-extrabold text-indigo-700 bg-indigo-500/15 px-2 py-0.5 rounded-full border border-indigo-200/50">
                     30-Day Activity
                   </span>
                 </div>
                 <div className="text-3xl font-black tracking-tight text-slate-900 mt-2">
                   {totalUnitsMoved.toLocaleString()}
                 </div>
-                <p className="text-[10px] text-slate-400 font-medium mt-0.5">Total units transacted</p>
+                <p className="text-[11px] text-slate-600 font-medium mt-0.5">Total units transacted across catalog</p>
                 <div className="flex items-end gap-1 h-8 mt-2">
                   {movementSparklines.map((h, i) => (
                     <div
                       key={i}
-                      className="flex-1 bg-indigo-500 rounded-t-sm opacity-80"
+                      className="flex-1 bg-indigo-500 rounded-t-sm opacity-90"
                       style={{ height: `${h}%` }}
                     />
                   ))}
                 </div>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/50 text-[11px] text-slate-500 space-y-1">
+              <div className="mt-4 pt-3 border-t border-white/50 text-xs text-slate-700 font-medium space-y-1">
                 <div className="flex justify-between">
-                  <span>Stock-In Intake</span>
-                  <span className="font-bold text-emerald-600">+{totalInAll.toLocaleString()}</span>
+                  <span className="text-slate-600">Stock-In Intake</span>
+                  <span className="font-bold text-emerald-700">+{totalInAll.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Stock-Out Fulfillment</span>
-                  <span className="font-bold text-rose-600">-{totalOutAll.toLocaleString()}</span>
+                  <span className="text-slate-600">Stock-Out Fulfillment</span>
+                  <span className="font-bold text-rose-700">-{totalOutAll.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -311,32 +567,32 @@ export default function Reports() {
               <div>
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold text-slate-900 tracking-tight">Total Capitalization</h3>
-                  <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-200/50">
                     Asset Value
                   </span>
                 </div>
                 <div className="text-3xl font-black tracking-tight text-slate-900 mt-2">
                   ${totalValue >= 10000 ? `${(totalValue / 1000).toFixed(1)}k` : totalValue.toFixed(2)}
                 </div>
-                <p className="text-[10px] text-slate-400 font-medium mt-0.5">${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} valuation</p>
+                <p className="text-[11px] text-slate-600 font-medium mt-0.5">${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} valuation</p>
                 <div className="flex items-end gap-1 h-8 mt-2">
                   {valuationSparklines.map((h, i) => (
                     <div
                       key={i}
-                      className="flex-1 bg-emerald-500 rounded-t-sm opacity-80"
+                      className="flex-1 bg-emerald-500 rounded-t-sm opacity-90"
                       style={{ height: `${h}%` }}
                     />
                   ))}
                 </div>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/50 text-[11px] text-slate-500 space-y-1">
+              <div className="mt-4 pt-3 border-t border-white/50 text-xs text-slate-700 font-medium space-y-1">
                 <div className="flex justify-between">
-                  <span>Physical Inventory</span>
-                  <span className="font-bold text-slate-800">{totalStock.toLocaleString()} Units</span>
+                  <span className="text-slate-600">Physical Inventory</span>
+                  <span className="font-bold text-slate-900">{totalStock.toLocaleString()} Units</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Avg SKU Price</span>
-                  <span className="font-bold text-slate-800">
+                  <span className="text-slate-600">Avg SKU Price</span>
+                  <span className="font-bold text-slate-900">
                     ${products.length ? (totalValue / (totalStock || 1)).toFixed(2) : '0.00'}
                   </span>
                 </div>
@@ -348,63 +604,63 @@ export default function Reports() {
               <div>
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold text-slate-900 tracking-tight">Supplier Network</h3>
-                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-200/50">
                     Active
                   </span>
                 </div>
                 <div className="text-3xl font-black tracking-tight text-slate-900 mt-2">
                   {suppliers.length}
                 </div>
-                <p className="text-[11px] text-slate-400 mt-0.5">Procurement partners active</p>
+                <p className="text-[11px] text-slate-600 font-medium mt-0.5">Procurement partners active</p>
 
                 <div className="flex items-center gap-2 mt-3">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-200/50 shadow-2xs">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-xs">
                     <Database size={15} />
                   </div>
-                  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center border border-indigo-200/50 shadow-2xs">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center shadow-xs">
                     <Layers size={15} />
                   </div>
-                  <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center border border-purple-200/50 shadow-2xs">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 text-white flex items-center justify-center shadow-xs">
                     <BarChart2 size={15} />
                   </div>
-                  <div className="w-8 h-8 rounded-xl bg-white/50 text-slate-500 flex items-center justify-center text-[10px] font-bold border border-white/60">
+                  <div className="w-8 h-8 rounded-xl bg-slate-800 text-white flex items-center justify-center text-[10.5px] font-bold shadow-xs">
                     {categories.length}
                   </div>
                 </div>
               </div>
 
               <div className="mt-3">
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200/50">
-                  <CheckCircle2 size={11} /> All supply lines operational
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-200/60">
+                  <CheckCircle2 size={11} className="text-emerald-700" /> All supply lines operational
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Middle Row: Operational Workspaces (Replacing AI card & Mock items with Real Workspaces) */}
+          {/* Middle Row: Operational Workspaces */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {/* Workspace 1: Valuation Breakdown */}
             <div className="glass-card rounded-[17px] border border-white/55 p-5 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center border border-indigo-200/50">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center shadow-xs">
                     <TrendingUp size={16} />
                   </div>
-                  <span className="text-[10px] font-bold text-indigo-600 bg-indigo-500/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold text-indigo-700 bg-indigo-500/15 px-2 py-0.5 rounded-full border border-indigo-200/50">
                     Asset Audit
                   </span>
                 </div>
                 <h4 className="text-sm font-bold text-slate-900">Asset Valuation & Portfolio</h4>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                <p className="text-xs text-slate-600 font-medium mt-1 leading-relaxed">
                   Analyze inventory capitalization, weighted average SKU values, and portfolio concentration.
                 </p>
-                <div className="mt-4 p-3 rounded-xl bg-white/35 border border-white/50 space-y-1.5 text-xs">
+                <div className="mt-4 p-3 rounded-xl bg-white/40 border border-white/60 space-y-1.5 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Total Valuation:</span>
+                    <span className="text-slate-600 font-medium">Total Valuation:</span>
                     <span className="font-bold text-slate-900">${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Active SKUs:</span>
+                    <span className="text-slate-600 font-medium">Active SKUs:</span>
                     <span className="font-bold text-slate-900">{products.length} Items</span>
                   </div>
                 </div>
@@ -422,26 +678,26 @@ export default function Reports() {
             <div className="glass-card rounded-[17px] border border-white/55 p-5 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-200/50">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-xs">
                     <Activity size={16} />
                   </div>
-                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-200/50">
                     Flow Analysis
                   </span>
                 </div>
                 <h4 className="text-sm font-bold text-slate-900">Stock Movement & Velocity</h4>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                <p className="text-xs text-slate-600 font-medium mt-1 leading-relaxed">
                   Track inbound replenish flow against customer dispatch throughput to identify inventory turn rates.
                 </p>
-                <div className="mt-4 p-3 rounded-xl bg-white/35 border border-white/50 space-y-1.5 text-xs">
+                <div className="mt-4 p-3 rounded-xl bg-white/40 border border-white/60 space-y-1.5 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Net Delta:</span>
-                    <span className={`font-bold ${netMovement >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <span className="text-slate-600 font-medium">Net Delta:</span>
+                    <span className={`font-bold ${netMovement >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                       {netMovement >= 0 ? `+${netMovement}` : netMovement} Units
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Transactions:</span>
+                    <span className="text-slate-600 font-medium">Transactions:</span>
                     <span className="font-bold text-slate-900">{transactions.length} Records</span>
                   </div>
                 </div>
@@ -459,25 +715,25 @@ export default function Reports() {
             <div className="glass-card rounded-[17px] border border-white/55 p-5 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-200/50">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-xs">
                     <AlertTriangle size={16} />
                   </div>
-                  <span className="text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-500/15 px-2 py-0.5 rounded-full border border-amber-200/50">
                     Restock Alerts
                   </span>
                 </div>
                 <h4 className="text-sm font-bold text-slate-900">Threshold & Reorder Buffer</h4>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                <p className="text-xs text-slate-600 font-medium mt-1 leading-relaxed">
                   Monitor SKUs approaching zero safety buffers to prevent fulfillment halts and backorders.
                 </p>
-                <div className="mt-4 p-3 rounded-xl bg-white/35 border border-white/50 space-y-1.5 text-xs">
+                <div className="mt-4 p-3 rounded-xl bg-white/40 border border-white/60 space-y-1.5 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Low Stock SKUs:</span>
-                    <span className="font-bold text-amber-600">{lowCount} Items</span>
+                    <span className="text-slate-600 font-medium">Low Stock SKUs:</span>
+                    <span className="font-bold text-amber-700">{lowCount} Items</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Depleted SKUs:</span>
-                    <span className="font-bold text-rose-600">{outCount} Items</span>
+                    <span className="text-slate-600 font-medium">Depleted SKUs:</span>
+                    <span className="font-bold text-rose-700">{outCount} Items</span>
                   </div>
                 </div>
               </div>
@@ -498,7 +754,7 @@ export default function Reports() {
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 tracking-tight">Recent Movement Activity</h3>
-                  <p className="text-[11px] text-slate-400">Live transaction movements recorded across the store</p>
+                  <p className="text-xs text-slate-600 font-medium">Live transaction movements recorded across the store</p>
                 </div>
                 <button
                   type="button"
@@ -512,7 +768,7 @@ export default function Reports() {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-white/50 bg-white/20 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                    <tr className="border-b border-white/50 bg-white/20 text-slate-700 font-bold uppercase tracking-wider text-[10px]">
                       <th className="px-4 py-2.5 text-left">Reference / Item</th>
                       <th className="px-4 py-2.5 text-left">Type</th>
                       <th className="px-4 py-2.5 text-right">Units</th>
@@ -523,7 +779,7 @@ export default function Reports() {
                   <tbody className="divide-y divide-white/40">
                     {transactions.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                        <td colSpan={5} className="px-4 py-8 text-center text-slate-500 font-medium">
                           No stock movement transactions recorded yet.
                         </td>
                       </tr>
@@ -534,7 +790,7 @@ export default function Reports() {
                           <tr key={t.id} className="hover:bg-white/40 transition-colors">
                             <td className="px-4 py-3 font-bold text-slate-900">
                               <div className="flex items-center gap-2">
-                                <span className="font-mono text-[11px] text-indigo-600 bg-indigo-50/80 px-1.5 py-0.5 rounded border border-indigo-200/50">
+                                <span className="font-mono text-[11px] text-indigo-700 bg-indigo-50/90 px-1.5 py-0.5 rounded border border-indigo-200/70 font-semibold">
                                   {t.reference || `REF-${t.id.slice(0, 5)}`}
                                 </span>
                                 <span className="truncate max-w-[160px]">{prod?.name ?? 'Catalog SKU'}</span>
@@ -546,8 +802,8 @@ export default function Reports() {
                             <td className="px-4 py-3 text-right font-black tracking-tight text-slate-900">
                               {t.type === 'Stock Out' ? `-${t.quantity}` : `+${t.quantity}`}
                             </td>
-                            <td className="px-4 py-3 text-slate-600 font-medium">{t.performedBy}</td>
-                            <td className="px-4 py-3 text-right text-slate-400 font-mono text-[11px]">{t.createdAt}</td>
+                            <td className="px-4 py-3 text-slate-700 font-medium">{t.performedBy}</td>
+                            <td className="px-4 py-3 text-right text-slate-600 font-mono text-[11px]">{t.createdAt}</td>
                           </tr>
                         );
                       })
@@ -563,40 +819,14 @@ export default function Reports() {
                 <h3 className="text-sm font-bold text-slate-900 tracking-tight mb-1">
                   Movement Distribution
                 </h3>
-                <p className="text-[11px] text-slate-400 mb-4">Volume breakdown across transaction types</p>
+                <p className="text-xs text-slate-600 font-medium mb-2">Volume breakdown across transaction types</p>
 
-                <div className="flex items-center justify-center py-2">
-                  <div className="relative w-28 h-28 rounded-full border-8 border-indigo-500/20 border-t-emerald-500 border-r-indigo-600 flex items-center justify-center shadow-inner">
-                    <div className="text-center">
-                      <span className="text-xl font-black tracking-tight text-slate-900">{transactions.length}</span>
-                      <p className="text-[9px] font-semibold text-slate-400 uppercase">Movements</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2 mt-4 text-xs font-semibold text-slate-600">
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                      Stock-In Replenishment
-                    </span>
-                    <span className="font-bold text-slate-900">{txInPct}%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
-                      Stock-Out Fulfillment
-                    </span>
-                    <span className="font-bold text-slate-900">{txOutPct}%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-                      Stock Adjustments
-                    </span>
-                    <span className="font-bold text-slate-900">{txAdjPct}%</span>
-                  </div>
-                </div>
+                <MovementDistributionChart
+                  txInCount={txInCount}
+                  txOutCount={txOutCount}
+                  txAdjCount={txAdjCount}
+                  totalTx={totalTx}
+                />
               </div>
             </div>
           </div>
@@ -607,14 +837,21 @@ export default function Reports() {
       {tab === 'summary' && (
         <div className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-            <KPICard label="Total Catalog SKUs" value={products.length} />
-            <KPICard label="Total Physical Units" value={totalStock.toLocaleString()} />
+            <KPICard label="Total Catalog SKUs" value={products.length} icon={<Package size={17} />} />
+            <KPICard
+              label="Total Physical Units"
+              value={totalStock.toLocaleString()}
+              icon={<Boxes size={17} />}
+              iconBg="bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/25 border border-blue-400/30"
+            />
             <KPICard
               label="Asset Valuation"
               value={`$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              icon={<DollarSign size={17} />}
+              iconBg="bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/25 border border-emerald-400/30"
             />
-            <KPICard label="Low Stock Items" value={lowCount} variant={lowCount > 0 ? 'warning' : 'default'} />
-            <KPICard label="Depleted Items" value={outCount} variant={outCount > 0 ? 'danger' : 'default'} />
+            <KPICard label="Low Stock Items" value={lowCount} variant={lowCount > 0 ? 'warning' : 'default'} icon={<AlertTriangle size={17} />} />
+            <KPICard label="Depleted Items" value={outCount} variant={outCount > 0 ? 'danger' : 'default'} icon={<TrendingDown size={17} />} />
           </div>
 
           <div className="glass-card rounded-[17px] border border-white/55 overflow-hidden">
@@ -703,12 +940,13 @@ export default function Reports() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            <KPICard label="Total Inbound Stock" value={totalIn} variant="success" />
-            <KPICard label="Total Outbound Dispatched" value={totalOut} variant="danger" />
+            <KPICard label="Total Inbound Stock" value={totalIn} variant="success" icon={<ArrowUpRight size={17} />} />
+            <KPICard label="Total Outbound Dispatched" value={totalOut} variant="danger" icon={<ArrowDownRight size={17} />} />
             <KPICard
               label="Net Inventory Delta"
               value={netMovement >= 0 ? `+${netMovement}` : String(netMovement)}
               variant={netMovement >= 0 ? 'success' : 'danger'}
+              icon={<Activity size={17} />}
             />
           </div>
 
@@ -764,12 +1002,14 @@ export default function Reports() {
               value={lowCount}
               variant={lowCount > 0 ? 'warning' : 'default'}
               sub="Operating at or below reorder buffer"
+              icon={<AlertTriangle size={17} />}
             />
             <KPICard
               label="Zero Stock Outages"
               value={outCount}
               variant={outCount > 0 ? 'danger' : 'default'}
               sub="Zero units in physical inventory"
+              icon={<TrendingDown size={17} />}
             />
           </div>
 
@@ -840,6 +1080,7 @@ export default function Reports() {
               label="Total Capital Valuation"
               value={`$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               variant="success"
+              icon={<DollarSign size={17} />}
             />
             <KPICard
               label="Average SKU Valuation"
@@ -851,6 +1092,8 @@ export default function Reports() {
                     })
                   : '0.00'
               }`}
+              icon={<BarChart2 size={17} />}
+              iconBg="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-500/25 border border-indigo-400/30"
             />
             <KPICard
               label="Top Asset Allocation"
@@ -861,6 +1104,8 @@ export default function Reports() {
                 );
                 return p.name;
               })()}
+              icon={<Award size={17} />}
+              iconBg="bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-md shadow-purple-500/25 border border-purple-400/30"
             />
           </div>
 

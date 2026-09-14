@@ -1,0 +1,7 @@
+SKU,Quantity,Supplier,Reference,Notes
+WM-001,25,"TechSource Ltd",PO-2026-IN01,"Emergency restock of wireless mice"
+MK-002,15,"TechSource Ltd",PO-2026-IN02,"Mechanical keyboard quarterly batch"
+UC-003,50,"Global Electronics",PO-2026-IN03,"Restock zero-stock USB-C cables"
+LS-004,10,"Apex Components",PO-2026-IN04,"Aluminum laptop stands receiving"
+WC-005,20,"TechSource Ltd",PO-2026-IN05,"1080p HD webcam replenishment"
+HC-006,40,"Global Electronics",PO-2026-IN06,"Bulk 8K HDMI cable shipment"

@@ -98,6 +98,7 @@ export default function Inventory() {
             value={totalStock.toLocaleString()}
             sub={`${products.length} catalog items`}
             icon={<Package size={17} />}
+            iconBg="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-500/25 border border-indigo-400/30"
           />
         </div>
         <KPICard
@@ -108,6 +109,7 @@ export default function Inventory() {
           })}`}
           sub="Asset cost across inventory"
           icon={<DollarSign size={17} />}
+          iconBg="bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/25 border border-emerald-400/30"
         />
         <div
           onClick={() => {
@@ -122,6 +124,7 @@ export default function Inventory() {
             sub={lowCount > 0 ? 'Restock recommended' : 'All levels optimum'}
             variant={lowCount > 0 ? 'warning' : 'default'}
             icon={<AlertTriangle size={17} />}
+            iconBg="bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/25 border border-amber-400/30"
           />
         </div>
         <div
@@ -137,6 +140,7 @@ export default function Inventory() {
             sub={outCount > 0 ? 'Requires immediate restock' : 'Zero depleted items'}
             variant={outCount > 0 ? 'danger' : 'default'}
             icon={<TrendingDown size={17} />}
+            iconBg="bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-md shadow-rose-500/25 border border-rose-400/30"
           />
         </div>
       </div>

@@ -284,6 +284,7 @@ export default function Dashboard() {
             value={totalProducts}
             sub={`${categories.length} active categories`}
             icon={<Boxes size={17} />}
+            iconBg="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-500/25 border border-indigo-400/30"
             sparkline={<KPISparkline data={[3, 5, 4, 7, 6, 8, totalProducts]} color="#6366f1" />}
           />
         </div>
@@ -296,6 +297,7 @@ export default function Dashboard() {
               maximumFractionDigits: 0,
             })} asset value`}
             icon={<Package size={17} />}
+            iconBg="bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/25 border border-emerald-400/30"
             sparkline={<KPISparkline data={[65, 80, 72, 90, 85, 110, totalStock || 10]} color="#10b981" />}
           />
         </div>
@@ -306,6 +308,7 @@ export default function Dashboard() {
             sub={lowStock > 0 ? 'Requires restocking' : 'All levels optimum'}
             variant={lowStock > 0 ? 'warning' : 'default'}
             icon={<AlertTriangle size={17} />}
+            iconBg="bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/25 border border-amber-400/30"
             sparkline={<KPISparkline data={[1, 3, 2, 4, 3, 2, lowStock]} color="#f59e0b" />}
           />
         </div>
@@ -316,6 +319,7 @@ export default function Dashboard() {
             sub={outOfStock > 0 ? 'Critical replenishment' : 'Zero depleted items'}
             variant={outOfStock > 0 ? 'danger' : 'default'}
             icon={<TrendingDown size={17} />}
+            iconBg="bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-md shadow-rose-500/25 border border-rose-400/30"
             sparkline={<KPISparkline data={[2, 1, 3, 2, 1, 0, outOfStock]} color="#ef4444" />}
           />
         </div>
@@ -329,12 +333,12 @@ export default function Dashboard() {
           <div className="glass-card rounded-[17px] border border-white/55 p-4 sm:p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 border border-orange-200/50">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-xs">
                   <Activity size={14} />
                 </div>
                 <div>
                   <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">Stock Velocity & Movement Activity</h2>
-                  <p className="text-[10px] text-slate-400">Inbound receipts vs outbound dispatch volumes</p>
+                  <p className="text-[11px] text-slate-600 font-medium">Inbound receipts vs outbound dispatch volumes</p>
                 </div>
               </div>
               <button
@@ -353,7 +357,7 @@ export default function Dashboard() {
             <div className="px-4 py-3 bg-white/25 border-b border-white/50 flex items-center justify-between">
               <div>
                 <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">Recent Movement Ledger</h2>
-                <p className="text-[10px] text-slate-400">Latest immutable inventory transactions</p>
+                <p className="text-[11px] text-slate-600 font-medium">Latest immutable inventory transactions</p>
               </div>
               <button
                 type="button"
@@ -444,12 +448,12 @@ export default function Dashboard() {
           <div className="glass-card rounded-[17px] border border-white/55 p-4 sm:p-5 space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 border border-purple-200/50">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-xs">
                   <Sparkles size={14} />
                 </div>
                 <div>
                   <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">Inventory Distribution</h2>
-                  <p className="text-[10px] text-slate-400">Stock condition across active SKUs</p>
+                  <p className="text-[11px] text-slate-600 font-medium">Stock condition across active SKUs</p>
                 </div>
               </div>
               <button
@@ -471,7 +475,7 @@ export default function Dashboard() {
             {/* Overall Stock Health Progress & Quick Actions */}
             <div className="pt-3 border-t border-white/50 space-y-2.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 font-medium text-[11px]">Stock Health Ratio</span>
+                <span className="text-slate-700 font-bold text-[11px]">Stock Health Ratio</span>
                 <span className="font-extrabold text-emerald-700 text-[11.5px]">{healthRate}% Optimal</span>
               </div>
               <div className="w-full h-1.5 bg-slate-200/60 rounded-full overflow-hidden">
@@ -507,12 +511,12 @@ export default function Dashboard() {
           <div className="glass-card rounded-[17px] border border-white/55 p-4 sm:p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 border border-purple-200/50">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-xs">
                   <PieChart size={14} />
                 </div>
                 <div>
                   <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">Valuation by Category</h2>
-                  <p className="text-[10px] text-slate-400">Asset value distribution across segments</p>
+                  <p className="text-[11px] text-slate-600 font-medium">Asset value distribution across segments</p>
                 </div>
               </div>
               <button
@@ -533,12 +537,12 @@ export default function Dashboard() {
         <div className="glass-card rounded-[17px] border border-amber-200/60 overflow-hidden shadow-xs">
           <div className="px-4 py-3 bg-amber-500/10 border-b border-amber-200/50 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-700">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-xs">
                 <AlertTriangle size={14} />
               </div>
               <div>
                 <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">Restock Priority Queue</h2>
-                <p className="text-[10px] text-slate-500">{lowStockProducts.length} items operating at or below reorder levels</p>
+                <p className="text-[11px] text-slate-700 font-medium">{lowStockProducts.length} items operating at or below reorder levels</p>
               </div>
             </div>
             <button
