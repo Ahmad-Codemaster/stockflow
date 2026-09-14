@@ -1,0 +1,50 @@
+{
+  "name": "StockFlow — Inventory & Operations Management",
+  "short_name": "StockFlow",
+  "description": "Real-time enterprise inventory tracking, stock movements, and catalog operations.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#0B0F19",
+  "theme_color": "#4F46E5",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Inventory",
+      "short_name": "Inventory",
+      "description": "Quick view current stock levels",
+      "url": "/inventory",
+      "icons": [{ "src": "/icon.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Stock In",
+      "short_name": "Stock In",
+      "description": "Receive new stock into warehouse",
+      "url": "/stock-in",
+      "icons": [{ "src": "/icon.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Stock Out",
+      "short_name": "Stock Out",
+      "description": "Dispatch or fulfill stock",
+      "url": "/stock-out",
+      "icons": [{ "src": "/icon.svg", "sizes": "192x192" }]
+    }
+  ]
+}

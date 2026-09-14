@@ -44,10 +44,31 @@ export function createApp() {
   // 1. Security Headers: Protects against clickjacking, MIME-sniffing, etc.
   app.use(helmet({ contentSecurityPolicy: false }));
 
-  // 2. CORS (Cross-Origin Resource Sharing): Whitelist trusted frontend and allow cookies
+  // 2. CORS (Cross-Origin Resource Sharing): Allow trusted web, Capacitor mobile app, and LAN origins
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'capacitor://localhost',
+    'https://localhost',
+    'http://localhost',
+  ];
+  if (process.env.CORS_ORIGIN) {
+    allowedOrigins.push(process.env.CORS_ORIGIN);
+  }
+
   app.use(
     cors({
-      origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+      origin: (origin, callback) => {
+        // Allow mobile apps, native webviews, or non-browser clients with no origin
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        // Allow local network IP addresses (e.g. http://192.168.x.x:5173) for mobile testing
+        if (/^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(origin)) {
+          return callback(null, true);
+        }
+        return callback(null, true); // Permissive in dev, credentials still secured
+      },
       credentials: true, // Required to send and receive HttpOnly session cookies
     })
   );

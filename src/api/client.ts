@@ -14,7 +14,21 @@ export class ApiError extends Error {
   }
 }
 
-const API_BASE = '/api';
+export function getApiBaseUrl(): string {
+  try {
+    const customUrl = localStorage.getItem('stockflow_server_url');
+    if (customUrl && customUrl.trim()) {
+      return customUrl.trim().replace(/\/$/, '') + '/api';
+    }
+  } catch {}
+
+  const envUrl = (import.meta as any).env?.VITE_API_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
+    return envUrl.trim().replace(/\/$/, '') + '/api';
+  }
+
+  return '/api';
+}
 
 async function request<T>(
   endpoint: string,
@@ -25,7 +39,8 @@ async function request<T>(
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const baseUrl = getApiBaseUrl();
+  const response = await fetch(`${baseUrl}${endpoint}`, {
     ...options,
     headers,
     credentials: 'include', // Includes HTTP-only session cookie
@@ -328,6 +343,18 @@ export const api = {
       request<{ message: string }>('/system/wipe', {
         method: 'POST',
       }),
+    ping: async (customBase?: string): Promise<{ success: boolean; latencyMs: number; data?: any }> => {
+      const start = Date.now();
+      const target = customBase && customBase.trim()
+        ? customBase.trim().replace(/\/$/, '') + '/api/health'
+        : `${getApiBaseUrl()}/health`;
+      const res = await fetch(target, { cache: 'no-store' });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json?.message || `Server responded with HTTP ${res.status}`);
+      }
+      return { success: true, latencyMs: Date.now() - start, data: json };
+    },
   },
 };
 

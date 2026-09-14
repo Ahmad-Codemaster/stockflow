@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       port: parseInt(process.env.VITE_PORT || '5173'),
       strictPort: false,
-      watch: { ignored: ['**/server/**', '**/prisma/**'] },
+      watch: { ignored: ['**/server/**', '**/prisma/**', '**/android/**'] },
       proxy: {
         '/api': {
           target: 'http://localhost:3001',

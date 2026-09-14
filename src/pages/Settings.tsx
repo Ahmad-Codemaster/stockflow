@@ -1,4 +1,19 @@
-import { Database, KeyRound, Loader2, Lock, Palette, ShieldAlert, Trash2, User } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Database,
+  Download,
+  KeyRound,
+  Loader2,
+  Lock,
+  Palette,
+  RefreshCw,
+  ShieldAlert,
+  Smartphone,
+  Trash2,
+  User,
+  Wifi,
+} from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { Badge, Confirm, FormField, PageHeader } from '../components/ui';
@@ -21,6 +36,46 @@ export default function Settings() {
   const [confirmWipe, setConfirmWipe] = useState(false);
   const [wiping, setWiping] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
+
+  // Mobile App & Network Backend Configuration
+  const [serverUrl, setServerUrl] = useState(() => localStorage.getItem('stockflow_server_url') || '');
+  const [pingStatus, setPingStatus] = useState<{
+    status: 'idle' | 'testing' | 'success' | 'error';
+    message?: string;
+    latency?: number;
+  }>({ status: 'idle' });
+
+  async function handleTestConnection() {
+    setPingStatus({ status: 'testing' });
+    try {
+      const res = await api.system.ping(serverUrl);
+      setPingStatus({
+        status: 'success',
+        latency: res.latencyMs,
+        message: `Connected successfully! Latency: ${res.latencyMs}ms`,
+      });
+      showToast('success', `Backend connected (${res.latencyMs}ms)`);
+    } catch (err: any) {
+      setPingStatus({
+        status: 'error',
+        message: err.message || 'Cannot connect to backend. Verify IP and port.',
+      });
+      showToast('error', `Connection failed: ${err.message}`);
+    }
+  }
+
+  function handleSaveServerUrl(e: React.FormEvent) {
+    e.preventDefault();
+    if (serverUrl.trim()) {
+      localStorage.setItem('stockflow_server_url', serverUrl.trim());
+      showToast('success', 'Server endpoint updated. Reloading with new endpoint...');
+      setTimeout(() => window.location.reload(), 600);
+    } else {
+      localStorage.removeItem('stockflow_server_url');
+      showToast('success', 'Server endpoint reset to default (/api). Reloading...');
+      setTimeout(() => window.location.reload(), 600);
+    }
+  }
 
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
@@ -237,6 +292,129 @@ export default function Settings() {
               />
             </div>
           </div>
+        </section>
+
+        {/* Mobile App & Remote Network Connectivity */}
+        <section className="glass-card rounded-[17px] border border-white/55 p-6 md:p-8">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 border border-purple-200/50">
+              <Smartphone size={15} />
+            </div>
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                Mobile App &amp; Network Connectivity
+              </h2>
+              <p className="text-[11px] text-slate-500">
+                Configure backend API endpoint for Android APK and PWA mobile devices
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveServerUrl} className="space-y-4 pt-1">
+            <div className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                  <Wifi size={13} className="text-indigo-600" />
+                  Backend Server Address
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-600">
+                  {serverUrl ? 'Custom IP / Cloud' : 'Default (/api)'}
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <input
+                  type="text"
+                  value={serverUrl}
+                  onChange={(e) => {
+                    setServerUrl(e.target.value);
+                    setPingStatus({ status: 'idle' });
+                  }}
+                  placeholder="e.g. http://192.168.1.50:3001 or https://stockflow.onrender.com"
+                  className="w-full px-3 py-2 text-xs font-mono bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all text-slate-900"
+                />
+                <p className="text-[10px] text-slate-500">
+                  When running on physical phones, enter your computer&apos;s local Wi-Fi IP address or production cloud URL.
+                </p>
+              </div>
+
+              {pingStatus.status !== 'idle' && (
+                <div
+                  className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-medium border ${
+                    pingStatus.status === 'success'
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                      : pingStatus.status === 'error'
+                      ? 'bg-rose-50 text-rose-800 border-rose-200'
+                      : 'bg-indigo-50 text-indigo-800 border-indigo-200'
+                  }`}
+                >
+                  {pingStatus.status === 'testing' ? (
+                    <Loader2 size={13} className="animate-spin text-indigo-600 shrink-0" />
+                  ) : pingStatus.status === 'success' ? (
+                    <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                  ) : (
+                    <AlertCircle size={13} className="text-rose-600 shrink-0" />
+                  )}
+                  <span>
+                    {pingStatus.status === 'testing'
+                      ? 'Testing server connection & measuring latency...'
+                      : pingStatus.message}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleTestConnection}
+                  disabled={pingStatus.status === 'testing'}
+                  className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-all cursor-pointer shadow-2xs inline-flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {pingStatus.status === 'testing' ? (
+                    <Loader2 size={12} className="animate-spin" />
+                  ) : (
+                    <RefreshCw size={12} />
+                  )}
+                  <span>Test Connection</span>
+                </button>
+
+                <button
+                  type="submit"
+                  className="px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all cursor-pointer shadow-xs"
+                >
+                  Save &amp; Apply
+                </button>
+
+                {serverUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setServerUrl('');
+                      localStorage.removeItem('stockflow_server_url');
+                      setPingStatus({ status: 'idle' });
+                      showToast('info', 'Reset to default /api');
+                    }}
+                    className="px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Mobile Architecture Info Box */}
+            <div className="p-3.5 bg-purple-50/50 border border-purple-100 rounded-2xl flex items-start gap-3">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-xs">
+                <Smartphone size={16} />
+              </div>
+              <div className="text-xs text-slate-600 space-y-1">
+                <p className="font-bold text-slate-900">Installable Native &amp; PWA Mobile App</p>
+                <p>
+                  StockFlow includes Capacitor native Android compilation and PWA offline shell caching. On Android phones, you can install the standalone APK or tap the Install button in your browser toolbar.
+                </p>
+              </div>
+            </div>
+          </form>
         </section>
 
         {/* Store Data Management (ADMIN Only) */}

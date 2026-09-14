@@ -26,6 +26,7 @@ import {
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from '../context';
 import type { Page } from '../types';
+import { InstallAppButton } from './InstallAppPrompt';
 import { Badge } from './ui';
 
 const pageLabels: Record<string, string[]> = {
@@ -927,6 +928,9 @@ export default function Header() {
             </div>
           )}
         </div>
+
+        {/* Mobile / PWA App Install Button */}
+        <InstallAppButton />
 
         {/* Notifications Dropdown */}
         <div ref={notifRef} className="relative">
