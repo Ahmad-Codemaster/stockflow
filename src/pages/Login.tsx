@@ -354,9 +354,10 @@ export default function Login() {
 
       {/* Forgot Password Modal */}
       {helpOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fade-slide">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-slide">
+          <div className="absolute inset-0" onClick={() => setHelpOpen(false)} />
           <div
-            className="glass-modal rounded-[17px] border border-white/70 shadow-[0_24px_60px_rgba(0,0,0,0.08)] max-w-sm w-full p-6 relative"
+            className="bg-white rounded-[20px] border border-slate-200 shadow-[0_25px_70px_rgba(15,23,42,0.22)] max-w-sm w-full p-6 relative z-10"
             role="dialog"
             aria-modal="true"
           >

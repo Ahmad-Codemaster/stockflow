@@ -48,16 +48,16 @@ export default function UserManualModal({ isOpen, onClose }: UserManualModalProp
       role="dialog"
       aria-modal="true"
     >
-      {/* Dimmed backdrop */}
+      {/* Click backdrop to dismiss without dark overlay */}
       <div
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-300"
+        className="absolute inset-0"
         onClick={onClose}
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-4xl max-h-[90vh] glass-modal rounded-[17px] border border-white/70 shadow-[0_24px_60px_rgba(0,0,0,0.08)] flex flex-col overflow-hidden animate-fade-slide">
+      <div className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-[20px] border border-slate-200 shadow-[0_25px_70px_rgba(15,23,42,0.22)] flex flex-col overflow-hidden animate-fade-slide">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/60 bg-white/40 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/80 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
               <Warehouse size={20} />

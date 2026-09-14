@@ -157,8 +157,9 @@ export function Confirm({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-950/30 backdrop-blur-md" onClick={onCancel} />
-      <div className="relative w-full max-w-sm glass-modal rounded-[17px] p-6.5 animate-fade-slide border border-white/80 shadow-2xl">
+      {/* Click-catcher without dark overlay or blur */}
+      <div className="absolute inset-0" onClick={onCancel} />
+      <div className="relative w-full max-w-sm bg-white rounded-[20px] p-6.5 animate-fade-slide border border-slate-200 shadow-[0_25px_70px_rgba(15,23,42,0.22)]">
         <div className="flex items-start gap-3.5 mb-4">
           <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0 text-rose-600">
             <AlertTriangle size={20} />
