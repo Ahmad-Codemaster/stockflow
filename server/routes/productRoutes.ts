@@ -18,6 +18,7 @@ import {
   createProductSchema,
   productQuerySchema,
   updateProductSchema,
+  bulkProductsSchema,
 } from '../controllers/productController';
 import { requireAuth } from '../middleware/auth';
 import { requireRole } from '../middleware/rbac';
@@ -34,6 +35,7 @@ router.get('/', validateQuery(productQuerySchema), ProductController.list);
 router.get('/:id', validateParams(idParamSchema), ProductController.getById);
 
 // Mutation endpoints: strictly guarded for ADMIN role only (returns 403 Forbidden to Staff)
+router.post('/bulk', requireRole('ADMIN'), validateBody(bulkProductsSchema), ProductController.bulkCreate);
 router.post('/', requireRole('ADMIN'), validateBody(createProductSchema), ProductController.create);
 router.put('/:id', requireRole('ADMIN'), validateParams(idParamSchema), validateBody(updateProductSchema), ProductController.update);
 router.delete('/:id', requireRole('ADMIN'), validateParams(idParamSchema), ProductController.delete);

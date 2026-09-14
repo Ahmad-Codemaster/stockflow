@@ -196,7 +196,47 @@ Creates a new product and optionally records an initial stock transaction.
   * `409 Conflict`: SKU already exists.
   * `422 Unprocessable Entity`: Negative price or invalid category ID.
 
-### 3.3 `GET /api/products/:id`
+### 3.3 `POST /api/products/bulk`
+Batch creates products and initial stock transactions from CSV imports.
+
+* **Auth Required:** Yes
+* **Allowed Roles:** `ADMIN` strictly (Staff is rejected with `403 Forbidden`)
+* **Execution Strategy:** Strict Option A (All-or-Nothing ACID transaction)
+* **Limits:** Max 500 items per batch
+* **Features:** Case-insensitive SKU conflict checking, dynamic category auto-creation, user attribution to authenticated session ID.
+* **Request Body:**
+  ```json
+  {
+    "items": [
+      {
+        "name": "Wireless Headphones",
+        "sku": "HP-001",
+        "categoryName": "Audio & Acoustics",
+        "supplierName": "TechSource Ltd",
+        "price": 199.99,
+        "initialStock": 20,
+        "reorderLevel": 5,
+        "description": "Noise cancelling"
+      }
+    ]
+  }
+  ```
+* **Success Response (`201 Created`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "createdCount": 1,
+      "products": [ { "id": "uuid", "sku": "HP-001", "name": "Wireless Headphones" } ]
+    }
+  }
+  ```
+* **Error Responses:**
+  * `400 Bad Request`: Duplicate SKU inside batch or validation failure.
+  * `403 Forbidden`: User role is `STAFF`.
+  * `409 Conflict`: One or more SKUs already exist in the master catalog.
+
+### 3.4 `GET /api/products/:id`
 Retrieves single product details, real-time stock analytics, and recent transactions.
 
 * **Auth Required:** Yes
@@ -349,7 +389,100 @@ Executes an atomic Stock-Out fulfillment with strict negative stock prevention.
 * **Error Responses:**
   * `400 Bad Request` / `422 Unprocessable Entity`: `"Insufficient stock. Only 4 units are available."`
 
-### 5.3 `POST /api/inventory/adjust`
+### 5.3 `POST /api/inventory/bulk-stock-in`
+Executes an atomic batch Stock-In receiving replenishment from uploaded CSV data.
+
+* **Auth Required:** Yes
+* **Allowed Roles:** `ADMIN` strictly (Staff rejected with `403 Forbidden`)
+* **Execution Strategy:** Strict Option A (All-or-Nothing ACID transaction)
+* **Limits:** Max 500 items per batch
+* **Features:** Pessimistic row locking (`SELECT ... FOR UPDATE`), automatic supplier resolution, immutable ledger logging attributed to authenticated admin user ID.
+* **Request Body:**
+  ```json
+  {
+    "items": [
+      {
+        "sku": "WM-001",
+        "quantity": 25,
+        "supplierName": "TechSource Ltd",
+        "reference": "PO-BULK-2026-01",
+        "notes": "Freight delivery batch A"
+      }
+    ]
+  }
+  ```
+* **Success Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "processedCount": 1,
+      "transactions": [
+        {
+          "transactionId": "uuid",
+          "sku": "WM-001",
+          "quantity": 25,
+          "previousStock": 4,
+          "newStock": 29,
+          "status": "In Stock"
+        }
+      ]
+    }
+  }
+  ```
+* **Error Responses:**
+  * `400 Bad Request`: Invalid quantity or validation failure.
+  * `403 Forbidden`: User role is `STAFF`.
+  * `404 Not Found`: One or more SKUs not found or archived.
+
+### 5.4 `POST /api/inventory/bulk-stock-out`
+Executes an atomic batch Stock-Out order fulfillment with strict negative stock prevention and Option A rollback.
+
+* **Auth Required:** Yes
+* **Allowed Roles:** `ADMIN` strictly (Staff rejected with `403 Forbidden`)
+* **Execution Strategy:** **Option A (Strict All-or-Nothing)**
+  * Pre-aggregates deductions across all rows.
+  * Locks products alphabetically (`SELECT ... FOR UPDATE`) to prevent deadlocks.
+  * If ANY product has insufficient stock, the entire transaction is rolled back with 0 modifications and an itemized failure report.
+* **Limits:** Max 500 items per batch
+* **Request Body:**
+  ```json
+  {
+    "items": [
+      {
+        "sku": "WM-001",
+        "quantity": 2,
+        "reference": "DISPATCH-BATCH-09",
+        "notes": "Retail shipment"
+      }
+    ]
+  }
+  ```
+* **Success Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "processedCount": 1,
+      "transactions": [
+        {
+          "transactionId": "uuid",
+          "sku": "WM-001",
+          "quantity": 2,
+          "previousStock": 29,
+          "newStock": 27,
+          "status": "In Stock"
+        }
+      ]
+    }
+  }
+  ```
+* **Error Responses:**
+  * `400 Bad Request` (`INSUFFICIENT_STOCK`): Insufficient stock for one or more SKUs (All-or-Nothing batch rolled back).
+  * `403 Forbidden`: User role is `STAFF`.
+  * `404 Not Found`: One or more SKUs not found or archived.
+
+### 5.5 `POST /api/inventory/adjust`
 Executes an atomic inventory count adjustment.
 
 * **Auth Required:** Yes

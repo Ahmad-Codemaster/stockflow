@@ -19,8 +19,11 @@ import {
   stockInSchema,
   stockOutSchema,
   transactionQuerySchema,
+  bulkStockInSchema,
+  bulkStockOutSchema,
 } from '../controllers/inventoryController';
 import { requireAuth } from '../middleware/auth';
+import { requireRole } from '../middleware/rbac';
 import { mutationLimiter } from '../middleware/rateLimiter';
 import { validateBody, validateParams, validateQuery } from '../middleware/validate';
 import { idParamSchema } from '../schemas/common';
@@ -31,6 +34,8 @@ const router = Router();
 router.use(requireAuth);
 
 router.get('/', validateQuery(inventoryQuerySchema), InventoryController.list);
+router.post('/bulk-stock-in', requireRole('ADMIN'), mutationLimiter, validateBody(bulkStockInSchema), InventoryController.bulkStockIn);
+router.post('/bulk-stock-out', requireRole('ADMIN'), mutationLimiter, validateBody(bulkStockOutSchema), InventoryController.bulkStockOut);
 router.post('/stock-in', mutationLimiter, validateBody(stockInSchema), InventoryController.stockIn);
 router.post('/stock-out', mutationLimiter, validateBody(stockOutSchema), InventoryController.stockOut);
 router.post('/adjust', mutationLimiter, validateBody(stockAdjustSchema), InventoryController.adjust);

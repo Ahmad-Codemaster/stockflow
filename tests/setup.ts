@@ -9,9 +9,11 @@ beforeAll(async () => {
   const dbUrl = process.env.DATABASE_URL;
   if (dbUrl && (dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://'))) {
     try {
-      execSync('npx prisma migrate deploy', {
+      const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+      execSync(`${npxCmd} prisma migrate deploy`, {
         env: { ...process.env, DATABASE_URL: dbUrl },
         stdio: 'ignore',
+        timeout: 15000,
       });
     } catch {
       // ignore migration errors in environments where DB is already current
@@ -36,7 +38,7 @@ beforeAll(async () => {
     }
     throw err;
   }
-});
+}, 60000);
 
 export async function loginAsAdmin(): Promise<{ cookie: string; user: any }> {
   const res = await request(app)

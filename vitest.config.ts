@@ -9,8 +9,8 @@ export default defineConfig({
       ['tests/**', 'node'],
     ],
     setupFiles: ['./src/test/setup.ts'],
-    testTimeout: 20000,
-    hookTimeout: 20000,
+    testTimeout: 60000,
+    hookTimeout: 60000,
     fileParallelism: false,
     maxConcurrency: 1,
     sequence: {

@@ -6,8 +6,14 @@ import {
   updateProductSchema,
   productQuerySchema,
 } from '../schemas/productSchemas';
+import { bulkProductsSchema } from '../schemas/bulkSchemas';
 
-export { createProductSchema, updateProductSchema, productQuerySchema };
+export {
+  createProductSchema,
+  updateProductSchema,
+  productQuerySchema,
+  bulkProductsSchema,
+};
 
 export class ProductController {
   static async list(req: AuthenticatedRequest, res: Response) {
@@ -55,5 +61,15 @@ export class ProductController {
       ipAddress
     );
     return res.status(200).json({ success: true, data: result });
+  }
+
+  static async bulkCreate(req: AuthenticatedRequest, res: Response) {
+    const ipAddress = req.ip || req.socket.remoteAddress;
+    const result = await ProductService.bulkCreate(
+      req.body.items,
+      req.user!.id,
+      ipAddress
+    );
+    return res.status(201).json({ success: true, data: result });
   }
 }

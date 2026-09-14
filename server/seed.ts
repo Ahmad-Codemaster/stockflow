@@ -416,9 +416,9 @@ export async function seedDatabase(preserveSessions = false) {
         entity: 'DATABASE',
         details: JSON.stringify({ message: 'Initial database fixtures seeded' }),
         ipAddress: '127.0.0.1',
-      },
+      }
     });
-  });
+  }, { maxWait: 20000, timeout: 60000 });
 }
 
 if (import.meta.url.endsWith(process.argv[1]?.replace(/\\/g, '/') || '')) {

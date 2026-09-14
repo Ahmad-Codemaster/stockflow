@@ -1,12 +1,13 @@
-import { ArrowDownRight, ArrowUpRight, Edit, Eye, MoreVertical, Plus, RotateCcw, Search, Tag, Trash2 } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Edit, Eye, FileSpreadsheet, MoreVertical, Plus, RotateCcw, Search, Tag, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
+import CsvImportModal from '../components/CsvImportModal';
 import { Badge, Confirm, EmptyState, PageHeader, Pagination } from '../components/ui';
 import { useApp } from '../context';
 
 const PAGE_SIZE = 10;
 
 export default function Products() {
-  const { products, categories, inventory, currentUser, navigate, deleteProduct, getStockStatus } = useApp();
+  const { products, categories, inventory, currentUser, navigate, deleteProduct, getStockStatus, showToast, refreshData } = useApp();
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -14,6 +15,7 @@ export default function Products() {
   const [page, setPage] = useState(1);
   const [menuId, setMenuId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [showCsvModal, setShowCsvModal] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   function getStock(pid: string) {
@@ -55,14 +57,24 @@ export default function Products() {
         subtitle="Maintain master SKUs, dynamic price books, and threshold triggers."
         action={
           currentUser?.role === 'ADMIN' && (
-            <button
-              type="button"
-              onClick={() => navigate('product-add')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 gradient-btn-primary text-white text-xs font-semibold rounded-xl shadow-sm"
-            >
-              <Plus size={15} />
-              <span>Add Product</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCsvModal(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 glass-card hover:bg-white/50 border border-white/60 text-slate-700 text-xs font-semibold rounded-xl shadow-2xs transition-colors cursor-pointer"
+              >
+                <FileSpreadsheet size={15} className="text-emerald-600" />
+                <span>Import CSV</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('product-add')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 gradient-btn-primary text-white text-xs font-semibold rounded-xl shadow-sm cursor-pointer"
+              >
+                <Plus size={15} />
+                <span>Add Product</span>
+              </button>
+            </div>
           )
         }
       />
@@ -317,6 +329,16 @@ export default function Products() {
           onCancel={() => setConfirmDelete(null)}
         />
       )}
+
+      <CsvImportModal
+        isOpen={showCsvModal}
+        onClose={() => setShowCsvModal(false)}
+        mode="products"
+        onSuccess={() => {
+          refreshData();
+        }}
+        showToast={showToast}
+      />
     </div>
   );
 }

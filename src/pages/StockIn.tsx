@@ -10,14 +10,15 @@
  *   which atomically increments stock and creates an immutable transaction receipt.
  */
 
-import { ArrowLeft, ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, CheckCircle2, FileSpreadsheet } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import CsvImportModal from '../components/CsvImportModal';
 import { FormField } from '../components/ui';
 import { useApp } from '../context';
 
 export default function StockIn() {
-  const { products, suppliers, inventory, navigate, stockIn } = useApp();
+  const { products, suppliers, inventory, currentUser, navigate, stockIn, showToast, refreshData } = useApp();
   const [searchParams] = useSearchParams();
   const urlProductId = searchParams.get('product');
 
@@ -29,6 +30,7 @@ export default function StockIn() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showCsvModal, setShowCsvModal] = useState(false);
 
   // Sync selected product if provided via URL query param (?product=p1)
   useEffect(() => {
@@ -79,18 +81,30 @@ export default function StockIn() {
 
   return (
     <div className="max-w-xl space-y-5">
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => (selectedProduct ? navigate('product-detail', selectedProduct.id) : navigate('inventory'))}
-          className="p-2.5 rounded-xl glass-card border border-white/60 text-slate-500 hover:text-slate-900 transition-colors shadow-2xs cursor-pointer"
-        >
-          <ArrowLeft size={16} />
-        </button>
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-[-0.025em]">Stock-In Receiving</h1>
-          <p className="text-xs text-slate-500 font-medium">Record physical inbound freight and purchase orders.</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => (selectedProduct ? navigate('product-detail', selectedProduct.id) : navigate('inventory'))}
+            className="p-2.5 rounded-xl glass-card border border-white/60 text-slate-500 hover:text-slate-900 transition-colors shadow-2xs cursor-pointer"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-[-0.025em]">Stock-In Receiving</h1>
+            <p className="text-xs text-slate-500 font-medium">Record physical inbound freight and purchase orders.</p>
+          </div>
         </div>
+        {currentUser?.role === 'ADMIN' && (
+          <button
+            type="button"
+            onClick={() => setShowCsvModal(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 glass-card hover:bg-white/50 border border-white/60 text-slate-700 text-xs font-semibold rounded-xl shadow-2xs transition-colors cursor-pointer shrink-0"
+          >
+            <FileSpreadsheet size={15} className="text-emerald-600" />
+            <span>Bulk Import</span>
+          </button>
+        )}
       </div>
 
       {products.length === 0 && (
@@ -243,6 +257,17 @@ export default function StockIn() {
           </button>
         </div>
       </form>
+
+      <CsvImportModal
+        isOpen={showCsvModal}
+        onClose={() => setShowCsvModal(false)}
+        mode="stock-in"
+        onSuccess={() => {
+          refreshData();
+          navigate('inventory');
+        }}
+        showToast={showToast}
+      />
     </div>
   );
 }

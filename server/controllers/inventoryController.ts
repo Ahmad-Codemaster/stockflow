@@ -19,6 +19,10 @@ import {
   inventoryQuerySchema,
   transactionQuerySchema,
 } from '../schemas/inventorySchemas';
+import {
+  bulkStockInSchema,
+  bulkStockOutSchema,
+} from '../schemas/bulkSchemas';
 
 export {
   stockInSchema,
@@ -26,6 +30,8 @@ export {
   stockAdjustSchema,
   inventoryQuerySchema,
   transactionQuerySchema,
+  bulkStockInSchema,
+  bulkStockOutSchema,
 };
 
 export class InventoryController {
@@ -103,5 +109,33 @@ export class InventoryController {
   static async getTransactionById(req: AuthenticatedRequest, res: Response) {
     const txn = await InventoryService.getTransactionById(req.params.id);
     return res.status(200).json({ success: true, data: txn });
+  }
+
+  /**
+   * POST /api/inventory/bulk-stock-in: Record bulk receiving restock via CSV
+   */
+  static async bulkStockIn(req: AuthenticatedRequest, res: Response) {
+    const ipAddress = req.ip || req.socket.remoteAddress;
+
+    const result = await InventoryService.bulkStockIn(
+      req.body.items,
+      req.user!.id,
+      ipAddress
+    );
+    return res.status(200).json({ success: true, data: result });
+  }
+
+  /**
+   * POST /api/inventory/bulk-stock-out: Record bulk order fulfillment via CSV
+   */
+  static async bulkStockOut(req: AuthenticatedRequest, res: Response) {
+    const ipAddress = req.ip || req.socket.remoteAddress;
+
+    const result = await InventoryService.bulkStockOut(
+      req.body.items,
+      req.user!.id,
+      ipAddress
+    );
+    return res.status(200).json({ success: true, data: result });
   }
 }

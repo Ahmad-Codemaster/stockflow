@@ -14,6 +14,7 @@ import prisma from '../db';
 import { AppError } from '../middleware/errorHandler';
 import { AuditService } from './auditService';
 import { computeStockStatus } from './productService';
+import type { BulkStockInItem, BulkStockOutItem } from '../schemas/bulkSchemas';
 
 export class InventoryService {
   /**
@@ -543,6 +544,342 @@ export class InventoryService {
       reference: txn.reference,
       notes: txn.notes,
       createdAt: txn.createdAt,
+    };
+  }
+
+  /**
+   * BULK STOCK-IN WORKFLOW: Atomic Restock of Multiple SKUs
+   * 
+   * Invariants:
+   * 1. Uses row-level locks on each target SKU.
+   * 2. Resolves optional supplier names dynamically.
+   * 3. Increments stock and creates immutable ledger records.
+   * 4. Option A (All-or-Nothing): If any SKU fails, the entire transaction rolls back.
+   */
+  static async bulkStockIn(
+    items: BulkStockInItem[],
+    userId: string,
+    ipAddress?: string
+  ) {
+    if (!items || items.length === 0) {
+      throw new AppError('No items provided for bulk stock-in.', 400, 'VALIDATION_ERROR');
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const transactions = [];
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const normalizedSku = item.sku.trim().toUpperCase();
+        const qty = Number(item.quantity);
+
+        if (!qty || qty <= 0) {
+          throw new AppError(
+            `Row ${i + 1} (${normalizedSku}): Quantity must be a positive integer.`,
+            400,
+            'VALIDATION_ERROR'
+          );
+        }
+
+        const rows = await tx.$queryRaw<
+          Array<{
+            id: string;
+            name: string;
+            sku: string;
+            supplierId: string | null;
+            quantity: number;
+            reorderLevel: number;
+            isArchived: boolean;
+          }>
+        >`
+          SELECT 
+            id,
+            name,
+            sku,
+            supplier_id AS "supplierId",
+            quantity,
+            reorder_level AS "reorderLevel",
+            is_archived AS "isArchived"
+          FROM products
+          WHERE UPPER(sku) = ${normalizedSku}
+          FOR UPDATE
+        `;
+
+        const product = rows[0];
+        if (!product || product.isArchived) {
+          throw new AppError(
+            `Row ${i + 1}: Product with SKU "${normalizedSku}" was not found or is archived.`,
+            404,
+            'NOT_FOUND'
+          );
+        }
+
+        let supplierId = product.supplierId;
+        if (item.supplierName && item.supplierName.trim()) {
+          const sup = await tx.supplier.findFirst({
+            where: { name: { equals: item.supplierName.trim(), mode: 'insensitive' } },
+          });
+          if (sup) supplierId = sup.id;
+        }
+
+        const previousStock = product.quantity;
+        const newStock = previousStock + qty;
+
+        await tx.product.update({
+          where: { id: product.id },
+          data: { quantity: newStock },
+        });
+
+        const txn = await tx.stockTransaction.create({
+          data: {
+            productId: product.id,
+            type: 'STOCK_IN',
+            quantity: qty,
+            previousStock,
+            newStock,
+            supplierId,
+            performedById: userId,
+            reference: item.reference?.trim() || 'BULK_STOCK_IN',
+            notes: item.notes?.trim() || 'Bulk stock-in via CSV',
+          },
+        });
+
+        transactions.push({
+          transactionId: txn.id,
+          productId: product.id,
+          sku: product.sku,
+          productName: product.name,
+          quantity: qty,
+          previousStock,
+          newStock,
+          status: computeStockStatus(newStock, product.reorderLevel),
+        });
+      }
+
+      await AuditService.log(
+        {
+          userId,
+          action: 'INVENTORY_BULK_STOCK_IN',
+          entity: 'INVENTORY',
+          entityId: 'BULK',
+          details: {
+            count: items.length,
+            totalUnits: items.reduce((acc, it) => acc + it.quantity, 0),
+          },
+          ipAddress,
+        },
+        tx
+      );
+
+      return transactions;
+    });
+
+    return {
+      processedCount: result.length,
+      transactions: result,
+    };
+  }
+
+  /**
+   * BULK STOCK-OUT WORKFLOW: Atomic Fulfillment with Strict Option A All-or-Nothing
+   * 
+   * Invariants:
+   * 1. Aggregates total deductions per SKU across the CSV batch.
+   * 2. Locks all affected product rows alphabetically via `SELECT ... FOR UPDATE` (deadlock prevention).
+   * 3. Validates that EVERY product has sufficient inventory (`quantity >= requestedTotal`).
+   * 4. Strict Option A: If ANY item has insufficient stock, the transaction is immediately
+   *    aborted with an itemized error report and ZERO database modifications.
+   * 5. Deducts stock and inserts immutable STOCK_OUT records attributed to `userId`.
+   */
+  static async bulkStockOut(
+    items: BulkStockOutItem[],
+    userId: string,
+    ipAddress?: string
+  ) {
+    if (!items || items.length === 0) {
+      throw new AppError('No items provided for bulk stock-out.', 400, 'VALIDATION_ERROR');
+    }
+
+    // 1. Calculate requested total deductions per SKU across the batch
+    const requestedTotalsBySku = new Map<string, number>();
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const normalizedSku = item.sku.trim().toUpperCase();
+      const qty = Number(item.quantity);
+      if (!qty || qty <= 0) {
+        throw new AppError(
+          `Row ${i + 1} (${normalizedSku}): Quantity must be a positive integer.`,
+          400,
+          'VALIDATION_ERROR'
+        );
+      }
+      requestedTotalsBySku.set(
+        normalizedSku,
+        (requestedTotalsBySku.get(normalizedSku) || 0) + qty
+      );
+    }
+
+    // 2. Execute within atomic transaction with row-level locking
+    const result = await prisma.$transaction(async (tx) => {
+      // Lock in deterministic alphabetical order to avoid deadlocks
+      const sortedSkus = Array.from(requestedTotalsBySku.keys()).sort();
+      const lockedProductsMap = new Map<
+        string,
+        {
+          id: string;
+          name: string;
+          sku: string;
+          quantity: number;
+          reorderLevel: number;
+          isArchived: boolean;
+        }
+      >();
+
+      const notFoundSkus: string[] = [];
+      const insufficientStockErrors: Array<{
+        sku: string;
+        name: string;
+        available: number;
+        requested: number;
+      }> = [];
+
+      for (const sku of sortedSkus) {
+        const rows = await tx.$queryRaw<
+          Array<{
+            id: string;
+            name: string;
+            sku: string;
+            quantity: number;
+            reorderLevel: number;
+            isArchived: boolean;
+          }>
+        >`
+          SELECT 
+            id,
+            name,
+            sku,
+            quantity,
+            reorder_level AS "reorderLevel",
+            is_archived AS "isArchived"
+          FROM products
+          WHERE UPPER(sku) = ${sku}
+          FOR UPDATE
+        `;
+
+        const product = rows[0];
+        if (!product || product.isArchived) {
+          notFoundSkus.push(sku);
+          continue;
+        }
+
+        lockedProductsMap.set(sku, product);
+
+        const requestedTotal = requestedTotalsBySku.get(sku)!;
+        if (product.quantity < requestedTotal) {
+          insufficientStockErrors.push({
+            sku: product.sku,
+            name: product.name,
+            available: product.quantity,
+            requested: requestedTotal,
+          });
+        }
+      }
+
+      if (notFoundSkus.length > 0) {
+        throw new AppError(
+          `The following SKU(s) were not found or are archived: ${notFoundSkus.join(', ')}.`,
+          404,
+          'NOT_FOUND',
+          { notFoundSkus }
+        );
+      }
+
+      // Strict Option A check: Fail entire batch if any product lacks stock
+      if (insufficientStockErrors.length > 0) {
+        const detailsStr = insufficientStockErrors
+          .map(
+            (e) =>
+              `SKU ${e.sku} (${e.name}): requested ${e.requested}, only ${e.available} available`
+          )
+          .join('; ');
+        throw new AppError(
+          `Insufficient stock for ${insufficientStockErrors.length} product(s): ${detailsStr}. (All-or-Nothing batch rolled back)`,
+          400,
+          'INSUFFICIENT_STOCK',
+          { failedItems: insufficientStockErrors }
+        );
+      }
+
+      // 3. All items passed pre-flight under row lock. Perform deductions
+      const currentStockTracker = new Map<string, number>();
+      for (const [sku, prod] of lockedProductsMap.entries()) {
+        currentStockTracker.set(sku, prod.quantity);
+      }
+
+      const transactions = [];
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const normalizedSku = item.sku.trim().toUpperCase();
+        const qty = Number(item.quantity);
+        const product = lockedProductsMap.get(normalizedSku)!;
+
+        const previousStock = currentStockTracker.get(normalizedSku)!;
+        const newStock = previousStock - qty;
+        currentStockTracker.set(normalizedSku, newStock);
+
+        await tx.product.update({
+          where: { id: product.id },
+          data: { quantity: newStock },
+        });
+
+        const txn = await tx.stockTransaction.create({
+          data: {
+            productId: product.id,
+            type: 'STOCK_OUT',
+            quantity: qty,
+            previousStock,
+            newStock,
+            supplierId: null,
+            performedById: userId,
+            reference: item.reference?.trim() || 'BULK_STOCK_OUT',
+            notes: item.notes?.trim() || 'Bulk stock-out fulfillment via CSV',
+          },
+        });
+
+        transactions.push({
+          transactionId: txn.id,
+          productId: product.id,
+          sku: product.sku,
+          productName: product.name,
+          quantity: qty,
+          previousStock,
+          newStock,
+          status: computeStockStatus(newStock, product.reorderLevel),
+        });
+      }
+
+      await AuditService.log(
+        {
+          userId,
+          action: 'INVENTORY_BULK_STOCK_OUT',
+          entity: 'INVENTORY',
+          entityId: 'BULK',
+          details: {
+            count: items.length,
+            totalUnits: items.reduce((acc, it) => acc + it.quantity, 0),
+          },
+          ipAddress,
+        },
+        tx
+      );
+
+      return transactions;
+    });
+
+    return {
+      processedCount: result.length,
+      transactions: result,
     };
   }
 }

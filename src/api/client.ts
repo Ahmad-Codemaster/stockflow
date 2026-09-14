@@ -90,6 +90,20 @@ export const api = {
       request<{ message: string }>(`/products/${id}`, {
         method: 'DELETE',
       }),
+    bulkCreate: (items: Array<{
+      name: string;
+      sku: string;
+      categoryName: string;
+      supplierName?: string;
+      price: number;
+      initialStock?: number;
+      reorderLevel?: number;
+      description?: string;
+    }>) =>
+      request<{ createdCount: number; products: Product[] }>('/products/bulk', {
+        method: 'POST',
+        body: JSON.stringify({ items }),
+      }),
   },
 
   // Categories API
@@ -215,6 +229,27 @@ export const api = {
     },
     getTransaction: (id: string) =>
       request<Transaction>(`/inventory/transactions/${id}`),
+    bulkStockIn: (items: Array<{
+      sku: string;
+      quantity: number;
+      supplierName?: string;
+      reference?: string;
+      notes?: string;
+    }>) =>
+      request<{ processedCount: number; transactions: any[] }>('/inventory/bulk-stock-in', {
+        method: 'POST',
+        body: JSON.stringify({ items }),
+      }),
+    bulkStockOut: (items: Array<{
+      sku: string;
+      quantity: number;
+      reference?: string;
+      notes?: string;
+    }>) =>
+      request<{ processedCount: number; transactions: any[] }>('/inventory/bulk-stock-out', {
+        method: 'POST',
+        body: JSON.stringify({ items }),
+      }),
   },
 
   // Reports API

@@ -13,6 +13,7 @@
 import prisma from '../db';
 import { AppError } from '../middleware/errorHandler';
 import { AuditService } from './auditService';
+import type { BulkProductItem } from '../schemas/bulkSchemas';
 
 /**
  * COMPUTE STOCK STATUS
@@ -359,5 +360,143 @@ export class ProductService {
     });
 
     return { message: 'Product archived successfully.' };
+  }
+
+  /**
+   * BULK CREATE PRODUCTS WORKFLOW (Strict Option A - All or Nothing)
+   * 
+   * Invariants:
+   * 1. Rejects entire batch if any SKU is duplicated within batch or exists in DB.
+   * 2. Resolves or auto-creates categories by name dynamically.
+   * 3. Resolves supplier by name if provided.
+   * 4. If initialStock > 0, creates initial STOCK_IN ledger record attributed to userId.
+   * 5. Commits all records atomically within prisma.$transaction.
+   */
+  static async bulkCreate(
+    items: BulkProductItem[],
+    userId: string,
+    ipAddress?: string
+  ) {
+    if (!items || items.length === 0) {
+      throw new AppError('No items provided for bulk product import.', 400, 'VALIDATION_ERROR');
+    }
+
+    // 1. Check for duplicates within the CSV batch itself
+    const batchSkus = new Set<string>();
+    for (let i = 0; i < items.length; i++) {
+      const sku = items[i].sku.trim().toUpperCase();
+      if (batchSkus.has(sku)) {
+        throw new AppError(
+          `Duplicate SKU "${sku}" found at row ${i + 1} within the CSV batch.`,
+          400,
+          'DUPLICATE_SKU'
+        );
+      }
+      batchSkus.add(sku);
+    }
+
+    // 2. Check for conflicts with existing database SKUs
+    const existingProducts = await prisma.product.findMany({
+      where: {
+        sku: { in: Array.from(batchSkus) },
+      },
+      select: { sku: true },
+    });
+
+    if (existingProducts.length > 0) {
+      const conflictSkus = existingProducts.map((p) => p.sku).join(', ');
+      throw new AppError(
+        `The following SKU(s) already exist in the catalog: ${conflictSkus}.`,
+        409,
+        'DUPLICATE_SKU',
+        { existingSkus: existingProducts.map((p) => p.sku) }
+      );
+    }
+
+    // 3. Atomic transaction: create all categories, products, and initial stock ledgers
+    const createdProducts = await prisma.$transaction(async (tx) => {
+      const productsList = [];
+
+      for (const item of items) {
+        const catName = item.categoryName.trim();
+        let category = await tx.category.findFirst({
+          where: { name: { equals: catName, mode: 'insensitive' } },
+        });
+
+        if (!category) {
+          category = await tx.category.create({
+            data: {
+              name: catName,
+              description: 'Created automatically via bulk CSV import',
+            },
+          });
+        }
+
+        let supplierId: string | null = null;
+        if (item.supplierName && item.supplierName.trim()) {
+          const supplier = await tx.supplier.findFirst({
+            where: { name: { equals: item.supplierName.trim(), mode: 'insensitive' } },
+          });
+          if (supplier) {
+            supplierId = supplier.id;
+          }
+        }
+
+        const initialStock = Math.max(0, Number(item.initialStock) || 0);
+
+        const product = await tx.product.create({
+          data: {
+            name: item.name.trim(),
+            sku: item.sku.trim().toUpperCase(),
+            categoryId: category.id,
+            supplierId,
+            price: Number(item.price),
+            quantity: initialStock,
+            reorderLevel: Number(item.reorderLevel ?? 10),
+            description: item.description?.trim() || null,
+          },
+        });
+
+        if (initialStock > 0) {
+          await tx.stockTransaction.create({
+            data: {
+              productId: product.id,
+              type: 'STOCK_IN',
+              quantity: initialStock,
+              previousStock: 0,
+              newStock: initialStock,
+              supplierId,
+              performedById: userId,
+              reference: 'BULK_CSV_IMPORT',
+              notes: 'Initial inventory on bulk product creation',
+            },
+          });
+        }
+
+        productsList.push(product);
+      }
+
+      await AuditService.log(
+        {
+          userId,
+          action: 'PRODUCT_BULK_CREATE',
+          entity: 'PRODUCT',
+          entityId: 'BULK',
+          details: {
+            count: productsList.length,
+            skus: Array.from(batchSkus),
+          },
+          ipAddress,
+        },
+        tx
+      );
+
+      return productsList;
+    });
+
+    return {
+      createdCount: createdProducts.length,
+      products: createdProducts,
+    };
   }
 }

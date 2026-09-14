@@ -8,7 +8,7 @@
 [![Prisma ORM](https://img.shields.io/badge/Prisma-6.19-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Tests](https://img.shields.io/badge/Vitest-55%20Tests%20Passing-6E9F18?logo=vitest&logoColor=white)](https://vitest.dev/)
+[![Tests](https://img.shields.io/badge/Vitest-64%20Tests%20Passing-6E9F18?logo=vitest&logoColor=white)](https://vitest.dev/)
 
 > **Stack:** React 19 + TypeScript + Vite + Tailwind CSS v4 | Node.js + Express 5 + Prisma ORM (PostgreSQL) | Docker + Render | Vitest + GitHub Actions CI
 
@@ -80,6 +80,21 @@
 - **Dense & Compact Inventory Monitoring Page:**
   - Integrated multi-filter control center: Search input, **Category Filter Dropdown** (newly added to eliminate empty layout space), real-time status count pills, result counter, and reset button.
   - Compact tabular grid (`py-2.5`) with visual mini stock-depth progress bars comparing units in stock against reorder thresholds.
+
+### 3. High-Performance Bulk CSV Data Ingestion (Admin-Exclusive)
+- **Zero Disk Footprint (Ephemeral In-Memory Processing):**
+  - Files are uploaded and parsed strictly in browser RAM using streaming RFC 4180 parsing, pre-flight validated, and dispatched as JSON payloads directly to Express `express.json()`.
+  - Zero temporary files or disk storage used on either frontend or backend (file memory discarded immediately upon closing).
+- **Admin-Exclusive Privilege:**
+  - Both UI modal buttons and backend routes (`/api/products/bulk`, `/api/inventory/bulk-stock-in`, `/api/inventory/bulk-stock-out`) are guarded with `requireRole('ADMIN')`. Floor staff cannot access or execute bulk mutations (HTTP 403 Forbidden).
+- **Option A (Strict All-or-Nothing Atomic Rollback):**
+  - If any row in a CSV batch fails validation, has an unresolvable SKU, or has insufficient inventory during stock-out, the entire transaction is rolled back with zero database mutations and an itemized failure report.
+- **Deadlock-Free Row-Level Locking:**
+  - Batch operations acquire deterministic alphabetical row locks (`SELECT ... FOR UPDATE`) inside ACID transactions, preventing deadlocks under concurrent batch fulfillment.
+- **Full User Attribution:**
+  - Every batch created product, inventory ledger entry, and audit trail record is tagged with the active authenticated administrator's ID.
+- **Glassmorphic Batch Import UI:**
+  - Drag-and-drop dropzone, live table preview with valid/invalid status counters, error badges, and 1-click ready-made CSV template generation (`products`, `stock-in`, `stock-out`).
 
 ---
 
