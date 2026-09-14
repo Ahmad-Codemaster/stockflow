@@ -565,114 +565,154 @@ export class InventoryService {
       throw new AppError('No items provided for bulk stock-in.', 400, 'VALIDATION_ERROR');
     }
 
-    const result = await prisma.$transaction(async (tx) => {
-      const transactions = [];
+    // --- PRE-VALIDATION (outside transaction to reduce lock hold time) ---
+    const normalizedItems: Array<{
+      normalizedSku: string;
+      qty: number;
+      supplierName?: string;
+      reference?: string;
+      notes?: string;
+    }> = [];
 
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        const normalizedSku = item.sku.trim().toUpperCase();
-        const qty = Number(item.quantity);
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const normalizedSku = item.sku.trim().toUpperCase();
+      const qty = Number(item.quantity);
+      if (!qty || qty <= 0 || !Number.isInteger(qty)) {
+        throw new AppError(
+          `Row ${i + 1} (${normalizedSku}): Quantity must be a positive integer.`,
+          400,
+          'VALIDATION_ERROR'
+        );
+      }
+      normalizedItems.push({
+        normalizedSku,
+        qty,
+        supplierName: item.supplierName?.trim() || undefined,
+        reference: item.reference?.trim() || undefined,
+        notes: item.notes?.trim() || undefined,
+      });
+    }
 
-        if (!qty || qty <= 0) {
-          throw new AppError(
-            `Row ${i + 1} (${normalizedSku}): Quantity must be a positive integer.`,
-            400,
-            'VALIDATION_ERROR'
-          );
-        }
+    // Pre-resolve supplier names outside the transaction (read-only lookup)
+    const supplierCache = new Map<string, string>(); // name.lower -> supplierId
+    const uniqueSupplierNames = [
+      ...new Set(normalizedItems.map((i) => i.supplierName?.toLowerCase()).filter(Boolean) as string[]),
+    ];
+    if (uniqueSupplierNames.length > 0) {
+      const suppliers = await prisma.supplier.findMany({
+        where: { name: { in: uniqueSupplierNames, mode: 'insensitive' } },
+        select: { id: true, name: true },
+      });
+      for (const s of suppliers) {
+        supplierCache.set(s.name.toLowerCase(), s.id);
+      }
+    }
 
-        const rows = await tx.$queryRaw<
-          Array<{
-            id: string;
-            name: string;
-            sku: string;
-            supplierId: string | null;
-            quantity: number;
-            reorderLevel: number;
-            isArchived: boolean;
-          }>
-        >`
-          SELECT 
-            id,
-            name,
-            sku,
-            supplier_id AS "supplierId",
-            quantity,
-            reorder_level AS "reorderLevel",
-            is_archived AS "isArchived"
-          FROM products
-          WHERE UPPER(sku) = ${normalizedSku}
-          FOR UPDATE
-        `;
+    // --- ATOMIC TRANSACTION (only locking + write operations inside) ---
+    const result = await prisma.$transaction(
+      async (tx) => {
+        const transactions = [];
 
-        const product = rows[0];
-        if (!product || product.isArchived) {
-          throw new AppError(
-            `Row ${i + 1}: Product with SKU "${normalizedSku}" was not found or is archived.`,
-            404,
-            'NOT_FOUND'
-          );
-        }
+        for (let i = 0; i < normalizedItems.length; i++) {
+          const { normalizedSku, qty, supplierName, reference, notes } = normalizedItems[i];
 
-        let supplierId = product.supplierId;
-        if (item.supplierName && item.supplierName.trim()) {
-          const sup = await tx.supplier.findFirst({
-            where: { name: { equals: item.supplierName.trim(), mode: 'insensitive' } },
+          const rows = await tx.$queryRaw<
+            Array<{
+              id: string;
+              name: string;
+              sku: string;
+              supplierId: string | null;
+              quantity: number;
+              reorderLevel: number;
+              isArchived: boolean;
+            }>
+          >`
+            SELECT 
+              id,
+              name,
+              sku,
+              supplier_id AS "supplierId",
+              quantity,
+              reorder_level AS "reorderLevel",
+              is_archived AS "isArchived"
+            FROM products
+            WHERE UPPER(sku) = ${normalizedSku}
+            FOR UPDATE
+          `;
+
+          const product = rows[0];
+          if (!product || product.isArchived) {
+            throw new AppError(
+              `Row ${i + 1}: Product with SKU "${normalizedSku}" was not found or is archived.`,
+              404,
+              'NOT_FOUND'
+            );
+          }
+
+          // Resolve supplierId from pre-fetched cache
+          let supplierId = product.supplierId;
+          if (supplierName) {
+            const cachedId = supplierCache.get(supplierName.toLowerCase());
+            if (cachedId) supplierId = cachedId;
+          }
+
+          const previousStock = product.quantity;
+          const newStock = previousStock + qty;
+
+          await tx.product.update({
+            where: { id: product.id },
+            data: { quantity: newStock },
           });
-          if (sup) supplierId = sup.id;
-        }
 
-        const previousStock = product.quantity;
-        const newStock = previousStock + qty;
+          const txn = await tx.stockTransaction.create({
+            data: {
+              productId: product.id,
+              type: 'STOCK_IN',
+              quantity: qty,
+              previousStock,
+              newStock,
+              supplierId,
+              performedById: userId,
+              reference: reference || 'BULK_STOCK_IN',
+              notes: notes || 'Bulk stock-in via CSV',
+            },
+          });
 
-        await tx.product.update({
-          where: { id: product.id },
-          data: { quantity: newStock },
-        });
-
-        const txn = await tx.stockTransaction.create({
-          data: {
+          transactions.push({
+            transactionId: txn.id,
             productId: product.id,
-            type: 'STOCK_IN',
+            sku: product.sku,
+            productName: product.name,
             quantity: qty,
             previousStock,
             newStock,
-            supplierId,
-            performedById: userId,
-            reference: item.reference?.trim() || 'BULK_STOCK_IN',
-            notes: item.notes?.trim() || 'Bulk stock-in via CSV',
-          },
-        });
+            status: computeStockStatus(newStock, product.reorderLevel),
+          });
+        }
 
-        transactions.push({
-          transactionId: txn.id,
-          productId: product.id,
-          sku: product.sku,
-          productName: product.name,
-          quantity: qty,
-          previousStock,
-          newStock,
-          status: computeStockStatus(newStock, product.reorderLevel),
-        });
+        await AuditService.log(
+          {
+            userId,
+            action: 'INVENTORY_BULK_STOCK_IN',
+            entity: 'INVENTORY',
+            entityId: 'BULK',
+            details: {
+              count: items.length,
+              totalUnits: normalizedItems.reduce((acc, it) => acc + it.qty, 0),
+            },
+            ipAddress,
+          },
+          tx
+        );
+
+        return transactions;
+      },
+      {
+        timeout: 30000, // 30s — supports large CSV batches
+        maxWait: 5000,  // 5s max wait to acquire connection
       }
-
-      await AuditService.log(
-        {
-          userId,
-          action: 'INVENTORY_BULK_STOCK_IN',
-          entity: 'INVENTORY',
-          entityId: 'BULK',
-          details: {
-            count: items.length,
-            totalUnits: items.reduce((acc, it) => acc + it.quantity, 0),
-          },
-          ipAddress,
-        },
-        tx
-      );
-
-      return transactions;
-    });
+    );
 
     return {
       processedCount: result.length,
@@ -875,7 +915,12 @@ export class InventoryService {
       );
 
       return transactions;
-    });
+    },
+    {
+      timeout: 30000, // 30s — supports large CSV batches
+      maxWait: 5000,  // 5s max wait to acquire connection
+    }
+  );
 
     return {
       processedCount: result.length,
