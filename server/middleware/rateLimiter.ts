@@ -20,28 +20,29 @@ interface RateLimitRecord {
   resetTime: number;
 }
 
-// In-memory sliding window store mapping IP address -> { count, resetTime }
-const ipBuckets = new Map<string, RateLimitRecord>();
-
 /**
  * Enterprise Rate Limiting Middleware
- * Protects sensitive endpoints (like /api/auth/login) from automated brute force attacks.
+ * Protects sensitive endpoints from automated brute force or high-frequency abuse.
+ * Each limiter instance maintains its own isolated IP bucket store.
  */
 export function rateLimiter({
   windowMs = 15 * 60 * 1000, // 15-minute sliding window
   max = 20, // Maximum 20 attempts per window per IP
-  message = 'Too many authentication attempts from this IP. Please try again in 15 minutes.',
+  message = 'Too many requests from this IP. Please try again later.',
 }: {
   windowMs?: number;
   max?: number;
   message?: string;
 } = {}) {
+  // Dedicated in-memory bucket store for this rate limiter instance
+  const buckets = new Map<string, RateLimitRecord>();
+
   // Periodic cleanup of expired entries (unref() prevents timer from blocking process exit)
   setInterval(() => {
     const now = Date.now();
-    for (const [ip, record] of ipBuckets.entries()) {
+    for (const [ip, record] of buckets.entries()) {
       if (now > record.resetTime) {
-        ipBuckets.delete(ip);
+        buckets.delete(ip);
       }
     }
   }, windowMs).unref();
@@ -54,10 +55,10 @@ export function rateLimiter({
 
     const ip = req.ip || req.socket.remoteAddress || 'unknown-ip';
     const now = Date.now();
-    const record = ipBuckets.get(ip);
+    const record = buckets.get(ip);
 
     if (!record || now > record.resetTime) {
-      ipBuckets.set(ip, { count: 1, resetTime: now + windowMs });
+      buckets.set(ip, { count: 1, resetTime: now + windowMs });
       return next();
     }
 

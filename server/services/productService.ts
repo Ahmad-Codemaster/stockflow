@@ -63,8 +63,8 @@ export class ProductService {
     if (params.search && params.search.trim()) {
       const search = params.search.trim();
       where.OR = [
-        { name: { contains: search } },
-        { sku: { contains: search } },
+        { name: { contains: search, mode: 'insensitive' } },
+        { sku: { contains: search, mode: 'insensitive' } },
       ];
     }
 

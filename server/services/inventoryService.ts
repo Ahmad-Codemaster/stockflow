@@ -424,7 +424,10 @@ export class InventoryService {
 
     if (params?.search && params.search.trim()) {
       const s = params.search.trim();
-      where.OR = [{ name: { contains: s } }, { sku: { contains: s } }];
+      where.OR = [
+        { name: { contains: s, mode: 'insensitive' } },
+        { sku: { contains: s, mode: 'insensitive' } },
+      ];
     }
 
     const products = await prisma.product.findMany({
@@ -610,13 +613,27 @@ export class InventoryService {
     }
 
     // --- ATOMIC TRANSACTION (only locking + write operations inside) ---
+    // Deterministic lock acquisition: sort unique SKUs alphabetically to guarantee
+    // deadlock freedom across concurrent bulk operations.
+    const sortedSkus = Array.from(new Set(normalizedItems.map((i) => i.normalizedSku))).sort();
+
     const result = await prisma.$transaction(
       async (tx) => {
-        const transactions = [];
+        const lockedProductsMap = new Map<
+          string,
+          {
+            id: string;
+            name: string;
+            sku: string;
+            supplierId: string | null;
+            quantity: number;
+            reorderLevel: number;
+            isArchived: boolean;
+          }
+        >();
 
-        for (let i = 0; i < normalizedItems.length; i++) {
-          const { normalizedSku, qty, supplierName, reference, notes } = normalizedItems[i];
-
+        // Lock all unique SKUs in deterministic alphabetical order
+        for (const sku of sortedSkus) {
           const rows = await tx.$queryRaw<
             Array<{
               id: string;
@@ -637,18 +654,27 @@ export class InventoryService {
               reorder_level AS "reorderLevel",
               is_archived AS "isArchived"
             FROM products
-            WHERE UPPER(sku) = ${normalizedSku}
+            WHERE UPPER(sku) = ${sku}
             FOR UPDATE
           `;
 
           const product = rows[0];
           if (!product || product.isArchived) {
             throw new AppError(
-              `Row ${i + 1}: Product with SKU "${normalizedSku}" was not found or is archived.`,
+              `Product with SKU "${sku}" was not found or is archived.`,
               404,
               'NOT_FOUND'
             );
           }
+
+          lockedProductsMap.set(sku, product);
+        }
+
+        const transactions = [];
+
+        for (let i = 0; i < normalizedItems.length; i++) {
+          const { normalizedSku, qty, supplierName, reference, notes } = normalizedItems[i];
+          const product = lockedProductsMap.get(normalizedSku)!;
 
           // Resolve supplierId from pre-fetched cache
           let supplierId = product.supplierId;
@@ -659,6 +685,7 @@ export class InventoryService {
 
           const previousStock = product.quantity;
           const newStock = previousStock + qty;
+          product.quantity = newStock; // Keep running state for subsequent rows with same SKU
 
           await tx.product.update({
             where: { id: product.id },

@@ -42,7 +42,16 @@ export function idempotency() {
       return next();
     }
 
-    const normalizedKey = `${req.method}:${req.baseUrl || ''}${req.path}:${key.trim()}`;
+    const userScope =
+      (req as any).user?.id ||
+      (req as any).sessionId ||
+      req.cookies?.stockflow_session ||
+      (req.headers.authorization?.startsWith('Bearer ')
+        ? req.headers.authorization.slice(7)
+        : null) ||
+      'anon';
+
+    const normalizedKey = `${userScope}:${req.method}:${req.baseUrl || ''}${req.path}:${key.trim()}`;
     const existing = idempotencyStore.get(normalizedKey);
 
     if (existing) {

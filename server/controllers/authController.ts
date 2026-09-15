@@ -95,12 +95,19 @@ export class AuthController {
   static async changePassword(req: AuthenticatedRequest, res: Response) {
     const { currentPassword, newPassword } = req.body;
     const ipAddress = req.ip || req.socket.remoteAddress;
+    const sessionId =
+      req.sessionId ||
+      req.cookies?.stockflow_session ||
+      (req.headers.authorization?.startsWith('Bearer ')
+        ? req.headers.authorization.slice(7)
+        : undefined);
 
     await AuthService.changePassword(
       req.user!.id,
       currentPassword,
       newPassword,
-      ipAddress
+      ipAddress,
+      sessionId
     );
 
     return res.status(200).json({

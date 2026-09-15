@@ -67,7 +67,12 @@ export function createApp() {
         if (/^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(origin)) {
           return callback(null, true);
         }
-        return callback(null, true); // Permissive in dev, credentials still secured
+        // In non-production environments, allow permissive fallback for local tooling
+        if (process.env.NODE_ENV !== 'production') {
+          return callback(null, true);
+        }
+        // Reject untrusted cross-origin requests in production
+        return callback(null, false);
       },
       credentials: true, // Required to send and receive HttpOnly session cookies
     })

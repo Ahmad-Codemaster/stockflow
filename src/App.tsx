@@ -1,23 +1,26 @@
+import { lazy, Suspense } from 'react';
 import { Warehouse } from 'lucide-react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ToastContainer from './components/Toast';
 import { AppProvider, useApp } from './context';
-import Categories from './pages/Categories';
-import Dashboard from './pages/Dashboard';
-import Inventory from './pages/Inventory';
-import Login from './pages/Login';
-import ProductDetail from './pages/ProductDetail';
-import ProductForm from './pages/ProductForm';
-import Products from './pages/Products';
-import Reports from './pages/Reports';
-import Settings from './pages/Settings';
-import StockIn from './pages/StockIn';
-import StockOut from './pages/StockOut';
-import Suppliers from './pages/Suppliers';
-import TransactionDetail from './pages/TransactionDetail';
-import Transactions from './pages/Transactions';
-import Users from './pages/Users';
+
+// Lazy-loaded page components for optimal bundle splitting and fast mobile boot
+const Categories = lazy(() => import('./pages/Categories'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Inventory = lazy(() => import('./pages/Inventory'));
+const Login = lazy(() => import('./pages/Login'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const ProductForm = lazy(() => import('./pages/ProductForm'));
+const Products = lazy(() => import('./pages/Products'));
+const Reports = lazy(() => import('./pages/Reports'));
+const Settings = lazy(() => import('./pages/Settings'));
+const StockIn = lazy(() => import('./pages/StockIn'));
+const StockOut = lazy(() => import('./pages/StockOut'));
+const Suppliers = lazy(() => import('./pages/Suppliers'));
+const TransactionDetail = lazy(() => import('./pages/TransactionDetail'));
+const Transactions = lazy(() => import('./pages/Transactions'));
+const Users = lazy(() => import('./pages/Users'));
 
 function SessionLoadingScreen({ message = 'Restoring secure session...' }: { message?: string }) {
   return (
@@ -46,7 +49,11 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <Layout>{children}</Layout>
+      <Layout>
+        <Suspense fallback={<SessionLoadingScreen message="Loading page..." />}>
+          {children}
+        </Suspense>
+      </Layout>
       <ToastContainer />
     </>
   );
@@ -65,10 +72,10 @@ function AppRoutes() {
             ) : currentUser ? (
               <Navigate to="/dashboard" replace />
             ) : (
-              <>
+              <Suspense fallback={<SessionLoadingScreen message="Loading login..." />}>
                 <Login />
                 <ToastContainer />
-              </>
+              </Suspense>
             )
           }
         />

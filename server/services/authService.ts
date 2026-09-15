@@ -139,7 +139,8 @@ export class AuthService {
     userId: string,
     currentPassword: string,
     newPassword: string,
-    ipAddress?: string
+    ipAddress?: string,
+    currentSessionId?: string
   ) {
     if (newPassword.length < 8) {
       throw new AppError('New password must be at least 8 characters long.', 400, 'VALIDATION_ERROR');
@@ -163,11 +164,26 @@ export class AuthService {
       data: { passwordHash: newHash },
     });
 
+    // Revoke all other active sessions to prevent persistence of compromised tokens
+    if (currentSessionId) {
+      await prisma.session.deleteMany({
+        where: {
+          userId,
+          id: { not: currentSessionId },
+        },
+      });
+    } else {
+      await prisma.session.deleteMany({
+        where: { userId },
+      });
+    }
+
     await AuditService.log({
       userId,
       action: 'PASSWORD_CHANGE',
       entity: 'USER',
       entityId: userId,
+      details: { otherSessionsRevoked: true },
       ipAddress,
     });
   }
