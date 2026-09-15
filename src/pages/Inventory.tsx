@@ -244,9 +244,9 @@ export default function Inventory() {
         </div>
 
         {/* Status bar reporting showing results count */}
-        <div className="flex items-center justify-between text-[11px] text-slate-400 px-1 pt-1 border-t border-white/40">
+        <div className="flex items-center justify-between text-[11.5px] text-purple-900/80 font-medium px-1 pt-1 border-t border-white/40">
           <span>
-            Showing <strong className="text-slate-700 font-semibold">{filtered.length}</strong> of {products.length} items
+            Showing <strong className="text-purple-950 font-bold">{filtered.length}</strong> of {products.length} items
           </span>
           {isFiltered && (
             <span className="text-indigo-600 font-medium">Filtered view active</span>
@@ -259,7 +259,7 @@ export default function Inventory() {
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[9.5px]">
+              <tr className="border-b border-white/60 bg-white/30 text-purple-950/70 font-bold uppercase tracking-wider text-[9.5px]">
                 <th className="px-3.5 py-2.5 text-left">Product Name</th>
                 <th className="px-3.5 py-2.5 text-left">SKU</th>
                 <th className="px-3.5 py-2.5 text-left">Category</th>
@@ -299,8 +299,8 @@ export default function Inventory() {
                           {p.name}
                         </button>
                       </td>
-                      <td className="px-3.5 py-2.5 font-mono text-[10.5px] text-slate-500">{p.sku}</td>
-                      <td className="px-3.5 py-2.5 text-slate-600 font-medium text-[11px]">{getCatName(p.categoryId)}</td>
+                      <td className="px-3.5 py-2.5 font-mono text-[11px] font-semibold text-purple-900/90">{p.sku}</td>
+                      <td className="px-3.5 py-2.5 text-purple-950/80 font-medium text-[11px]">{getCatName(p.categoryId)}</td>
                       <td className="px-3.5 py-2.5 text-right">
                         <div className="inline-flex flex-col items-end">
                           <span className="font-black tracking-tight text-slate-900 text-xs">{stock}</span>
@@ -318,7 +318,7 @@ export default function Inventory() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-3.5 py-2.5 text-right font-mono text-slate-400 text-[11px]">{p.reorderLevel}</td>
+                      <td className="px-3.5 py-2.5 text-right font-mono font-bold text-purple-900 text-[11.5px]">{p.reorderLevel}</td>
                       <td className="px-3.5 py-2.5 text-right font-bold text-slate-900 text-xs">${p.price.toFixed(2)}</td>
                       <td className="px-3.5 py-2.5 text-right font-black tracking-tight text-indigo-700 text-xs">
                         ${itemValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

@@ -110,7 +110,7 @@ export default function Transactions() {
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+              <tr className="border-b border-white/60 bg-white/30 text-purple-950/70 font-bold uppercase tracking-wider text-[10px]">
                 {['Timestamp', 'Product Name', 'SKU', 'Movement Type', 'Quantity', 'Previous', 'New Stock', 'Operator', 'Reference'].map(
                   (h) => (
                     <th
@@ -144,8 +144,8 @@ export default function Transactions() {
                       onClick={() => navigate('transaction-detail', t.id)}
                       className="hover:bg-white/50 transition-colors cursor-pointer group"
                     >
-                      <td className="px-4 py-3.5 text-slate-400 font-mono text-[11px] whitespace-nowrap flex items-center gap-1.5">
-                        <Clock size={11} className="text-slate-300" />
+                      <td className="px-4 py-3.5 text-purple-900/80 font-mono text-[11px] whitespace-nowrap flex items-center gap-1.5 font-medium">
+                        <Clock size={11} className="text-purple-600" />
                         <span>{t.createdAt}</span>
                       </td>
                       <td className="px-4 py-3.5 font-bold text-slate-900">
@@ -160,15 +160,15 @@ export default function Transactions() {
                           {p?.name ?? 'Unknown'}
                         </button>
                       </td>
-                      <td className="px-4 py-3.5 font-mono text-slate-400">{p?.sku ?? '—'}</td>
+                      <td className="px-4 py-3.5 font-mono font-semibold text-purple-900/90 text-xs">{p?.sku ?? '—'}</td>
                       <td className="px-4 py-3.5">
                         <Badge variant={t.type} />
                       </td>
                       <td className="px-4 py-3.5 text-right font-black tracking-[-0.025em] text-slate-900">{t.quantity}</td>
-                      <td className="px-4 py-3.5 text-right font-mono text-slate-400">{t.previousStock}</td>
+                      <td className="px-4 py-3.5 text-right font-mono font-bold text-purple-900 text-xs">{t.previousStock}</td>
                       <td className="px-4 py-3.5 text-right font-black tracking-[-0.025em] text-indigo-700">{t.newStock}</td>
-                      <td className="px-4 py-3.5 text-slate-700 font-medium">{t.performedBy}</td>
-                      <td className="px-4 py-3.5 font-mono text-slate-400 text-[11px] group-hover:text-slate-700 transition-colors">
+                      <td className="px-4 py-3.5 text-purple-950/90 font-medium">{t.performedBy}</td>
+                      <td className="px-4 py-3.5 font-mono text-purple-800/80 font-medium text-[11px] group-hover:text-purple-950 transition-colors">
                         {t.reference || '—'}
                       </td>
                     </tr>

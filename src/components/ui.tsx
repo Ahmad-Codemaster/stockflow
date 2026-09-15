@@ -322,11 +322,11 @@ export function Pagination({ page, totalPages, total, pageSize, onPage }: Pagina
   const start = (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, total);
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3.5 border-t border-white/50 text-xs text-slate-500">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3.5 border-t border-white/50 text-xs text-purple-900/80 font-medium">
       <span>
-        Showing <span className="font-semibold text-slate-800">{start}</span>–
-        <span className="font-semibold text-slate-800">{end}</span> of{' '}
-        <span className="font-semibold text-slate-800">{total}</span>
+        Showing <span className="font-bold text-purple-950">{start}</span>–
+        <span className="font-bold text-purple-950">{end}</span> of{' '}
+        <span className="font-bold text-purple-950">{total}</span>
       </span>
       <div className="flex items-center gap-1.5 flex-wrap justify-center">
         <button

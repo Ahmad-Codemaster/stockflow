@@ -408,7 +408,7 @@ export default function Dashboard() {
                           >
                             {getProductName(t.productId)}
                           </button>
-                          <p className="text-[9.5px] text-slate-400 font-mono">{getProductSku(t.productId)}</p>
+                          <p className="text-[9.5px] text-purple-900/90 font-semibold font-mono">{getProductSku(t.productId)}</p>
                         </td>
                         <td className="px-3 py-2.5">{txnBadge[t.type]}</td>
                         <td className="px-3 py-2.5 text-right">
@@ -430,7 +430,7 @@ export default function Dashboard() {
                           </span>
                         </td>
                         <td className="px-3 py-2.5 text-slate-600 font-medium text-[11px]">{t.performedBy.split(' ')[0]}</td>
-                        <td className="px-3.5 py-2.5 text-slate-400 font-mono text-[10.5px] group-hover:text-slate-700 transition-colors">
+                        <td className="px-3.5 py-2.5 text-purple-900/80 font-mono text-[10.5px] font-medium group-hover:text-purple-950 transition-colors">
                           {t.createdAt}
                         </td>
                       </tr>
@@ -578,10 +578,10 @@ export default function Dashboard() {
                       className="hover:bg-white/50 transition-colors cursor-pointer"
                     >
                       <td className="px-3.5 py-2.5 font-bold text-slate-900">{p.name}</td>
-                      <td className="px-3 py-2.5 text-slate-400 font-mono text-[10.5px]">{p.sku}</td>
+                      <td className="px-3 py-2.5 text-purple-900/90 font-semibold font-mono text-[11px]">{p.sku}</td>
                       <td className="px-3 py-2.5 text-slate-600 font-medium text-[11px]">{getCategoryName(p.categoryId)}</td>
                       <td className="px-3 py-2.5 font-black tracking-tight text-slate-900 text-right">{stock}</td>
-                      <td className="px-3 py-2.5 text-slate-400 font-mono text-right">{p.reorderLevel}</td>
+                      <td className="px-3 py-2.5 text-purple-900 font-bold font-mono text-right text-[11px]">{p.reorderLevel}</td>
                       <td className="px-3 py-2.5">
                         <Badge variant={status} />
                       </td>

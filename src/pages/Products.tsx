@@ -143,7 +143,7 @@ export default function Products() {
         )}
 
         <div className="flex items-center gap-2 ml-auto">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Sort by:</span>
+          <span className="text-[11px] font-semibold text-purple-900/80 uppercase tracking-wider">Sort by:</span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -161,7 +161,7 @@ export default function Products() {
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+              <tr className="border-b border-white/60 bg-white/30 text-purple-950/70 font-bold uppercase tracking-wider text-[10px]">
                 {['Product Name', 'SKU', 'Category', 'Unit Price', 'Current Stock', 'Threshold', 'Status', 'Actions'].map(
                   (h) => (
                     <th
@@ -212,8 +212,8 @@ export default function Products() {
                           {p.name}
                         </button>
                       </td>
-                      <td className="px-4 py-3.5 font-mono text-slate-500">{p.sku}</td>
-                      <td className="px-4 py-3.5 text-slate-600 font-medium">
+                      <td className="px-4 py-3.5 font-mono font-semibold text-purple-900/90 text-xs">{p.sku}</td>
+                      <td className="px-4 py-3.5 text-purple-950/80 font-medium">
                         <button
                           type="button"
                           onClick={() => setFilterCat(p.categoryId)}
@@ -225,7 +225,7 @@ export default function Products() {
                       </td>
                       <td className="px-4 py-3.5 text-right font-bold text-slate-900">${p.price.toFixed(2)}</td>
                       <td className="px-4 py-3.5 text-right font-black tracking-[-0.025em] text-slate-900">{stock}</td>
-                      <td className="px-4 py-3.5 text-right font-mono text-slate-400">{p.reorderLevel}</td>
+                      <td className="px-4 py-3.5 text-right font-mono font-bold text-purple-900 text-xs">{p.reorderLevel}</td>
                       <td className="px-4 py-3.5">
                         <Badge variant={status} />
                       </td>
@@ -234,7 +234,7 @@ export default function Products() {
                           <button
                             type="button"
                             onClick={() => setMenuId((v) => (v === p.id ? null : p.id))}
-                            className="p-1.5 rounded-lg hover:bg-white/80 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg hover:bg-white/80 text-purple-700 hover:text-purple-950 transition-colors cursor-pointer"
                             aria-label="Actions"
                           >
                             <MoreVertical size={14} />

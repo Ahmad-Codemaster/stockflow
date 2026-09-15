@@ -2,6 +2,7 @@ import {
   AlertTriangle,
   ArrowDownRight,
   ArrowLeft,
+  ArrowLeftRight,
   ArrowRight,
   ArrowUpRight,
   Building2,
@@ -324,7 +325,7 @@ export default function ProductDetail() {
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                  <tr className="border-b border-white/60 bg-white/30 text-purple-950/70 font-bold uppercase tracking-wider text-[10px]">
                     {['Timestamp', 'Movement Type', 'Quantity', 'Previous', 'New Stock', 'Operator', 'Reference'].map(
                       (h) => (
                         <th
@@ -343,7 +344,9 @@ export default function ProductDetail() {
                   {productTxns.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-4 py-12 text-center text-slate-400">
-                        No transactions recorded for this SKU yet.
+                        <ArrowLeftRight size={24} className="mx-auto text-slate-300 mb-2" />
+                        <p className="text-xs font-semibold text-slate-600">No stock movements recorded</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Use Stock In or Stock Out to log transactions.</p>
                       </td>
                     </tr>
                   ) : (
@@ -353,8 +356,8 @@ export default function ProductDetail() {
                         onClick={() => navigate('transaction-detail', t.id)}
                         className="hover:bg-white/50 transition-colors cursor-pointer group"
                       >
-                        <td className="px-4 py-3 text-slate-400 font-mono text-[11px] flex items-center gap-1.5">
-                          <Clock size={11} className="text-slate-300" />
+                        <td className="px-4 py-3 text-purple-900/80 font-mono text-[11px] flex items-center gap-1.5 font-medium">
+                          <Clock size={11} className="text-purple-600" />
                           <span>{t.createdAt}</span>
                         </td>
                         <td className="px-4 py-3">{txnBadge[t.type]}</td>
@@ -376,10 +379,10 @@ export default function ProductDetail() {
                             {t.quantity}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-slate-400">{t.previousStock}</td>
+                        <td className="px-4 py-3 text-right font-mono font-bold text-purple-900 text-xs">{t.previousStock}</td>
                         <td className="px-4 py-3 text-right font-bold text-blue-700">{t.newStock}</td>
-                        <td className="px-4 py-3 text-slate-600 font-medium">{t.performedBy}</td>
-                        <td className="px-4 py-3 font-mono text-slate-400 text-[11px] group-hover:text-blue-600 transition-colors">
+                        <td className="px-4 py-3 text-purple-950/90 font-medium">{t.performedBy}</td>
+                        <td className="px-4 py-3 font-mono text-purple-800/80 font-medium text-[11px] group-hover:text-purple-950 transition-colors">
                           {t.reference || '—'}
                         </td>
                       </tr>

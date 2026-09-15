@@ -97,7 +97,7 @@ export default function Suppliers() {
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+            <tr className="border-b border-white/60 bg-white/30 text-purple-950/70 font-bold uppercase tracking-wider text-[10px]">
               <th className="px-5 py-3.5 text-left">Company Name</th>
               <th className="px-5 py-3.5 text-left">Contact Email</th>
               <th className="px-5 py-3.5 text-left">Phone Number</th>
@@ -128,30 +128,30 @@ export default function Suppliers() {
                       </div>
                       <span>{sup.name}</span>
                     </td>
-                    <td className="px-5 py-4 text-slate-600 font-medium">
+                    <td className="px-5 py-4 text-purple-950/80 font-medium">
                       {sup.email ? (
                         <span className="flex items-center gap-1.5 text-indigo-600 font-mono">
-                          <Mail size={12} className="text-slate-400" />
+                          <Mail size={12} className="text-purple-600" />
                           {sup.email}
                         </span>
                       ) : (
                         '—'
                       )}
                     </td>
-                    <td className="px-5 py-4 text-slate-600 font-mono">
+                    <td className="px-5 py-4 text-purple-950/80 font-mono">
                       {sup.phone ? (
                         <span className="flex items-center gap-1.5">
-                          <Phone size={12} className="text-slate-400" />
+                          <Phone size={12} className="text-purple-600" />
                           {sup.phone}
                         </span>
                       ) : (
                         '—'
                       )}
                     </td>
-                    <td className="px-5 py-4 text-slate-500 max-w-xs truncate">
+                    <td className="px-5 py-4 text-purple-950/80 max-w-xs truncate font-medium">
                       {sup.address ? (
                         <span className="flex items-center gap-1.5">
-                          <MapPin size={12} className="text-slate-400 shrink-0" />
+                          <MapPin size={12} className="text-purple-600 shrink-0" />
                           <span className="truncate">{sup.address}</span>
                         </span>
                       ) : (
@@ -174,7 +174,7 @@ export default function Suppliers() {
                           <button
                             type="button"
                             onClick={() => openEdit(sup.id)}
-                            className="p-1.5 rounded-lg hover:bg-white/80 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg hover:bg-white/80 text-purple-700 hover:text-purple-950 transition-colors cursor-pointer"
                             aria-label="Edit supplier"
                           >
                             <Edit size={14} />
@@ -182,7 +182,7 @@ export default function Suppliers() {
                           <button
                             type="button"
                             onClick={() => setConfirmDelete(sup.id)}
-                            className="p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg hover:bg-rose-500/10 text-rose-500 hover:text-rose-700 transition-colors cursor-pointer"
                             aria-label="Delete supplier"
                           >
                             <Trash2 size={14} />

@@ -82,7 +82,7 @@ export default function Categories() {
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-white/60 bg-white/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+            <tr className="border-b border-white/60 bg-white/30 text-purple-950/70 font-bold uppercase tracking-wider text-[10px]">
               <th className="px-5 py-3.5 text-left">Category Name</th>
               <th className="px-5 py-3.5 text-right">Products Count</th>
               <th className="px-5 py-3.5 text-left">Created Date</th>
@@ -121,14 +121,14 @@ export default function Categories() {
                         {count} {count === 1 ? 'item' : 'items'}
                       </button>
                     </td>
-                    <td className="px-5 py-4 text-slate-400 font-mono text-[11px]">{cat.createdAt}</td>
+                    <td className="px-5 py-4 text-purple-900/80 font-mono text-[11.5px] font-medium">{cat.createdAt}</td>
                     {currentUser?.role === 'ADMIN' && (
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             type="button"
                             onClick={() => openEdit(cat.id)}
-                            className="p-1.5 rounded-lg hover:bg-white/80 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg hover:bg-white/80 text-purple-700 hover:text-purple-950 transition-colors cursor-pointer"
                             aria-label="Edit category"
                           >
                             <Edit size={14} />
@@ -136,7 +136,7 @@ export default function Categories() {
                           <button
                             type="button"
                             onClick={() => setConfirmDelete(cat.id)}
-                            className="p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg hover:bg-rose-500/10 text-rose-500 hover:text-rose-700 transition-colors cursor-pointer"
                             aria-label="Delete category"
                           >
                             <Trash2 size={14} />
