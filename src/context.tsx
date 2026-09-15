@@ -107,7 +107,7 @@ export interface AppContextValue {
   getInventory: (productId: string) => number;
   skuExists: (sku: string, excludeId?: string) => boolean;
   refreshData: () => Promise<void>;
-  wipeStoreData: () => Promise<void>;
+  wipeStoreData: (password: string) => Promise<boolean>;
 }
 
 export function useApp(): AppContextValue {

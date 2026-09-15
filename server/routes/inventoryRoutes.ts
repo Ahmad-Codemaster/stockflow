@@ -38,7 +38,7 @@ router.post('/bulk-stock-in', requireRole('ADMIN'), mutationLimiter, validateBod
 router.post('/bulk-stock-out', requireRole('ADMIN'), mutationLimiter, validateBody(bulkStockOutSchema), InventoryController.bulkStockOut);
 router.post('/stock-in', mutationLimiter, validateBody(stockInSchema), InventoryController.stockIn);
 router.post('/stock-out', mutationLimiter, validateBody(stockOutSchema), InventoryController.stockOut);
-router.post('/adjust', mutationLimiter, validateBody(stockAdjustSchema), InventoryController.adjust);
+router.post('/adjust', requireRole('ADMIN'), mutationLimiter, validateBody(stockAdjustSchema), InventoryController.adjust);
 router.get('/transactions', validateQuery(transactionQuerySchema), InventoryController.listTransactions);
 router.get('/transactions/:id', validateParams(idParamSchema), InventoryController.getTransactionById);
 

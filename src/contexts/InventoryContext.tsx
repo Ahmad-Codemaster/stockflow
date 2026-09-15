@@ -37,7 +37,7 @@ export interface InventoryContextValue {
   getInventory: (productId: string) => number;
   skuExists: (sku: string, excludeId?: string) => boolean;
   refreshData: () => Promise<void>;
-  wipeStoreData: () => Promise<void>;
+  wipeStoreData: (password: string) => Promise<boolean>;
 }
 
 const InventoryContext = createContext<InventoryContextValue | null>(null);
@@ -451,9 +451,9 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     [navigate, refreshData, showToast]
   );
 
-  const wipeStoreData = useCallback(async () => {
+  const wipeStoreData = useCallback(async (password: string): Promise<boolean> => {
     try {
-      await api.system.wipe();
+      await api.system.wipe(password);
       // Clear all local state immediately — no competing refreshData() call
       setProducts([]);
       setCategories([]);
@@ -465,8 +465,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         'success',
         'Store wiped to a clean slate. All products, inventory, and transactions cleared.'
       );
+      return true;
     } catch (err: any) {
       showToast('error', err.message || 'Failed to wipe store data.');
+      return false;
     }
   }, [navigate, showToast]);
 

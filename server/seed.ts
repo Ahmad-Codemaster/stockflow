@@ -7,11 +7,11 @@ const STAFF_HASH = bcrypt.hashSync('Staff@123', 10);
 
 /**
  * Completely wipe all store catalog, inventory, supplier, category, and transaction movement logs.
- * Preserves user accounts and active login sessions so you can build a fresh store from scratch.
+ * Preserves user accounts, active login sessions, and audit logs so historical business accountability is retained.
  */
 export async function wipeStoreData() {
   await prisma.$transaction(async (tx) => {
-    await tx.auditLog.deleteMany();
+    // Preserve auditLog for forensic and security accountability
     await tx.stockTransaction.deleteMany();
     await tx.product.deleteMany();
     await tx.supplier.deleteMany();

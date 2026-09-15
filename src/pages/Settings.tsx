@@ -16,11 +16,12 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
+import Modal from '../components/Modal';
 import { Badge, Confirm, FormField, PageHeader } from '../components/ui';
 import { useApp } from '../context';
 
 export default function Settings() {
-  const { currentUser, showToast, wipeStoreData } = useApp();
+  const { currentUser, showToast, wipeStoreData, updateUser } = useApp();
   const [profileName, setProfileName] = useState(currentUser?.name ?? '');
 
   useEffect(() => {
@@ -34,6 +35,8 @@ export default function Settings() {
   const [notifEmail, setNotifEmail] = useState(true);
   const [notifLowStock, setNotifLowStock] = useState(true);
   const [confirmWipe, setConfirmWipe] = useState(false);
+  const [wipePassword, setWipePassword] = useState('');
+  const [wipeError, setWipeError] = useState('');
   const [wiping, setWiping] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
 
@@ -79,9 +82,21 @@ export default function Settings() {
 
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
+    if (!profileName.trim()) {
+      showToast('error', 'Profile name cannot be empty.');
+      return;
+    }
+    if (!currentUser) return;
     setSaving(true);
     try {
+      if (updateUser) {
+        await updateUser(currentUser.id, { name: profileName.trim() });
+      } else {
+        await api.users.update(currentUser.id, { name: profileName.trim() });
+      }
       showToast('success', 'Profile updated successfully.');
+    } catch (err: any) {
+      showToast('error', err.message || 'Failed to update profile.');
     } finally {
       setSaving(false);
     }
@@ -112,11 +127,23 @@ export default function Settings() {
     }
   }
 
-  async function handleWipeData() {
-    setConfirmWipe(false);
+  async function handleWipeData(e: React.FormEvent) {
+    e.preventDefault();
+    if (!wipePassword.trim()) {
+      setWipeError('Administrator password is required.');
+      return;
+    }
     setWiping(true);
-    await wipeStoreData();
+    setWipeError('');
+    const success = await wipeStoreData(wipePassword);
     setWiping(false);
+    if (success) {
+      setConfirmWipe(false);
+      setWipePassword('');
+      setWipeError('');
+    } else {
+      setWipeError('Failed to wipe store data. Verify administrator password.');
+    }
   }
 
 
@@ -465,14 +492,74 @@ export default function Settings() {
       </div>
 
       {confirmWipe && (
-        <Confirm
-          title="Wipe All Store Data to Blank?"
-          message="Are you sure you want to wipe all store data? All products, categories, suppliers, inventory levels, and transaction logs will be permanently deleted. You will have a completely clean, empty store. Your user account and login session will remain active."
-          confirmLabel="Wipe Everything to Blank"
-          variant="danger"
-          onConfirm={handleWipeData}
-          onCancel={() => setConfirmWipe(false)}
-        />
+        <Modal
+          onClose={() => {
+            if (!wiping) {
+              setConfirmWipe(false);
+              setWipePassword('');
+              setWipeError('');
+            }
+          }}
+          title="Confirm Store Data Wipe"
+        >
+          <form onSubmit={handleWipeData} className="space-y-4">
+            <div className="p-3.5 bg-rose-50 border border-rose-200/80 rounded-xl text-xs text-rose-800 space-y-1">
+              <p className="font-bold flex items-center gap-1.5 text-rose-900">
+                <ShieldAlert size={14} className="text-rose-600" />
+                <span>Permanent Destruction Warning</span>
+              </p>
+              <p>
+                This action will permanently delete all products, categories, suppliers, inventory counts, and movement transactions. Audit logs and user sessions are preserved.
+              </p>
+            </div>
+
+            <FormField label="Administrator Password" required error={wipeError}>
+              <input
+                type="password"
+                value={wipePassword}
+                onChange={(e) => {
+                  setWipePassword(e.target.value);
+                  if (wipeError) setWipeError('');
+                }}
+                placeholder="Enter your current admin password"
+                className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white/70 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                autoFocus
+              />
+            </FormField>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                disabled={wiping}
+                onClick={() => {
+                  setConfirmWipe(false);
+                  setWipePassword('');
+                  setWipeError('');
+                }}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={wiping || !wipePassword.trim()}
+                className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-1.5"
+              >
+                {wiping ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" />
+                    <span>Wiping Store...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={13} />
+                    <span>Confirm &amp; Wipe Everything</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );

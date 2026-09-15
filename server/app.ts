@@ -41,6 +41,9 @@ const __dirname = path.dirname(__filename);
 export function createApp() {
   const app = express();
 
+  // Trust first proxy hop (Render, Cloudflare, AWS ALB) for accurate client IP tracking
+  app.set('trust proxy', 1);
+
   // 1. Security Headers: Protects against clickjacking, MIME-sniffing, etc.
   app.use(helmet({ contentSecurityPolicy: false }));
 

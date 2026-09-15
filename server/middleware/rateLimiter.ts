@@ -53,12 +53,20 @@ export function rateLimiter({
       return next();
     }
 
-    const ip = req.ip || req.socket.remoteAddress || 'unknown-ip';
+    // Key by authenticated user ID if available (prevents shared Wi-Fi IP collision for warehouse teams)
+    const clientKey = (req as any).user?.id
+      ? `user:${(req as any).user.id}`
+      : req.ip || req.socket.remoteAddress || 'unknown-ip';
+
     const now = Date.now();
-    const record = buckets.get(ip);
+    const record = buckets.get(clientKey);
 
     if (!record || now > record.resetTime) {
-      buckets.set(ip, { count: 1, resetTime: now + windowMs });
+      // Memory protection: if buckets exceed 10,000 entries, clear oldest expired
+      if (buckets.size > 10000) {
+        buckets.clear();
+      }
+      buckets.set(clientKey, { count: 1, resetTime: now + windowMs });
       return next();
     }
 
@@ -75,14 +83,13 @@ export function rateLimiter({
 }
 
 /**
- * Mutation Rate Limiter: 60 requests per minute per IP.
- * Applied to high-impact inventory mutation routes (stock-in, stock-out, adjust).
- * Protects against scripted bulk manipulation attacks.
+ * Mutation Rate Limiter: 300 requests per minute per user/IP.
+ * Accommodates active warehouse scanning across 20-30 staff while protecting against flood scripts.
  */
 export const mutationLimiter = rateLimiter({
   windowMs: 60 * 1000,       // 1-minute window
-  max: 60,
-  message: 'Too many inventory requests from this IP. Please slow down and retry in 1 minute.',
+  max: 300,                  // 300 requests per minute per user/IP (supports continuous barcode scanning)
+  message: 'Too many inventory requests. Please slow down and retry in 1 minute.',
 });
 
 /**

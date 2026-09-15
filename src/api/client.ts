@@ -339,9 +339,10 @@ export const api = {
 
   // System Maintenance API
   system: {
-    wipe: () =>
+    wipe: (password: string) =>
       request<{ message: string }>('/system/wipe', {
         method: 'POST',
+        body: JSON.stringify({ password }),
       }),
     ping: async (customBase?: string): Promise<{ success: boolean; latencyMs: number; data?: any }> => {
       const start = Date.now();

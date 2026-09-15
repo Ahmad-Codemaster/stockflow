@@ -125,4 +125,20 @@ describe('Role-Based Access Control (RBAC) Enforcement', () => {
     expect(prodRes.status).toBe(201);
     expect(prodRes.body.data.sku).toBe('ADM-001');
   });
+
+  it('Staff user is REJECTED (403 Forbidden) when attempting inventory adjustments POST /api/inventory/adjust', async () => {
+    const { cookie } = await loginAsStaff();
+
+    const res = await request(app)
+      .post('/api/inventory/adjust')
+      .set('Cookie', [cookie])
+      .send({
+        productId: 'p1',
+        targetQuantity: 50,
+      });
+
+    expect(res.status).toBe(403);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error.code).toBe('FORBIDDEN');
+  });
 });

@@ -59,6 +59,24 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { currentUser, isAuthLoading } = useApp();
+
+  if (isAuthLoading) {
+    return <SessionLoadingScreen />;
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (currentUser.role !== 'ADMIN') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   const { currentUser, isAuthLoading } = useApp();
 
@@ -107,7 +125,9 @@ function AppRoutes() {
           path="/products/add"
           element={
             <ProtectedLayout>
-              <ProductForm mode="add" />
+              <AdminRoute>
+                <ProductForm mode="add" />
+              </AdminRoute>
             </ProtectedLayout>
           }
         />
@@ -115,7 +135,9 @@ function AppRoutes() {
           path="/products/edit/:id"
           element={
             <ProtectedLayout>
-              <ProductForm mode="edit" />
+              <AdminRoute>
+                <ProductForm mode="edit" />
+              </AdminRoute>
             </ProtectedLayout>
           }
         />
@@ -195,7 +217,9 @@ function AppRoutes() {
           path="/users"
           element={
             <ProtectedLayout>
-              <Users />
+              <AdminRoute>
+                <Users />
+              </AdminRoute>
             </ProtectedLayout>
           }
         />

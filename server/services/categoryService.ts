@@ -110,13 +110,13 @@ export class CategoryService {
   }
 
   static async deleteCategory(id: string, userId: string, ipAddress?: string) {
-    const activeProducts = await prisma.product.count({
-      where: { categoryId: id, isArchived: false },
+    const totalProducts = await prisma.product.count({
+      where: { categoryId: id },
     });
 
-    if (activeProducts > 0) {
+    if (totalProducts > 0) {
       throw new AppError(
-        `Cannot delete category. There are ${activeProducts} active product(s) associated with it.`,
+        `Cannot delete category. There are ${totalProducts} product(s) linked to it.`,
         400,
         'CATEGORY_IN_USE'
       );

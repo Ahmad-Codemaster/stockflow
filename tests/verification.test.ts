@@ -80,7 +80,7 @@ describe('Milestone 3 Verification: Idempotency, Adjustment & Atomic Rollback', 
 
   describe('Stock Adjustment Workflow', () => {
     it('adjusts stock to target physical count and records ADJUSTMENT ledger', async () => {
-      const { cookie } = await loginAsStaff();
+      const { cookie } = await loginAsAdmin();
 
       // Product p1 has initial quantity 4
       const res = await request(app)
@@ -119,7 +119,7 @@ describe('Milestone 3 Verification: Idempotency, Adjustment & Atomic Rollback', 
     });
 
     it('rejects adjustment that would result in negative stock', async () => {
-      const { cookie } = await loginAsStaff();
+      const { cookie } = await loginAsAdmin();
 
       // Product p1 has 4 units; delta of -10 would result in -6
       const res = await request(app)
