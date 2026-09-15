@@ -52,11 +52,12 @@ export function errorHandler(
       path: Array.isArray(e.path) ? e.path.join('.') : String(e.path || ''),
       message: e.message,
     }));
+    const firstMsg = issues[0]?.message;
     return res.status(400).json({
       success: false,
       error: {
         code: 'VALIDATION_ERROR',
-        message: 'Invalid request data',
+        message: firstMsg || 'Invalid request data',
         details,
       },
     });

@@ -106,8 +106,13 @@ export default function Settings() {
     e.preventDefault();
     const errs: Record<string, string> = {};
     if (!pwForm.current) errs.current = 'Current password is required.';
-    if (!pwForm.next) errs.next = 'New password is required.';
-    else if (pwForm.next.length < 8) errs.next = 'Password must be at least 8 characters.';
+    if (!pwForm.next) {
+      errs.next = 'New password is required.';
+    } else if (pwForm.next.length < 8) {
+      errs.next = 'Password must be at least 8 characters.';
+    } else if (!/[a-z]/.test(pwForm.next) || !/[A-Z]/.test(pwForm.next) || !/\d/.test(pwForm.next)) {
+      errs.next = 'Password must include uppercase, lowercase, and a number (e.g. Pass@123).';
+    }
     if (pwForm.next !== pwForm.confirm) errs.confirm = 'Passwords do not match.';
     if (Object.keys(errs).length) {
       setPwErrors(errs);
@@ -120,7 +125,20 @@ export default function Settings() {
       setPwErrors({});
       showToast('success', 'Password updated successfully.');
     } catch (err: any) {
-      setPwErrors({ current: err.message || 'Failed to update password. Verify current password.' });
+      const fieldErrs: Record<string, string> = {};
+      if (err.details && Array.isArray(err.details)) {
+        for (const d of err.details) {
+          if (d.path === 'currentPassword') fieldErrs.current = d.message;
+          else if (d.path === 'newPassword') fieldErrs.next = d.message;
+        }
+      }
+      if (Object.keys(fieldErrs).length > 0) {
+        setPwErrors(fieldErrs);
+      } else if (err.code === 'INVALID_PASSWORD' || err.message?.toLowerCase().includes('current password')) {
+        setPwErrors({ current: 'Current password is incorrect.' });
+      } else {
+        setPwErrors({ current: err.message || 'Failed to update password.' });
+      }
       showToast('error', err.message || 'Failed to update password.');
     } finally {
       setPwSaving(false);
@@ -244,7 +262,7 @@ export default function Settings() {
               />
             </FormField>
 
-            <FormField label="New Password (min. 8 characters)" error={pwErrors.next}>
+            <FormField label="New Password (min. 8 chars, uppercase, lowercase, number)" error={pwErrors.next}>
               <input
                 type="password"
                 value={pwForm.next}
